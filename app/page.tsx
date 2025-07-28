@@ -148,7 +148,7 @@ export default function Home() {
               href="/leagues"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              Leagues
+              Standings
             </Link>
             <Link
               href="/players"
@@ -156,28 +156,15 @@ export default function Home() {
             >
               Players
             </Link>
+            <Link href="/team-dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Team Dashboard
+            </Link>
             <Link
               href="/draft"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
               Draft
             </Link>
-            {user && (
-              <Link
-                href="/teams"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                My Teams
-              </Link>
-            )}
-            {user && (
-              <Link
-                href="/team-dashboard"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                Team Dashboard
-              </Link>
-            )}
           </nav>
           <div className="flex items-center gap-4">
             {user ? (

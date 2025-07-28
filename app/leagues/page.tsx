@@ -35,20 +35,14 @@ export default function LeaguesPage() {
             <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Home
             </Link>
-            <Link
-              href="/teams"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              My Teams
+            <Link href="/leagues" className="text-sm font-medium transition-colors hover:text-primary">
+              Standings
             </Link>
-            <Link
-              href="/players"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
+            <Link href="/players" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Players
             </Link>
-            <Link href="/leagues" className="text-sm font-medium transition-colors hover:text-primary">
-              League
+            <Link href="/team-dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Team Dashboard
             </Link>
             <Link
               href="/draft"

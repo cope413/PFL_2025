@@ -22,19 +22,16 @@ export default function PlayersPage() {
               Home
             </Link>
             <Link
-              href="/teams"
+              href="/leagues"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              My Teams
+              Standings
             </Link>
             <Link href="/players" className="text-sm font-medium transition-colors hover:text-primary">
               Players
             </Link>
-            <Link
-              href="/leagues"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Leagues
+            <Link href="/team-dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Team Dashboard
             </Link>
             <Link
               href="/draft"

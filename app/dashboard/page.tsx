@@ -127,14 +127,11 @@ export default function DashboardPage() {
             <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Home
             </Link>
-            <Link href="/dashboard" className="text-sm font-medium transition-colors hover:text-primary">
-              Dashboard
-            </Link>
             <Link
-              href="/teams"
+              href="/leagues"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              My Teams
+              Standings
             </Link>
             <Link
               href="/players"
@@ -142,11 +139,8 @@ export default function DashboardPage() {
             >
               Players
             </Link>
-            <Link
-              href="/leagues"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Leagues
+            <Link href="/team-dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Team Dashboard
             </Link>
             <Link
               href="/draft"

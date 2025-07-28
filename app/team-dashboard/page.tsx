@@ -21,6 +21,8 @@ import {
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
+import { useCurrentWeek } from "@/hooks/useCurrentWeek"
+import { useRouter } from "next/navigation"
 
 interface Player {
   id: string
@@ -50,14 +52,25 @@ const lineupSlots = [
 ]
 
 export default function TeamDashboard() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
+  const { currentWeek, loading: currentWeekLoading } = useCurrentWeek()
+  const router = useRouter()
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [userTeamName, setUserTeamName] = useState<string>("")
-  const [selectedWeek, setSelectedWeek] = useState<string>("3")
+  const [selectedWeek, setSelectedWeek] = useState<string>("")
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
+  const [hasSavedLineup, setHasSavedLineup] = useState(false)
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // Redirect to login if no user is authenticated
+      router.push('/auth')
+      return
+    }
+  }, [user, authLoading, router])
 
   useEffect(() => {
     if (user) {
@@ -68,6 +81,12 @@ export default function TeamDashboard() {
       fetchTeamRoster()
     }
   }, [user])
+
+  useEffect(() => {
+    if (!currentWeekLoading && currentWeek > 0) {
+      setSelectedWeek(currentWeek.toString())
+    }
+  }, [currentWeek, currentWeekLoading])
 
   useEffect(() => {
     if (players.length > 0 && selectedWeek && initialLoadComplete) {
@@ -164,6 +183,18 @@ export default function TeamDashboard() {
           }))
         )
         setHasUnsavedChanges(false) // Reset unsaved changes when loading
+        setHasSavedLineup(true) // Mark that we have a saved lineup
+      } else {
+        console.log('No lineup found for week:', selectedWeek)
+        // Clear all starters when no lineup is found
+        setPlayers(prevPlayers => 
+          prevPlayers.map(player => ({
+            ...player,
+            isStarter: false
+          }))
+        )
+        setHasUnsavedChanges(false)
+        setHasSavedLineup(false) // Mark that we don't have a saved lineup
       }
     } catch (err) {
       console.error('Error loading lineup:', err)
@@ -386,10 +417,15 @@ export default function TeamDashboard() {
     }
   }
 
-  const resetLineup = () => {
-    // Reset to original fetched data
-    fetchTeamRoster()
-    setHasUnsavedChanges(false)
+  const clearLineup = () => {
+    // Clear all starters and move all players to bench
+    setPlayers(prevPlayers => 
+      prevPlayers.map(player => ({
+        ...player,
+        isStarter: false
+      }))
+    )
+    setHasUnsavedChanges(true)
   }
 
   const optimizeLineup = () => {
@@ -413,16 +449,13 @@ export default function TeamDashboard() {
           </div>
           <nav className="hidden md:flex gap-6">
             <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-              Dashboard
+              Home
             </Link>
             <Link
-              href="/teams"
+              href="/leagues"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              My Teams
-            </Link>
-            <Link href="/team-dashboard" className="text-sm font-medium transition-colors hover:text-primary">
-              Team Dashboard
+              Standings
             </Link>
             <Link
               href="/players"
@@ -430,11 +463,8 @@ export default function TeamDashboard() {
             >
               Players
             </Link>
-            <Link
-              href="/leagues"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Leagues
+            <Link href="/team-dashboard" className="text-sm font-medium transition-colors hover:text-primary">
+              Team Dashboard
             </Link>
             <Link
               href="/draft"
@@ -463,13 +493,13 @@ export default function TeamDashboard() {
                 {userTeamName ? `${userTeamName} Dashboard` : "Team Dashboard"}
               </h1>
               <p className="text-muted-foreground">
-                Manage your lineup:
+                Manage your lineup: Current Week {currentWeek}
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+              <Select value={selectedWeek} onValueChange={setSelectedWeek} disabled={currentWeekLoading}>
                 <SelectTrigger className="w-[130px]">
-                  <SelectValue placeholder="Week" />
+                  <SelectValue placeholder={currentWeekLoading ? "Loading..." : "Week"} />
                 </SelectTrigger>
                 <SelectContent>
                   {Array.from({ length: 18 }, (_, i) => (
@@ -504,7 +534,23 @@ export default function TeamDashboard() {
             </Alert>
           )}
 
-          {loading ? (
+          {initialLoadComplete && !hasSavedLineup && !loading && (
+            <Alert className="mt-6 bg-red-50 border-red-200 text-red-800">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <AlertDescription>
+                No saved lineup found for Week {selectedWeek}. Create your lineup and save it to avoid starting with an empty roster.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {authLoading ? (
+            <div className="mt-6 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-muted-foreground">Checking authentication...</p>
+              </div>
+            </div>
+          ) : loading ? (
             <div className="mt-6 flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
@@ -534,9 +580,9 @@ export default function TeamDashboard() {
                             <Zap className="mr-2 h-4 w-4" />
                             Optimize
                           </Button>
-                          <Button variant="outline" size="sm" onClick={resetLineup}>
+                          <Button variant="outline" size="sm" onClick={clearLineup}>
                             <RotateCcw className="mr-2 h-4 w-4" />
-                            Reset
+                            Clear
                           </Button>
                           <Button size="sm" onClick={saveLineup} disabled={!hasUnsavedChanges}>
                             <Save className="mr-2 h-4 w-4" />

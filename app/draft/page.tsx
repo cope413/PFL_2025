@@ -18,13 +18,13 @@ export default function DraftPage() {
           </div>
           <nav className="hidden md:flex gap-6">
             <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-              Dashboard
+              Home
             </Link>
             <Link
-              href="/teams"
+              href="/leagues"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
-              My Teams
+              Standings
             </Link>
             <Link
               href="/players"
@@ -32,11 +32,8 @@ export default function DraftPage() {
             >
               Players
             </Link>
-            <Link
-              href="/leagues"
-              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-            >
-              Leagues
+            <Link href="/team-dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Team Dashboard
             </Link>
             <Link href="/draft" className="text-sm font-medium transition-colors hover:text-primary">
               Draft
@@ -80,7 +77,7 @@ export default function DraftPage() {
                   <div className="rounded-lg border p-4">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <h3 className="text-lg font-bold">Regular Season</h3>
+                        <h3 className="text-lg font-bold">Friends & Family League</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
                           <span>August 28, 2025 • 7:00 PM EST</span>
