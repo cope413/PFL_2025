@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { dbQueries, generateId } from './database';
 import { User } from './types';
+import bcrypt from 'bcryptjs';
 
 // Simple JWT-like token system (in production, use a proper JWT library)
 const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
@@ -80,8 +81,9 @@ export async function registerUser(data: RegisterData): Promise<AuthUser> {
     throw new Error('Username already exists');
   }
   
-  // In a real app, hash the password
-  const hashedPassword = data.password; // Use bcrypt in production
+  // Hash the password using bcrypt
+  const saltRounds = 10;
+  const hashedPassword = await bcrypt.hash(data.password, saltRounds);
   
   // Insert user into database
   const result = dbQueries.createUser.run(
@@ -121,9 +123,9 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthUser
       throw new Error('Invalid credentials');
     }
 
-    // In a real app, verify the password hash
-    // For now, we'll just check if passwords match (plain text)
-    if (user.password !== credentials.password) {
+    // Verify the password hash using bcrypt
+    const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+    if (!isPasswordValid) {
       console.log('Password mismatch for user:', credentials.username);
       throw new Error('Invalid credentials');
     }

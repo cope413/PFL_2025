@@ -363,7 +363,7 @@ export default function TeamDashboard() {
 
   const totalProjectedPoints = starters.reduce((sum, player) => sum + player.projectedPoints, 0)
 
-  const lineupIssues = []
+  const lineupIssues: Array<string | { text: string; bold: boolean }> = []
   if (starters.filter((p) => p.status === "out").length > 0) {
     lineupIssues.push("You have players marked as 'Out' in your starting lineup")
   }
@@ -372,6 +372,12 @@ export default function TeamDashboard() {
   }
   if (starters.filter((p) => p.status === "questionable").length > 0) {
     lineupIssues.push("You have questionable players in your starting lineup")
+  }
+  
+  // Check for players on bye during the selected week
+  const playersOnBye = starters.filter((p) => p.byeWeek && p.byeWeek === parseInt(selectedWeek))
+  if (playersOnBye.length > 0) {
+    lineupIssues.push({ text: `Lineup Contains ${playersOnBye.length} player${playersOnBye.length > 1 ? 's' : ''} on bye`, bold: true })
   }
 
   const saveLineup = async () => {
@@ -576,12 +582,16 @@ export default function TeamDashboard() {
 
               <TabsContent value="lineup" className="space-y-6">
                 {lineupIssues.length > 0 && (
-                  <Alert className="mt-6">
-                    <AlertTriangle className="h-4 w-4" />
+                  <Alert className="mt-6 bg-red-50 border-red-200 text-red-800">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
                     <AlertDescription>
                       <div className="space-y-1">
                         {lineupIssues.map((issue, index) => (
-                          <div key={index}>• {issue}</div>
+                          <div key={index}>
+                            • {typeof issue === 'string' ? issue : (
+                              <span className={issue.bold ? 'font-bold' : ''}>{issue.text}</span>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </AlertDescription>
