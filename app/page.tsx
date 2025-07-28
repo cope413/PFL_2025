@@ -170,6 +170,14 @@ export default function Home() {
                 My Teams
               </Link>
             )}
+            {user && (
+              <Link
+                href="/team-dashboard"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                Team Dashboard
+              </Link>
+            )}
           </nav>
           <div className="flex items-center gap-4">
             {user ? (
@@ -179,7 +187,7 @@ export default function Home() {
                   Settings
                 </Button>
                 <Avatar>
-                  <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.username} />
+                  <AvatarImage src="/placeholder.svg" alt={user.username} />
                   <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <Button variant="outline" size="sm" onClick={logout}>

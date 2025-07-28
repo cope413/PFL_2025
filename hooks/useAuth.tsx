@@ -6,15 +6,15 @@ import { apiService } from '@/lib/api';
 interface User {
   id: string;
   username: string;
-  email: string;
-  avatar?: string;
+  team: string;
+  team_name?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
-  register: (username: string, email: string, password: string, avatar?: string) => Promise<void>;
+  register: (username: string, password: string, teamId: string) => Promise<void>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => Promise<void>;
 }
@@ -51,9 +51,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (username: string, email: string, password: string, avatar?: string) => {
+  const register = async (username: string, password: string, teamId: string) => {
     try {
-      const result = await apiService.register({ username, email, password, avatar });
+      const result = await apiService.register({ username, password, teamId });
       setUser(result.user as User);
     } catch (error) {
       throw error;

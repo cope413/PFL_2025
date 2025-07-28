@@ -83,10 +83,9 @@ export interface Matchup {
 export interface User {
   id: string;
   username: string;
-  email: string;
-  teams: string[]; // Team IDs
-  leagues: string[]; // League IDs
-  avatar?: string;
+  password: string;
+  team: string;
+  team_name?: string;
 }
 
 export interface NewsItem {

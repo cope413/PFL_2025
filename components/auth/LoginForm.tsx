@@ -61,6 +61,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
               placeholder="Enter your username"
               required
               disabled={loading}
+              autoComplete="username"
             />
           </div>
 
@@ -74,6 +75,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
               placeholder="Enter your password"
               required
               disabled={loading}
+              autoComplete="current-password"
             />
           </div>
 

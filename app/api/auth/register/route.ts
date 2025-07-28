@@ -5,17 +5,17 @@ import { ApiResponse } from '@/lib/types';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, email, password, avatar } = body;
+    const { username, password, teamId } = body;
 
-    if (!username || !email || !password) {
+    if (!username || !password || !teamId) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
-        error: 'Missing required fields: username, email, password'
+        error: 'Missing required fields: username, password, teamId'
       }, { status: 400 });
     }
 
     // Register the user
-    const user = await registerUser({ username, email, password, avatar });
+    const user = await registerUser({ username, password, teamId });
     
     // Generate authentication token
     const token = generateToken(user);

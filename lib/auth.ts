@@ -8,8 +8,6 @@ const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 export interface AuthUser {
   id: string;
   username: string;
-  email: string;
-  avatar?: string;
 }
 
 export interface LoginCredentials {
@@ -19,9 +17,8 @@ export interface LoginCredentials {
 
 export interface RegisterData {
   username: string;
-  email: string;
   password: string;
-  avatar?: string;
+  teamId: string;
 }
 
 // Simple token generation (use proper JWT in production)
@@ -29,7 +26,6 @@ export function generateToken(user: AuthUser): string {
   const payload = {
     id: user.id,
     username: user.username,
-    email: user.email,
     exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
   };
   
@@ -49,8 +45,7 @@ export function verifyToken(token: string): AuthUser | null {
     
     return {
       id: payload.id,
-      username: payload.username,
-      email: payload.email
+      username: payload.username
     };
   } catch {
     return null;
@@ -80,75 +75,86 @@ export function requireAuth(request: NextRequest): AuthUser {
 // User registration
 export async function registerUser(data: RegisterData): Promise<AuthUser> {
   // Check if username already exists
-  const existingUser = dbQueries.getUserByUsername?.get(data.username);
+  const existingUser = dbQueries.getUserByUsername?.get(data.username) as User | undefined;
   if (existingUser) {
     throw new Error('Username already exists');
   }
-
-  // Check if email already exists
-  const existingEmail = dbQueries.getUserByEmail?.get(data.email);
-  if (existingEmail) {
-    throw new Error('Email already exists');
-  }
-
-  const userId = generateId('u');
   
   // In a real app, hash the password
   const hashedPassword = data.password; // Use bcrypt in production
   
   // Insert user into database
-  dbQueries.createUser.run(
-    userId,
+  const result = dbQueries.createUser.run(
     data.username,
-    data.email,
-    data.avatar || null
+    hashedPassword,
+    data.teamId,
+    data.username // Use username as team_name initially
   );
+
+  // Get the auto-generated ID
+  const userId = result.lastInsertRowid?.toString() || '0';
 
   return {
     id: userId,
-    username: data.username,
-    email: data.email,
-    avatar: data.avatar
+    username: data.username
   };
 }
 
 // User login
 export async function loginUser(credentials: LoginCredentials): Promise<AuthUser> {
-  // In a real app, you'd have a separate passwords table or hash field
-  // For now, we'll just check if the user exists
-  const user = dbQueries.getUserByUsername?.get(credentials.username);
-  if (!user) {
-    throw new Error('Invalid credentials');
-  }
+  try {
+    console.log('Login attempt for username:', credentials.username);
+    
+    // Check if the query exists
+    if (!dbQueries.getUserByUsername) {
+      console.error('getUserByUsername query is not defined');
+      throw new Error('Database query not available');
+    }
+    
+    // Get user from database
+    const user = dbQueries.getUserByUsername.get(credentials.username) as User | undefined;
+    
+    console.log('User found:', user);
+    
+    if (!user) {
+      console.log('No user found with username:', credentials.username);
+      throw new Error('Invalid credentials');
+    }
 
-  // In a real app, verify the password hash
-  // For now, we'll just return the user
-  return {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    avatar: user.avatar
-  };
+    // In a real app, verify the password hash
+    // For now, we'll just check if passwords match (plain text)
+    if (user.password !== credentials.password) {
+      console.log('Password mismatch for user:', credentials.username);
+      throw new Error('Invalid credentials');
+    }
+
+    console.log('Login successful for user:', credentials.username);
+    return {
+      id: user.id,
+      username: user.username
+    };
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
+  }
 }
 
 // Get user by ID
 export async function getUserById(userId: string): Promise<AuthUser | null> {
-  const user = dbQueries.getUserById.get(userId);
+  const user = dbQueries.getUserById.get(userId) as User | undefined;
   if (!user) {
     return null;
   }
 
   return {
     id: user.id,
-    username: user.username,
-    email: user.email,
-    avatar: user.avatar
+    username: user.username
   };
 }
 
 // Update user profile
 export async function updateUser(userId: string, updates: Partial<AuthUser>): Promise<AuthUser> {
-  const existingUser = dbQueries.getUserById.get(userId);
+  const existingUser = dbQueries.getUserById.get(userId) as User | undefined;
   if (!existingUser) {
     throw new Error('User not found');
   }
@@ -156,15 +162,12 @@ export async function updateUser(userId: string, updates: Partial<AuthUser>): Pr
   // Update user in database
   dbQueries.updateUser?.run(
     updates.username || existingUser.username,
-    updates.email || existingUser.email,
-    updates.avatar || existingUser.avatar,
+    existingUser.team_name || existingUser.username,
     userId
   );
 
   return {
     id: userId,
-    username: updates.username || existingUser.username,
-    email: updates.email || existingUser.email,
-    avatar: updates.avatar || existingUser.avatar
+    username: updates.username || existingUser.username
   };
 } 

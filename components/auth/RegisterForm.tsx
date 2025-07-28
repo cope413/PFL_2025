@@ -16,10 +16,9 @@ interface RegisterFormProps {
 export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) {
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
     password: '',
     confirmPassword: '',
-    avatar: ''
+    teamId: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -52,9 +51,8 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
     try {
       await register(
         formData.username,
-        formData.email,
         formData.password,
-        formData.avatar || undefined
+        formData.teamId
       );
       onSuccess?.();
     } catch (err) {
@@ -91,22 +89,25 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
               placeholder="Choose a username"
               required
               disabled={loading}
+              autoComplete="username"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="teamId">Team ID</Label>
             <Input
-              id="email"
-              name="email"
-              type="email"
-              value={formData.email}
+              id="teamId"
+              name="teamId"
+              type="text"
+              value={formData.teamId}
               onChange={handleChange}
-              placeholder="Enter your email"
+              placeholder="A1, A2, A3, A4, B1, B2, B3, B4, C1, C2, C3, C4, D1, D2, D3, D4"
               required
               disabled={loading}
             />
           </div>
+
+
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -119,6 +120,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
               placeholder="Create a password"
               required
               disabled={loading}
+              autoComplete="new-password"
             />
           </div>
 
@@ -133,21 +135,11 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
               placeholder="Confirm your password"
               required
               disabled={loading}
+              autoComplete="new-password"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="avatar">Avatar URL (Optional)</Label>
-            <Input
-              id="avatar"
-              name="avatar"
-              type="url"
-              value={formData.avatar}
-              onChange={handleChange}
-              placeholder="https://example.com/avatar.jpg"
-              disabled={loading}
-            />
-          </div>
+
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Creating account...' : 'Create Account'}

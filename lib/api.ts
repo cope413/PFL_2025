@@ -137,7 +137,7 @@ class ApiService {
   }
 
   // Authentication API
-  async register(userData: { username: string; email: string; password: string; avatar?: string }) {
+  async register(userData: { username: string; password: string; teamId: string }) {
     const result = await this.fetchApi<{ user: any; token: string }>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData)
@@ -167,7 +167,7 @@ class ApiService {
     return this.fetchApi('/auth/me');
   }
 
-  async updateProfile(updates: { username?: string; email?: string; avatar?: string }) {
+  async updateProfile(updates: { username?: string }) {
     return this.fetchApi('/auth/me', {
       method: 'PUT',
       body: JSON.stringify(updates)
