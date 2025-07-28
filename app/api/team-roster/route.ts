@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { dbQueries } from '@/lib/database';
 import { verifyToken } from '@/lib/auth';
+import Database from 'better-sqlite3';
+import path from 'path';
 
 export async function GET(request: Request) {
   try {
@@ -36,13 +38,29 @@ export async function GET(request: Request) {
     console.log('User data:', userData);
     console.log('Looking for players with owner_ID:', userData.team);
 
-    // Get players for this owner from the Players table using the team field
-    const players = dbQueries.getPlayersByOwner.all(userData.team) as any[];
+    // Connect to the database to get bye week information
+    const dbPath = path.join(process.cwd(), 'PFL_2025.db');
+    const db = new Database(dbPath);
+
+    // Get players with bye week information by joining with NFL_Teams table
+    const playersWithBye = db.prepare(`
+      SELECT 
+        p.player_ID,
+        p.player_name,
+        p.position,
+        p.team_name,
+        p.team_id,
+        p.owner_ID,
+        COALESCE(n.bye, 0) as bye_week
+      FROM Players p
+      LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
+      WHERE p.owner_ID = ?
+    `).all(userData.team) as any[];
     
-    console.log('Found players:', players);
+    console.log('Found players with bye weeks:', playersWithBye);
     
     // Transform the data to match the expected format
-    const roster = players.map(player => ({
+    const roster = playersWithBye.map(player => ({
       id: player.player_ID.toString(),
       name: player.player_name,
       position: player.position,
@@ -51,7 +69,7 @@ export async function GET(request: Request) {
       projectedPoints: 0, // This would need to come from a separate stats table
       status: 'healthy' as const, // Default status
       isStarter: false, // Default to bench, would need to come from lineup table
-      byeWeek: 0, // Would need to come from NFL schedule
+      byeWeek: player.bye_week || 0, // Get bye week from NFL_Teams table
       recentPerformance: [0, 0], // Would need to come from stats table
       teamId: player.team_id,
       ownerId: player.owner_ID

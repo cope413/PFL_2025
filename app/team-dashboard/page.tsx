@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   ClubIcon as Football,
   Settings,
@@ -18,10 +19,18 @@ import {
   Zap,
   Clock,
   Users,
+  Trophy,
+  Calendar,
+  BarChart3,
+  Target,
+  Award,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
 import { useCurrentWeek } from "@/hooks/useCurrentWeek"
+import { useTeamWeeklyResults } from "@/hooks/useTeamWeeklyResults"
+import { useMatchupDetails } from "@/hooks/useMatchupDetails"
+import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
 import { useRouter } from "next/navigation"
 
 interface Player {
@@ -54,6 +63,10 @@ const lineupSlots = [
 export default function TeamDashboard() {
   const { user, loading: authLoading } = useAuth()
   const { currentWeek, loading: currentWeekLoading } = useCurrentWeek()
+  const { teamInfo, weeklyResults, loading: weeklyResultsLoading, error: weeklyResultsError } = useTeamWeeklyResults()
+  const [selectedWeekForDetails, setSelectedWeekForDetails] = useState<number | null>(null)
+  const { matchupDetails, loading: matchupDetailsLoading, error: matchupDetailsError, fetchMatchupDetails } = useMatchupDetails(selectedWeekForDetails || undefined)
+  const [isMatchupModalOpen, setIsMatchupModalOpen] = useState(false)
   const router = useRouter()
   const [players, setPlayers] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
@@ -222,6 +235,14 @@ export default function TeamDashboard() {
       default:
         return "bg-gray-50 text-gray-700 hover:bg-gray-50"
     }
+  }
+
+  const getPlayerCardStyle = (player: Player) => {
+    // Check if player is on bye week during current week or selected week
+    if (player.byeWeek && (player.byeWeek === currentWeek || player.byeWeek === parseInt(selectedWeek))) {
+      return "bg-red-50 border-red-200 hover:bg-red-100"
+    }
+    return "hover:bg-muted/50"
   }
 
   const getStatusText = (status: Player["status"]) => {
@@ -439,6 +460,24 @@ export default function TeamDashboard() {
     setHasUnsavedChanges(true)
   }
 
+  const getResultColor = (result: 'W' | 'L' | 'T') => {
+    switch (result) {
+      case 'W':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'L':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'T':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+    }
+  }
+
+  const handleWeekClick = (week: number) => {
+    setSelectedWeekForDetails(week)
+    setIsMatchupModalOpen(true)
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -521,28 +560,6 @@ export default function TeamDashboard() {
             </Alert>
           )}
 
-          {lineupIssues.length > 0 && (
-            <Alert className="mt-6">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription>
-                <div className="space-y-1">
-                  {lineupIssues.map((issue, index) => (
-                    <div key={index}>• {issue}</div>
-                  ))}
-                </div>
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {initialLoadComplete && !hasSavedLineup && !loading && (
-            <Alert className="mt-6 bg-red-50 border-red-200 text-red-800">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-              <AlertDescription>
-                No saved lineup found for Week {selectedWeek}. Create your lineup and save it to avoid starting with an empty roster.
-              </AlertDescription>
-            </Alert>
-          )}
-
           {authLoading ? (
             <div className="mt-6 flex items-center justify-center">
               <div className="text-center">
@@ -550,270 +567,461 @@ export default function TeamDashboard() {
                 <p className="text-muted-foreground">Checking authentication...</p>
               </div>
             </div>
-          ) : loading ? (
-            <div className="mt-6 flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading team roster...</p>
-              </div>
-            </div>
-          ) : players.length === 0 ? (
-            <div className="mt-6 flex items-center justify-center">
-              <div className="text-center">
-                <p className="text-muted-foreground">No players found on roster</p>
-                <p className="text-sm text-muted-foreground mt-2">Debug: Players array length: {players.length}</p>
-              </div>
-            </div>
           ) : (
-            <>
-              <div className="mt-6 grid gap-6 lg:grid-cols-12">
-                <div className="lg:col-span-8">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <CardTitle>Starting Lineup</CardTitle>
-                          <CardDescription>Projected Points: {totalProjectedPoints.toFixed(1)} • Week {selectedWeek}</CardDescription>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" onClick={optimizeLineup}>
-                            <Zap className="mr-2 h-4 w-4" />
-                            Optimize
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={clearLineup}>
-                            <RotateCcw className="mr-2 h-4 w-4" />
-                            Clear
-                          </Button>
-                          <Button size="sm" onClick={saveLineup} disabled={!hasUnsavedChanges}>
-                            <Save className="mr-2 h-4 w-4" />
-                            Save
-                          </Button>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {lineupSlots.map((slot) => {
-                          const playersInSlot = getStartersByPosition(slot.position)
-                          const slotsNeeded = slot.count
-                          const emptySlots = Math.max(0, slotsNeeded - playersInSlot.length)
+            <Tabs defaultValue="lineup" className="mt-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="lineup">Lineup</TabsTrigger>
+                <TabsTrigger value="results">Weekly Results</TabsTrigger>
+              </TabsList>
 
-                          return (
-                            <div key={slot.position} className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <h3 className="text-sm font-medium text-muted-foreground">
-                                  {slot.label} ({playersInSlot.length}/{slot.count})
-                                </h3>
-                              </div>
-                              <div className="space-y-2">
-                                {playersInSlot.map((player) => (
-                                  <div
-                                    key={player.id}
-                                    className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors"
-                                  >
-                                    <div className="flex items-center gap-3">
-                                      <Avatar className="h-10 w-10">
-                                        <AvatarFallback>
-                                          {player.name
-                                            .split(" ")
-                                            .map((n) => n[0])
-                                            .join("")}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <div>
-                                        <div className="font-medium">{player.name}</div>
-                                        <div className="text-sm text-muted-foreground">
-                                          {player.position} - {player.nflTeam}
-                                          {player.byeWeek && player.byeWeek > 0 && (
-                                            <span className="ml-2">
-                                              <Clock className="inline h-3 w-3 mr-1" />
-                                              Bye: {player.byeWeek}
-                                            </span>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-3">
-                                      <div className="text-right">
-                                        <div className="font-medium">{player.projectedPoints} pts</div>
-                                        <div className="text-xs text-muted-foreground">
-                                          Last: {player.recentPerformance[0]}
-                                        </div>
-                                      </div>
-                                      <Badge variant="outline" className={getStatusColor(player.status)}>
-                                        {getStatusText(player.status)}
-                                      </Badge>
-                                      <Button variant="outline" size="sm" onClick={() => togglePlayerStatus(player.id)}>
-                                        Bench
-                                      </Button>
-                                    </div>
-                                  </div>
-                                ))}
-                                {Array.from({ length: emptySlots }).map((_, index) => (
-                                  <div
-                                    key={`empty-${slot.position}-${index}`}
-                                    className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-muted-foreground"
-                                  >
-                                    <div className="text-center">
-                                      <Users className="mx-auto h-8 w-8 mb-2" />
-                                      <div className="text-sm">Empty {slot.label} slot</div>
-                                      <div className="text-xs">Click a bench player to add</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
+              <TabsContent value="lineup" className="space-y-6">
+                {lineupIssues.length > 0 && (
+                  <Alert className="mt-6">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        {lineupIssues.map((issue, index) => (
+                          <div key={index}>• {issue}</div>
+                        ))}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {initialLoadComplete && !hasSavedLineup && !loading && (
+                  <Alert className="mt-6 bg-red-50 border-red-200 text-red-800">
+                    <AlertTriangle className="h-4 w-4 text-red-600" />
+                    <AlertDescription>
+                      No saved lineup found for Week {selectedWeek}. Create your lineup and save it to avoid starting with an empty roster.
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {loading ? (
+                  <div className="mt-6 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading team roster...</p>
+                    </div>
+                  </div>
+                ) : players.length === 0 ? (
+                  <div className="mt-6 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-muted-foreground">No players found on roster</p>
+                      <p className="text-sm text-muted-foreground mt-2">Debug: Players array length: {players.length}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid gap-6 lg:grid-cols-12">
+                    <div className="lg:col-span-8">
+                      <Card>
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle>Starting Lineup</CardTitle>
+                              <CardDescription>Projected Points: {totalProjectedPoints.toFixed(1)} • Week {selectedWeek}</CardDescription>
                             </div>
-                          )
-                        })}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <div className="lg:col-span-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Bench</CardTitle>
-                      <CardDescription>Available players</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        {bench.length === 0 ? (
-                          <div className="text-center text-muted-foreground py-4">
-                            No players on bench
+                            <div className="flex items-center gap-2">
+                              <Button variant="outline" size="sm" onClick={optimizeLineup}>
+                                <Zap className="mr-2 h-4 w-4" />
+                                Optimize
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={clearLineup}>
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                Clear
+                              </Button>
+                              <Button size="sm" onClick={saveLineup} disabled={!hasUnsavedChanges}>
+                                <Save className="mr-2 h-4 w-4" />
+                                Save
+                              </Button>
+                            </div>
                           </div>
-                        ) : (
-                          bench.map((player) => (
-                            <div
-                              key={player.id}
-                              className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
-                              onClick={() => togglePlayerStatus(player.id)}
-                            >
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarFallback>
-                                    {player.name
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-medium text-sm">{player.name}</div>
-                                  <div className="text-xs text-muted-foreground">
-                                    {player.position} - {player.nflTeam}
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            {lineupSlots.map((slot) => {
+                              const playersInSlot = getStartersByPosition(slot.position)
+                              const slotsNeeded = slot.count
+                              const emptySlots = Math.max(0, slotsNeeded - playersInSlot.length)
+
+                              return (
+                                <div key={slot.position} className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="text-sm font-medium text-muted-foreground">
+                                      {slot.label} ({playersInSlot.length}/{slot.count})
+                                    </h3>
+                                  </div>
+                                  <div className="space-y-2">
+                                    {playersInSlot.map((player) => (
+                                                                        <div
+                                    key={player.id}
+                                    className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${getPlayerCardStyle(player)}`}
+                                  >
+                                        <div className="flex items-center gap-3">
+                                          <Avatar className="h-10 w-10">
+                                            <AvatarFallback>
+                                              {player.name
+                                                .split(" ")
+                                                .map((n) => n[0])
+                                                .join("")}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <div>
+                                            <div className="font-medium">{player.name}</div>
+                                            <div className="text-sm text-muted-foreground">
+                                              {player.position} - {player.nflTeam}
+                                              {player.byeWeek && player.byeWeek > 0 && (
+                                                <span className="ml-2">
+                                                  <Clock className="inline h-3 w-3 mr-1" />
+                                                  Bye: {player.byeWeek}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                          <div className="text-right">
+                                            <div className="font-medium">{player.projectedPoints} pts</div>
+                                            <div className="text-xs text-muted-foreground">
+                                              Last: {player.recentPerformance[0]}
+                                            </div>
+                                          </div>
+                                          <Badge variant="outline" className={getStatusColor(player.status)}>
+                                            {getStatusText(player.status)}
+                                          </Badge>
+                                          <Button variant="outline" size="sm" onClick={() => togglePlayerStatus(player.id)}>
+                                            Bench
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                    {Array.from({ length: emptySlots }).map((_, index) => (
+                                      <div
+                                        key={`empty-${slot.position}-${index}`}
+                                        className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-8 text-muted-foreground"
+                                      >
+                                        <div className="text-center">
+                                          <Users className="mx-auto h-8 w-8 mb-2" />
+                                          <div className="text-sm">Empty {slot.label} slot</div>
+                                          <div className="text-xs">Click a bench player to add</div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="lg:col-span-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Bench</CardTitle>
+                          <CardDescription>Available players</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {bench.length === 0 ? (
+                              <div className="text-center text-muted-foreground py-4">
+                                No players on bench
+                              </div>
+                            ) : (
+                              bench.map((player) => (
+                                <div
+                                  key={player.id}
+                                  className={`flex items-center justify-between rounded-lg border p-3 transition-colors cursor-pointer ${getPlayerCardStyle(player)}`}
+                                  onClick={() => togglePlayerStatus(player.id)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-8 w-8">
+                                      <AvatarFallback>
+                                        {player.name
+                                          .split(" ")
+                                          .map((n) => n[0])
+                                          .join("")}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className="font-medium text-sm">{player.name}</div>
+                                      <div className="text-xs text-muted-foreground">
+                                        {player.position} - {player.nflTeam}
+                                        {player.byeWeek && player.byeWeek > 0 && (
+                                          <span className="ml-2">
+                                            <Clock className="inline h-3 w-3 mr-1" />
+                                            Bye: {player.byeWeek}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm font-medium">{player.projectedPoints}</div>
+                                    <Badge variant="outline" className={`text-xs ${getStatusColor(player.status)}`}>
+                                      {getStatusText(player.status)}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="mt-6">
+                        <CardHeader>
+                          <CardTitle>Lineup Insights</CardTitle>
+                          <CardDescription>Performance analysis</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Projected Total</span>
+                              <span className="font-medium">{totalProjectedPoints.toFixed(1)} pts</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">League Average</span>
+                              <span className="font-medium">115.2 pts</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Difference</span>
+                              <span
+                                className={`font-medium ${totalProjectedPoints > 115.2 ? "text-green-600" : "text-red-600"}`}
+                              >
+                                {totalProjectedPoints > 115.2 ? "+" : ""}
+                                {(totalProjectedPoints - 115.2).toFixed(1)} pts
+                                {totalProjectedPoints > 115.2 ? (
+                                  <TrendingUp className="inline h-4 w-4 ml-1" />
+                                ) : (
+                                  <TrendingDown className="inline h-4 w-4 ml-1" />
+                                )}
+                              </span>
+                            </div>
+                            <div className="pt-2 border-t">
+                              <div className="text-xs text-muted-foreground mb-2">Position Strength</div>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs">QB</span>
+                                  <div className="h-2 w-16 rounded-full bg-muted">
+                                    <div className="h-2 rounded-full bg-green-500" style={{ width: "85%" }}></div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs">RB</span>
+                                  <div className="h-2 w-16 rounded-full bg-muted">
+                                    <div className="h-2 rounded-full bg-green-500" style={{ width: "90%" }}></div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs">WR</span>
+                                  <div className="h-2 w-16 rounded-full bg-muted">
+                                    <div className="h-2 rounded-full bg-yellow-500" style={{ width: "75%" }}></div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs">TE</span>
+                                  <div className="h-2 w-16 rounded-full bg-muted">
+                                    <div className="h-2 rounded-full bg-yellow-500" style={{ width: "70%" }}></div>
                                   </div>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <div className="text-sm font-medium">{player.projectedPoints}</div>
-                                <Badge variant="outline" className={`text-xs ${getStatusColor(player.status)}`}>
-                                  {getStatusText(player.status)}
-                                </Badge>
-                              </div>
                             </div>
-                          ))
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+              </TabsContent>
 
-                  <Card className="mt-6">
-                    <CardHeader>
-                      <CardTitle>Lineup Insights</CardTitle>
-                      <CardDescription>Performance analysis</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
+              <TabsContent value="results" className="space-y-6">
+                {weeklyResultsError && (
+                  <Alert className="mt-6">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      {weeklyResultsError}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {weeklyResultsLoading ? (
+                  <div className="mt-6 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">Loading team results...</p>
+                    </div>
+                  </div>
+                ) : teamInfo && (
+                  <>
+                    {/* Team Overview Card */}
+                    <Card>
+                      <CardHeader>
                         <div className="flex items-center justify-between">
-                          <span className="text-sm">Projected Total</span>
-                          <span className="font-medium">{totalProjectedPoints.toFixed(1)} pts</span>
+                          <div>
+                            <CardTitle className="flex items-center gap-2">
+                              <Trophy className="h-5 w-5" />
+                              {teamInfo.teamName}
+                            </CardTitle>
+                            <CardDescription>
+                              Division {teamInfo.division} • Rank #{teamInfo.rank}
+                            </CardDescription>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold">
+                              {teamInfo.record.wins}-{teamInfo.record.losses}-{teamInfo.record.ties}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Record</div>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">League Average</span>
-                          <span className="font-medium">115.2 pts</span>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-green-600">{teamInfo.pointsFor.toFixed(1)}</div>
+                            <div className="text-sm text-muted-foreground">Points For</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-red-600">{teamInfo.pointsAgainst.toFixed(1)}</div>
+                            <div className="text-sm text-muted-foreground">Points Against</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-600">
+                              {(teamInfo.pointsFor - teamInfo.pointsAgainst).toFixed(1)}
+                            </div>
+                            <div className="text-sm text-muted-foreground">Point Differential</div>
+                          </div>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm">Difference</span>
-                          <span
-                            className={`font-medium ${totalProjectedPoints > 115.2 ? "text-green-600" : "text-red-600"}`}
-                          >
-                            {totalProjectedPoints > 115.2 ? "+" : ""}
-                            {(totalProjectedPoints - 115.2).toFixed(1)} pts
-                            {totalProjectedPoints > 115.2 ? (
-                              <TrendingUp className="inline h-4 w-4 ml-1" />
-                            ) : (
-                              <TrendingDown className="inline h-4 w-4 ml-1" />
-                            )}
-                          </span>
-                        </div>
-                        <div className="pt-2 border-t">
-                          <div className="text-xs text-muted-foreground mb-2">Position Strength</div>
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs">QB</span>
-                              <div className="h-2 w-16 rounded-full bg-muted">
-                                <div className="h-2 rounded-full bg-green-500" style={{ width: "85%" }}></div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Weekly Results */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <Calendar className="h-5 w-5" />
+                          Weekly Results
+                        </CardTitle>
+                        <CardDescription>
+                          Season performance and matchups
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                                                     {weeklyResults.map((result) => (
+                             <div
+                               key={result.week}
+                               className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+                               onClick={() => handleWeekClick(result.week)}
+                             >
+                              <div className="flex items-center gap-4">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold">Week {result.week}</div>
+                                  <div className="text-xs text-muted-foreground">{result.date}</div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <div className="text-sm font-medium">{teamInfo.teamName}</div>
+                                  <div className="text-lg font-bold">{result.teamScore}</div>
+                                  <div className="text-sm text-muted-foreground">vs</div>
+                                  <div className="text-lg font-bold">{result.opponentScore}</div>
+                                  <div className="text-sm font-medium">{result.opponentName}</div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Badge 
+                                  variant="outline" 
+                                  className={`${getResultColor(result.result)} font-bold`}
+                                >
+                                  {result.result}
+                                </Badge>
+                                <div className="text-right text-sm">
+                                  <div className="text-muted-foreground">Projected</div>
+                                  <div>{result.teamProjected.toFixed(1)} - {result.opponentProjected.toFixed(1)}</div>
+                                </div>
                               </div>
                             </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Performance Stats */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5" />
+                          Performance Statistics
+                        </CardTitle>
+                        <CardDescription>
+                          Season averages and trends
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs">RB</span>
-                              <div className="h-2 w-16 rounded-full bg-muted">
-                                <div className="h-2 rounded-full bg-green-500" style={{ width: "90%" }}></div>
-                              </div>
+                              <span className="text-sm">Average Score</span>
+                              <span className="font-medium">
+                                {(weeklyResults.reduce((sum, r) => sum + r.teamScore, 0) / weeklyResults.length).toFixed(1)} pts
+                              </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs">WR</span>
-                              <div className="h-2 w-16 rounded-full bg-muted">
-                                <div className="h-2 rounded-full bg-yellow-500" style={{ width: "75%" }}></div>
-                              </div>
+                              <span className="text-sm">Highest Score</span>
+                              <span className="font-medium">
+                                {Math.max(...weeklyResults.map(r => r.teamScore))} pts
+                              </span>
                             </div>
                             <div className="flex items-center justify-between">
-                              <span className="text-xs">TE</span>
-                              <div className="h-2 w-16 rounded-full bg-muted">
-                                <div className="h-2 rounded-full bg-yellow-500" style={{ width: "70%" }}></div>
-                              </div>
+                              <span className="text-sm">Lowest Score</span>
+                              <span className="font-medium">
+                                {Math.min(...weeklyResults.map(r => r.teamScore))} pts
+                              </span>
+                            </div>
+                          </div>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Wins</span>
+                              <span className="font-medium text-green-600">
+                                {weeklyResults.filter(r => r.result === 'W').length}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Losses</span>
+                              <span className="font-medium text-red-600">
+                                {weeklyResults.filter(r => r.result === 'L').length}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm">Ties</span>
+                              <span className="font-medium text-yellow-600">
+                                {weeklyResults.filter(r => r.result === 'T').length}
+                              </span>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
+                      </CardContent>
+                    </Card>
+                                     </>
+                 )}
+               </TabsContent>
+             </Tabs>
+           )}
 
-              <div className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>Common lineup management tasks</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid gap-4 md:grid-cols-3">
-                      <Button variant="outline" className="h-auto p-4 flex flex-col items-start bg-transparent">
-                        <div className="font-medium mb-1">Check Waivers</div>
-                        <div className="text-xs text-muted-foreground">Find available players to improve your roster</div>
-                      </Button>
-                      <Button variant="outline" className="h-auto p-4 flex flex-col items-start bg-transparent">
-                        <div className="font-medium mb-1">Trade Center</div>
-                        <div className="text-xs text-muted-foreground">Propose trades with other managers</div>
-                      </Button>
-                      <Button variant="outline" className="h-auto p-4 flex flex-col items-start bg-transparent">
-                        <div className="font-medium mb-1">Injury Report</div>
-                        <div className="text-xs text-muted-foreground">Stay updated on player health status</div>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-                        </>
-          )}
-        </div>
-      </main>
+           {/* Matchup Details Modal */}
+           <MatchupDetailsModal
+             isOpen={isMatchupModalOpen}
+             onClose={() => setIsMatchupModalOpen(false)}
+             matchupDetails={matchupDetails}
+             loading={matchupDetailsLoading}
+             error={matchupDetailsError}
+           />
+         </div>
+       </main>
       <footer className="border-t py-6">
         <div className="container mx-auto max-w-7xl px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
           <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} FantasyPro. All rights reserved.
+            &copy; {new Date().getFullYear()} PFL. All rights reserved.
           </p>
           <div className="flex gap-4">
             <Link href="#" className="text-sm text-muted-foreground hover:underline">
