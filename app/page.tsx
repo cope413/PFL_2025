@@ -49,6 +49,48 @@ export default function Home() {
   const router = useRouter();
   const { standings, loading: standingsLoading, error: standingsError } = useStandings();
 
+  // Function to get top teams for home page display
+  const getTopTeamsForHome = () => {
+    if (!standings || standings.length === 0) return [];
+    
+    // Group teams by division
+    const teamsByDivision = standings.reduce((acc, team) => {
+      const division = team.division;
+      if (!acc[division]) {
+        acc[division] = [];
+      }
+      acc[division].push(team);
+      return acc;
+    }, {} as Record<string, typeof standings>);
+    
+    // Get first place team from each division
+    const divisionLeaders = Object.values(teamsByDivision).map(teams => 
+      teams.sort((a, b) => {
+        // Sort by wins first, then by points for
+        if (a.wins !== b.wins) return b.wins - a.wins;
+        return b.pointsFor - a.pointsFor;
+      })[0]
+    );
+    
+    // Get all teams sorted by record (excluding division leaders)
+    const allTeamsSorted = standings
+      .filter(team => !divisionLeaders.some(leader => leader.id === team.id))
+      .sort((a, b) => {
+        // Sort by wins first, then by points for
+        if (a.wins !== b.wins) return b.wins - a.wins;
+        return b.pointsFor - a.pointsFor;
+      });
+    
+    // Combine division leaders with next 4 best teams
+    const topTeams = [...divisionLeaders, ...allTeamsSorted.slice(0, 4)];
+    
+    // Sort the final list by wins and points
+    return topTeams.sort((a, b) => {
+      if (a.wins !== b.wins) return b.wins - a.wins;
+      return b.pointsFor - a.pointsFor;
+    });
+  };
+
   // Mock data for top players (keeping this for now)
   const publicData: PublicDashboardData = {
     topPlayers: [
@@ -164,8 +206,8 @@ export default function Home() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Fantasy Football Hub</h1>
-              <p className="text-muted-foreground">Your ultimate destination for fantasy football management and analysis.</p>
+              <h1 className="text-3xl font-bold tracking-tight">Prehistoric Football League</h1>
+              <p className="text-muted-foreground">Where your dreams die like the dinosaurs, since 1997 </p>
             </div>
 
           </div>
@@ -178,7 +220,7 @@ export default function Home() {
                   <Trophy className="h-5 w-5" />
                   League Standings
                 </CardTitle>
-                <CardDescription>Current standings for Friends & Family League</CardDescription>
+                <CardDescription>Current Playoff Teams</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -208,12 +250,12 @@ export default function Home() {
                           <div className="text-center">PF</div>
                           <div className="text-center">PA</div>
                         </div>
-                        {standings.slice(0, 8).map((team) => (
+                        {getTopTeamsForHome().map((team) => (
                           <div key={team.id} className={`grid grid-cols-8 p-3 text-sm border-b last:border-0 ${team.teamName === 'The Touchdown Titans' ? "bg-muted/30" : ""}`}>
                             <div className="col-span-3 flex items-center gap-2">
                               <div className="font-medium">{team.rank}.</div>
                               <Avatar className="h-6 w-6">
-                                <AvatarFallback>{team.teamName.substring(0, 2)}</AvatarFallback>
+                                <AvatarFallback>{team.teamField}</AvatarFallback>
                               </Avatar>
                               <div className="font-medium truncate">{team.teamName}</div>
                             </div>
