@@ -24,6 +24,7 @@ import {
   BarChart3,
   Target,
   Award,
+  LogOut,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
@@ -61,7 +62,7 @@ const lineupSlots = [
 ]
 
 export default function TeamDashboard() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, logout } = useAuth()
   const { currentWeek, loading: currentWeekLoading } = useCurrentWeek()
   const { teamInfo, weeklyResults, loading: weeklyResultsLoading, error: weeklyResultsError } = useTeamWeeklyResults()
   const [selectedWeekForDetails, setSelectedWeekForDetails] = useState<number | null>(null)
@@ -519,7 +520,7 @@ export default function TeamDashboard() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent">
+            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Button>
@@ -527,6 +528,10 @@ export default function TeamDashboard() {
               <AvatarImage src="/placeholder.svg" alt="User" />
               <AvatarFallback>JD</AvatarFallback>
             </Avatar>
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </div>
       </header>

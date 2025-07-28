@@ -7,11 +7,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Settings, ClubIcon as Football, Plus, Loader2 } from "lucide-react"
+import { Settings, ClubIcon as Football, Plus, Loader2, LogOut } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 
 export default function TeamsPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
 
   // Redirect to auth page if not logged in
@@ -69,14 +69,18 @@ export default function TeamsPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent">
+            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Button>
             <Avatar>
-              <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.username || "User"} />
+              <AvatarImage src="/placeholder.svg" alt={user?.username || "User"} />
               <AvatarFallback>{user?.username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
             </Avatar>
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </div>
       </header>

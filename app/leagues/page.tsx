@@ -1,18 +1,22 @@
 "use client";
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ClubIcon as Football, Settings, Trophy, Users, Calendar, BarChart3, Loader2 } from "lucide-react"
+import { ClubIcon as Football, Settings, Trophy, Users, Calendar, BarChart3, Loader2, LogOut } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useMatchups } from "@/hooks/useMatchups"
 import { useStandings } from "@/hooks/useStandings"
+import { useAuth } from "@/hooks/useAuth"
 
 export default function LeaguesPage() {
+  const router = useRouter();
   const { matchups, loading, error } = useMatchups(undefined, 'l1'); // No week specified, will use current week
   const { standings, loading: standingsLoading, error: standingsError } = useStandings();
+  const { logout } = useAuth();
   const handleOpenPDF = () => {
     window.open('/scoring.pdf', '_blank');
   };
@@ -52,7 +56,7 @@ export default function LeaguesPage() {
             </Link>
           </nav>
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent">
+            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </Button>
@@ -60,6 +64,10 @@ export default function LeaguesPage() {
               <AvatarImage src="/placeholder.svg" alt="User" />
               <AvatarFallback>JD</AvatarFallback>
             </Avatar>
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
           </div>
         </div>
       </header>

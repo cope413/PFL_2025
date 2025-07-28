@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,6 +11,13 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   Settings,
   User,
@@ -25,6 +32,7 @@ import {
   Smartphone,
   Globe,
   Trophy,
+  CheckCircle,
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
@@ -55,6 +63,11 @@ export default function SettingsPage() {
   const [profileVisibility, setProfileVisibility] = useState("public")
   const [showEmail, setShowEmail] = useState(false)
   const [showTeamStats, setShowTeamStats] = useState(true)
+  
+  // Dialog states
+  const [showPasswordSuccessDialog, setShowPasswordSuccessDialog] = useState(false)
+  
+
 
   if (authLoading) {
     return (
@@ -108,7 +121,7 @@ export default function SettingsPage() {
     }
 
     try {
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('auth_token')
       if (!token) {
         toast({
           title: "Authentication Error",
@@ -136,10 +149,10 @@ export default function SettingsPage() {
         throw new Error(data.error || 'Failed to change password')
       }
 
-      toast({
-        title: "Password Changed",
-        description: "Your password has been updated successfully.",
-      })
+      // Show success dialog
+      setShowPasswordSuccessDialog(true)
+      
+      // Clear form fields
       setCurrentPassword("")
       setNewPassword("")
       setConfirmPassword("")
@@ -520,6 +533,26 @@ export default function SettingsPage() {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Password Change Success Dialog */}
+        <Dialog open={showPasswordSuccessDialog} onOpenChange={setShowPasswordSuccessDialog}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Password Changed Successfully
+              </DialogTitle>
+              <DialogDescription>
+                Your password has been updated successfully. You can now use your new password to log in.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end">
+              <Button onClick={() => setShowPasswordSuccessDialog(false)}>
+                Continue
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
