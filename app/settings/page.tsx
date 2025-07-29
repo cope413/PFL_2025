@@ -53,9 +53,9 @@ export default function SettingsPage() {
   
   // Preference states
   const [emailNotifications, setEmailNotifications] = useState(true)
-  const [pushNotifications, setPushNotifications] = useState(true)
-  const [weeklyRecaps, setWeeklyRecaps] = useState(true)
   const [tradeAlerts, setTradeAlerts] = useState(true)
+  const [matchupReminders, setMatchupReminders] = useState(true)
+  const [injuryAlerts, setInjuryAlerts] = useState(true)
   const [defaultView, setDefaultView] = useState("dashboard")
   const [theme, setTheme] = useState("system")
   const [timezone, setTimezone] = useState("America/New_York")
@@ -78,6 +78,36 @@ export default function SettingsPage() {
       setTeamName(user.team_name)
     }
   }, [user?.email, user?.team_name])
+
+  // Load notification preferences
+  useEffect(() => {
+    const loadNotificationPreferences = async () => {
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (!token) return
+
+        const response = await fetch('/api/notifications/preferences', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (response.ok) {
+          const preferences = await response.json()
+          setEmailNotifications(preferences.email_notifications)
+          setTradeAlerts(preferences.trade_alerts)
+          setMatchupReminders(preferences.matchup_reminders)
+          setInjuryAlerts(preferences.injury_alerts)
+        }
+      } catch (error) {
+        console.error('Failed to load notification preferences:', error)
+      }
+    }
+
+    if (user) {
+      loadNotificationPreferences()
+    }
+  }, [user])
   
 
 
@@ -226,15 +256,92 @@ export default function SettingsPage() {
 
   const handleSavePreferences = async () => {
     try {
-      // TODO: Implement API call to save preferences
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch('/api/notifications/preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          email_notifications: emailNotifications,
+          trade_alerts: tradeAlerts,
+          matchup_reminders: matchupReminders,
+          injury_alerts: injuryAlerts,
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save preferences')
+      }
+
       toast({
         title: "Preferences Saved",
-        description: "Your preferences have been updated successfully.",
+        description: "Your notification preferences have been updated successfully.",
       })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to save preferences. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to save preferences. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSendTestEmail = async () => {
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          type: 'test',
+          userId: user?.id,
+          data: {} // Empty data object for test email
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to send test email')
+      }
+
+      if (data.success === false) {
+        throw new Error(data.message || 'Failed to send test email')
+      }
+
+      toast({
+        title: "Test Email Sent",
+        description: "A test email has been sent to your email address.",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to send test email. Please try again.",
         variant: "destructive",
       })
     }
@@ -430,32 +537,6 @@ export default function SettingsPage() {
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label className="text-base">Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive push notifications on your device
-                    </p>
-                  </div>
-                  <Switch
-                    checked={pushNotifications}
-                    onCheckedChange={setPushNotifications}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label className="text-base">Weekly Recaps</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get weekly performance summaries
-                    </p>
-                  </div>
-                  <Switch
-                    checked={weeklyRecaps}
-                    onCheckedChange={setWeeklyRecaps}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
                     <Label className="text-base">Trade Alerts</Label>
                     <p className="text-sm text-muted-foreground">
                       Notify when trade offers are received
@@ -467,10 +548,46 @@ export default function SettingsPage() {
                   />
                 </div>
 
-                <Button onClick={handleSavePreferences} className="w-full md:w-auto">
-                  <Save className="mr-2 h-4 w-4" />
-                  Save Notification Settings
-                </Button>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Matchup Reminders</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get reminders before your matchups start
+                    </p>
+                  </div>
+                  <Switch
+                    checked={matchupReminders}
+                    onCheckedChange={setMatchupReminders}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="text-base">Injury Alerts</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when players on your team are injured
+                    </p>
+                  </div>
+                  <Switch
+                    checked={injuryAlerts}
+                    onCheckedChange={setInjuryAlerts}
+                  />
+                </div>
+
+                <div className="flex gap-4">
+                  <Button onClick={handleSavePreferences} className="w-full md:w-auto">
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Notification Settings
+                  </Button>
+                  <Button 
+                    onClick={handleSendTestEmail} 
+                    variant="outline" 
+                    className="w-full md:w-auto"
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Send Test Email
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -137,7 +137,7 @@ export default function Home() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between max-w-7xl">
           <div className="flex items-center gap-2">
-            <Football className="h-6 w-6" />
+            <img src="/PFL Logo.png" alt="PFL Logo" className="h-8 w-8" />
             <span className="text-xl font-bold">PFL</span>
           </div>
           <nav className="hidden md:flex gap-6">
@@ -198,8 +198,8 @@ export default function Home() {
       </header>
       <main className="flex-1">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-center">
+            <div className="text-center">
               <h1 className="text-3xl font-bold tracking-tight">Prehistoric Football League</h1>
               <p className="text-muted-foreground">Where your dreams die like the dinosaurs, since 1997 </p>
             </div>
@@ -316,15 +316,9 @@ export default function Home() {
             <Card className="mt-6">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold mb-2">Ready to join the action?</h2>
-                  <p className="text-muted-foreground mb-4">
-                    Create your account to start managing your fantasy teams and competing with friends.
-                  </p>
-                  <div className="flex justify-center gap-4">
-                    <Button size="lg" onClick={() => router.push('/auth')}>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Create Account
-                    </Button>
+                  <h2 className="text-2xl font-bold mb-2">Sign in to view your team dashboard</h2>
+                  
+                  <div className="flex justify-center">
                     <Button variant="outline" size="lg" onClick={() => router.push('/auth')}>
                       <LogIn className="mr-2 h-4 w-4" />
                       Sign In

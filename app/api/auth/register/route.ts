@@ -20,6 +20,21 @@ export async function POST(request: NextRequest) {
     // Generate authentication token
     const token = generateToken(user);
 
+    // Send welcome email if email is provided
+    if (user.email) {
+      try {
+        const { NotificationService } = await import('@/lib/email');
+        await NotificationService.sendWelcomeEmail(
+          user.email,
+          user.username,
+          user.team_name || user.username
+        );
+      } catch (error) {
+        console.error('Failed to send welcome email:', error);
+        // Don't fail registration if email fails
+      }
+    }
+
     return NextResponse.json<ApiResponse<{ user: typeof user; token: string }>>({
       success: true,
       data: { user, token },

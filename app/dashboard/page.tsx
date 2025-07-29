@@ -120,7 +120,7 @@ export default function DashboardPage() {
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between max-w-7xl">
           <div className="flex items-center gap-2">
-            <Football className="h-6 w-6" />
+            <img src="/PFL Logo.png" alt="PFL Logo" className="h-6 w-6" />
             <span className="text-xl font-bold">PFL</span>
           </div>
           <nav className="hidden md:flex gap-6">

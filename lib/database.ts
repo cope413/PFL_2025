@@ -40,6 +40,25 @@ getDatabase().pragma('foreign_keys = ON');
 export function initializeDatabase() {
   try {
     console.log('Initializing database...');
+    
+    // Create notification preferences table if it doesn't exist
+    const db = getDatabase();
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS notification_preferences (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id TEXT NOT NULL,
+        email_notifications BOOLEAN DEFAULT 1,
+        push_notifications BOOLEAN DEFAULT 1,
+        weekly_recaps BOOLEAN DEFAULT 1,
+        trade_alerts BOOLEAN DEFAULT 1,
+        matchup_reminders BOOLEAN DEFAULT 1,
+        injury_alerts BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES user(id)
+      )
+    `);
+    
     console.log('Database already exists with user table, skipping initialization');
   } catch (error) {
     console.error('Database initialization error:', error);
@@ -81,6 +100,27 @@ export const dbQueries = {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `),
   getLineup: getDatabase().prepare('SELECT * FROM Lineups WHERE owner_ID = ? AND week = ?'),
+};
+
+// Notification preferences queries (only available after table is created)
+export const getNotificationQueries = () => {
+  try {
+    return {
+      getNotificationPreferences: getDatabase().prepare('SELECT * FROM notification_preferences WHERE user_id = ?'),
+      createNotificationPreferences: getDatabase().prepare(`
+        INSERT INTO notification_preferences (user_id, email_notifications, push_notifications, weekly_recaps, trade_alerts, matchup_reminders, injury_alerts)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `),
+      updateNotificationPreferences: getDatabase().prepare(`
+        UPDATE notification_preferences 
+        SET email_notifications = ?, push_notifications = ?, weekly_recaps = ?, trade_alerts = ?, matchup_reminders = ?, injury_alerts = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ?
+      `),
+    };
+  } catch (error) {
+    console.warn('Notification preferences table not available:', error);
+    return null;
+  }
 };
 
 // Helper functions
