@@ -40,7 +40,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
       <CardHeader>
         <CardTitle>Login</CardTitle>
         <CardDescription>
-          Enter your credentials to access your fantasy football account
+          Enter your credentials to access your team dashboard
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -82,19 +82,6 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Logging in...' : 'Login'}
           </Button>
-
-          {onSwitchToRegister && (
-            <div className="text-center">
-              <Button
-                type="button"
-                variant="link"
-                onClick={onSwitchToRegister}
-                disabled={loading}
-              >
-                Don't have an account? Register
-              </Button>
-            </div>
-          )}
         </form>
       </CardContent>
     </Card>

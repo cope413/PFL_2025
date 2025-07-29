@@ -191,10 +191,6 @@ export default function Home() {
                   <LogIn className="mr-2 h-4 w-4" />
                   Login
                 </Button>
-                <Button size="sm" onClick={() => router.push('/auth')}>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Sign Up
-                </Button>
               </div>
             )}
           </div>
@@ -340,6 +336,13 @@ export default function Home() {
           )}
         </div>
       </main>
+      <footer className="border-t py-6">
+        <div className="container mx-auto max-w-7xl px-4 flex flex-col items-center justify-center">
+          <p className="text-center text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} PFL. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }

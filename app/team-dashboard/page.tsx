@@ -543,7 +543,7 @@ export default function TeamDashboard() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">
-                {userTeamName ? `${userTeamName} Dashboard` : "Team Dashboard"}
+                {userTeamName ? `${userTeamName}` : "Team Dashboard"}
               </h1>
               <p className="text-muted-foreground">
                 Manage your lineup: Current Week {currentWeek}
@@ -776,7 +776,7 @@ export default function TeamDashboard() {
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-medium">{player.projectedPoints}</div>
+                                    <div className="text-sm font-medium">{player.recentPerformance[0]}</div>
                                     <Badge variant="outline" className={`text-xs ${getStatusColor(player.status)}`}>
                                       {getStatusText(player.status)}
                                     </Badge>
@@ -1037,21 +1037,10 @@ export default function TeamDashboard() {
          </div>
        </main>
       <footer className="border-t py-6">
-        <div className="container mx-auto max-w-7xl px-4 flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-center text-sm text-muted-foreground md:text-left">
+        <div className="container mx-auto max-w-7xl px-4 flex flex-col items-center justify-center">
+          <p className="text-center text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} PFL. All rights reserved.
           </p>
-          <div className="flex gap-4">
-            <Link href="#" className="text-sm text-muted-foreground hover:underline">
-              Terms
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:underline">
-              Privacy
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:underline">
-              Contact
-            </Link>
-          </div>
         </div>
       </footer>
     </div>

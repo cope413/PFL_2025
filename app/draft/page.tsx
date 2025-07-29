@@ -16,9 +16,9 @@ export default function DraftPage() {
   const { user, logout } = useAuth();
   
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between max-w-7xl">
           <div className="flex items-center gap-2">
             <Football className="h-6 w-6" />
             <span className="text-xl font-bold">PFL</span>
@@ -55,7 +55,7 @@ export default function DraftPage() {
               Settings
             </Button>
             <Avatar>
-              <AvatarImage src="" alt="User" />
+              <AvatarImage src="" alt={user?.username} />
               <AvatarFallback>{user?.team || "U"}</AvatarFallback>
             </Avatar>
             <Button variant="outline" size="sm" onClick={logout}>
@@ -66,7 +66,7 @@ export default function DraftPage() {
         </div>
       </header>
       <main className="flex-1">
-        <div className="container py-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight">Draft Central</h1>
@@ -449,24 +449,6 @@ export default function DraftPage() {
           </div>
         </div>
       </main>
-      <footer className="border-t py-6">
-        <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
-          <p className="text-center text-sm text-muted-foreground md:text-left">
-            &copy; {new Date().getFullYear()} PFL. All rights reserved.
-          </p>
-          <div className="flex gap-4">
-            <Link href="#" className="text-sm text-muted-foreground hover:underline">
-              Terms
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:underline">
-              Privacy
-            </Link>
-            <Link href="#" className="text-sm text-muted-foreground hover:underline">
-              Contact
-            </Link>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

@@ -642,6 +642,13 @@ export default function SettingsPage() {
           </div>
         </DialogContent>
       </Dialog>
+      <footer className="border-t py-6">
+        <div className="container mx-auto max-w-7xl px-4 flex flex-col items-center justify-center">
+          <p className="text-center text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} PFL. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 } 
