@@ -9,6 +9,9 @@ const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 export interface AuthUser {
   id: string;
   username: string;
+  email?: string;
+  team?: string;
+  team_name?: string;
 }
 
 export interface LoginCredentials {
@@ -27,6 +30,8 @@ export function generateToken(user: AuthUser): string {
   const payload = {
     id: user.id,
     username: user.username,
+    team: user.team,
+    team_name: user.team_name,
     exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
   };
   
@@ -46,7 +51,9 @@ export function verifyToken(token: string): AuthUser | null {
     
     return {
       id: payload.id,
-      username: payload.username
+      username: payload.username,
+      team: payload.team,
+      team_name: payload.team_name
     };
   } catch {
     return null;
@@ -98,7 +105,9 @@ export async function registerUser(data: RegisterData): Promise<AuthUser> {
 
   return {
     id: userId,
-    username: data.username
+    username: data.username,
+    team: data.teamId,
+    team_name: data.username
   };
 }
 
@@ -133,7 +142,10 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthUser
     console.log('Login successful for user:', credentials.username);
     return {
       id: user.id,
-      username: user.username
+      username: user.username,
+      email: user.email,
+      team: user.team,
+      team_name: user.team_name
     };
   } catch (error) {
     console.error('Login error:', error);
@@ -150,7 +162,10 @@ export async function getUserById(userId: string): Promise<AuthUser | null> {
 
   return {
     id: user.id,
-    username: user.username
+    username: user.username,
+    email: user.email,
+    team: user.team,
+    team_name: user.team_name
   };
 }
 
@@ -164,12 +179,15 @@ export async function updateUser(userId: string, updates: Partial<AuthUser>): Pr
   // Update user in database
   dbQueries.updateUser?.run(
     updates.username || existingUser.username,
-    existingUser.team_name || existingUser.username,
+    updates.email || existingUser.email || null,
     userId
   );
 
   return {
     id: userId,
-    username: updates.username || existingUser.username
+    username: updates.username || existingUser.username,
+    email: updates.email || existingUser.email,
+    team: existingUser.team,
+    team_name: existingUser.team_name
   };
 } 

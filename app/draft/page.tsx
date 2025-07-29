@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth"
 
 export default function DraftPage() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   
   return (
     <div className="flex min-h-screen flex-col">
@@ -52,8 +52,8 @@ export default function DraftPage() {
               Settings
             </Button>
             <Avatar>
-              <AvatarImage src="/placeholder.svg" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage src="" alt="User" />
+              <AvatarFallback>{user?.team || "U"}</AvatarFallback>
             </Avatar>
             <Button variant="outline" size="sm" onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />

@@ -16,7 +16,7 @@ export default function LeaguesPage() {
   const router = useRouter();
   const { matchups, loading, error } = useMatchups(undefined, 'l1'); // No week specified, will use current week
   const { standings, loading: standingsLoading, error: standingsError } = useStandings();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const handleOpenPDF = () => {
     window.open('/scoring.pdf', '_blank');
   };
@@ -61,8 +61,8 @@ export default function LeaguesPage() {
               Settings
             </Button>
             <Avatar>
-              <AvatarImage src="/placeholder.svg" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage src="" alt="User" />
+              <AvatarFallback>{user?.team || "U"}</AvatarFallback>
             </Avatar>
             <Button variant="outline" size="sm" onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />

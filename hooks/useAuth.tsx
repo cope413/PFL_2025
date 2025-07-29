@@ -8,6 +8,7 @@ interface User {
   username: string;
   team: string;
   team_name?: string;
+  email?: string;
 }
 
 interface AuthContextType {

@@ -525,8 +525,8 @@ export default function TeamDashboard() {
               Settings
             </Button>
             <Avatar>
-              <AvatarImage src="/placeholder.svg" alt="User" />
-              <AvatarFallback>JD</AvatarFallback>
+              <AvatarImage src="" alt="User" />
+              <AvatarFallback>{user?.team || "U"}</AvatarFallback>
             </Avatar>
             <Button variant="outline" size="sm" onClick={logout}>
               <LogOut className="mr-2 h-4 w-4" />

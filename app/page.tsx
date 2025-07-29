@@ -174,8 +174,8 @@ export default function Home() {
                   Settings
                 </Button>
                 <Avatar>
-                  <AvatarImage src="/placeholder.svg" alt={user.username} />
-                  <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src="" alt={user.username} />
+                  <AvatarFallback>{user.team}</AvatarFallback>
                 </Avatar>
                 <Button variant="outline" size="sm" onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />

@@ -86,6 +86,7 @@ export interface User {
   password: string;
   team: string;
   team_name?: string;
+  email?: string;
 }
 
 export interface NewsItem {

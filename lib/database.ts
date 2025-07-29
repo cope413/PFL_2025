@@ -58,7 +58,7 @@ export const dbQueries = {
   `),
   updateUser: getDatabase().prepare(`
     UPDATE user 
-    SET username = ?, team_name = ?
+    SET username = ?, email = ?
     WHERE id = ?
   `),
   deleteUser: getDatabase().prepare('DELETE FROM user WHERE id = ?'),

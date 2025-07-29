@@ -167,7 +167,7 @@ class ApiService {
     return this.fetchApi('/auth/me');
   }
 
-  async updateProfile(updates: { username?: string }) {
+  async updateProfile(updates: { username?: string; email?: string }) {
     return this.fetchApi('/auth/me', {
       method: 'PUT',
       body: JSON.stringify(updates)

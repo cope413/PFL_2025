@@ -159,8 +159,8 @@ export default function DashboardPage() {
                 {user?.username}
               </span>
               <Avatar>
-                <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.username || "User"} />
-                <AvatarFallback>{user?.username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+                <AvatarImage src={user?.avatar || ""} alt={user?.username || "User"} />
+                <AvatarFallback>{user?.team || user?.username?.charAt(0) || "U"}</AvatarFallback>
               </Avatar>
               <Button
                 variant="ghost"

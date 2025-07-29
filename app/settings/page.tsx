@@ -38,13 +38,13 @@ import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, updateProfile } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   
   // Form states
   const [displayName, setDisplayName] = useState(user?.username || "")
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState(user?.email || "")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
@@ -66,6 +66,14 @@ export default function SettingsPage() {
   
   // Dialog states
   const [showPasswordSuccessDialog, setShowPasswordSuccessDialog] = useState(false)
+  const [showProfileSuccessDialog, setShowProfileSuccessDialog] = useState(false)
+
+  // Update email state when user data changes
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email)
+    }
+  }, [user?.email])
   
 
 
@@ -87,15 +95,61 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     try {
-      // TODO: Implement API call to update profile
-      toast({
-        title: "Profile Updated",
-        description: "Your profile information has been saved successfully.",
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again.",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch('/api/auth/update-profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          displayName,
+          email
+        })
       })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update profile')
+      }
+
+      // Show success dialog
+      setShowProfileSuccessDialog(true)
+      
+      // Refresh the user data to show the updated email
+      try {
+        const token = localStorage.getItem('auth_token')
+        if (token) {
+          const response = await fetch('/api/auth/me', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          if (response.ok) {
+            const userData = await response.json()
+            if (userData.data) {
+              // Update the local state to reflect the new email
+              setEmail(userData.data.email || "")
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to refresh user data:', error)
+      }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update profile. Please try again.",
         variant: "destructive",
       })
     }
@@ -231,8 +285,8 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src="/placeholder-user.jpg" alt={user.username} />
-                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                    <AvatarImage src="" alt={user.username} />
+                    <AvatarFallback>{user.team}</AvatarFallback>
                   </Avatar>
                   <div>
                     <h3 className="font-medium">{user.username}</h3>
@@ -554,6 +608,26 @@ export default function SettingsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Profile Update Success Dialog */}
+      <Dialog open={showProfileSuccessDialog} onOpenChange={setShowProfileSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              Profile Updated Successfully
+            </DialogTitle>
+            <DialogDescription>
+              Your profile information has been saved successfully.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button onClick={() => setShowProfileSuccessDialog(false)}>
+              Continue
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 
