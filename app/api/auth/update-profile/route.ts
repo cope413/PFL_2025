@@ -18,9 +18,9 @@ export async function PUT(request: NextRequest) {
     }
 
     // Parse request body
-    const { displayName, email } = await request.json()
+    const { displayName, teamName, email } = await request.json()
 
-    if (!displayName && !email) {
+    if (!displayName && !teamName && !email) {
       return NextResponse.json({ error: 'At least one field is required' }, { status: 400 })
     }
 
@@ -35,6 +35,11 @@ export async function PUT(request: NextRequest) {
     if (displayName) {
       updateQuery += 'username = ?, '
       updateParams.push(displayName)
+    }
+    
+    if (teamName) {
+      updateQuery += 'team_name = ?, '
+      updateParams.push(teamName)
     }
     
     if (email) {
@@ -56,6 +61,7 @@ export async function PUT(request: NextRequest) {
       message: 'Profile updated successfully',
       updatedFields: {
         displayName: displayName || undefined,
+        teamName: teamName || undefined,
         email: email || undefined
       }
     })

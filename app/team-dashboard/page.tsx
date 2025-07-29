@@ -512,6 +512,9 @@ export default function TeamDashboard() {
             <Link href="/team-dashboard" className="text-sm font-medium transition-colors hover:text-primary">
               Team Dashboard
             </Link>
+            <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Teams
+            </Link>
             <Link
               href="/draft"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"

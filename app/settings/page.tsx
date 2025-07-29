@@ -44,6 +44,7 @@ export default function SettingsPage() {
   
   // Form states
   const [displayName, setDisplayName] = useState(user?.username || "")
+  const [teamName, setTeamName] = useState(user?.team_name || "")
   const [email, setEmail] = useState(user?.email || "")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -68,12 +69,15 @@ export default function SettingsPage() {
   const [showPasswordSuccessDialog, setShowPasswordSuccessDialog] = useState(false)
   const [showProfileSuccessDialog, setShowProfileSuccessDialog] = useState(false)
 
-  // Update email state when user data changes
+  // Update email and team name state when user data changes
   useEffect(() => {
     if (user?.email) {
       setEmail(user.email)
     }
-  }, [user?.email])
+    if (user?.team_name) {
+      setTeamName(user.team_name)
+    }
+  }, [user?.email, user?.team_name])
   
 
 
@@ -113,6 +117,7 @@ export default function SettingsPage() {
         },
         body: JSON.stringify({
           displayName,
+          teamName,
           email
         })
       })
@@ -298,14 +303,23 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label htmlFor="displayName">Display Name</Label>
+                    <Label htmlFor="displayName">User Name</Label>
                     <Input
                       id="displayName"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
                       placeholder="Enter your display name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="teamName">Team Name</Label>
+                    <Input
+                      id="teamName"
+                      value={teamName}
+                      onChange={(e) => setTeamName(e.target.value)}
+                      placeholder="Enter your team name"
                     />
                   </div>
                   <div className="space-y-2">

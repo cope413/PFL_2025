@@ -1,73 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbQueries } from '@/lib/database';
-import { verifyToken } from '@/lib/auth';
+import { getUserFromRequest } from '@/lib/auth';
 import Database from 'better-sqlite3';
 import path from 'path';
 
-interface WeeklyResult {
-  week: number;
-  opponent: string;
-  opponentName: string;
-  teamScore: number;
-  opponentScore: number;
-  teamProjected: number;
-  opponentProjected: number;
-  result: 'W' | 'L' | 'T';
-  date: string;
-  isComplete: boolean;
-}
-
-interface TeamInfo {
-  teamId: string;
-  teamName: string;
-  record: {
-    wins: number;
-    losses: number;
-    ties: number;
-  };
-  pointsFor: number;
-  pointsAgainst: number;
-  rank: number;
-  division: string;
-}
-
 export async function GET(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No authorization token provided' 
+    // Get user from authentication token
+    const authUser = getUserFromRequest(request);
+    if (!authUser) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required'
       }, { status: 401 });
     }
 
-    const token = authHeader.substring(7);
-    const user = verifyToken(token);
-    
-    if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Invalid or expired token' 
-      }, { status: 401 });
-    }
-
-    // Get the user's full data from the database to get their team
-    const userData = dbQueries.getUserById.get(user.id) as any;
-    
-    if (!userData) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found' 
-      }, { status: 404 });
-    }
-
+    // Get team ID from query parameters (optional - if not provided, use user's team)
     const { searchParams } = new URL(request.url);
+    const teamId = searchParams.get('teamId') || authUser.team;
     const week = searchParams.get('week');
 
-    console.log('Getting weekly results for user:', userData.team, 'week:', week);
+    if (!teamId) {
+      return NextResponse.json({
+        success: false,
+        error: 'Team ID is required'
+      }, { status: 400 });
+    }
 
-    // Connect to the database
+    // Connect to database
     const dbPath = path.join(process.cwd(), 'PFL_2025.db');
     const db = new Database(dbPath);
 
@@ -85,9 +44,10 @@ export async function GET(request: NextRequest) {
       FROM Standings s
       LEFT JOIN user u ON s.Team_ID = u.team
       WHERE s.Team_ID = ?
-    `).get(userData.team) as any;
+    `).get(teamId) as any;
 
     if (!teamStanding) {
+      db.close();
       return NextResponse.json({
         success: false,
         error: 'Team not found in standings'
@@ -104,9 +64,9 @@ export async function GET(request: NextRequest) {
       ORDER BY s.Wins DESC, s.PF DESC
     `).all() as any[];
 
-    const rank = allStandings.findIndex(s => s.Team_ID === userData.team) + 1;
+    const rank = allStandings.findIndex(s => s.Team_ID === teamId) + 1;
 
-    const teamInfo: TeamInfo = {
+    const teamInfo = {
       teamId: teamStanding.teamId,
       teamName: teamStanding.teamName,
       record: {
@@ -121,7 +81,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Get weekly results (mock data for now since we don't have actual weekly scores)
-    const weeklyResults: WeeklyResult[] = [];
+    const weeklyResults = [];
     
     // Generate mock weekly results for weeks 1-18
     for (let weekNum = 1; weekNum <= 18; weekNum++) {
@@ -168,6 +128,8 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    db.close();
+
     // If specific week requested, return only that week
     if (week) {
       const weekResult = weeklyResults.find(r => r.week === parseInt(week));
@@ -196,10 +158,10 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error fetching team weekly results:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to fetch team weekly results' 
+    console.error('Get Team Weekly Results Error:', error);
+    return NextResponse.json({
+      success: false,
+      error: 'Internal server error'
     }, { status: 500 });
   }
 } 
