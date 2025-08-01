@@ -1,19 +1,16 @@
 import { createClient } from "@libsql/client";
 import { User } from "./types";
 
-// Turso configuration
-const TURSO_URL = "libsql://pfl2025-jlewin.aws-us-west-2.turso.io";
-const TURSO_AUTH_TOKEN = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NTM5OTg5MjEsImlkIjoiOTFlMzUxOWYtZjQ4NS00ZTY0LWIxOGUtMjZhZWNmZmVjYjQ1IiwicmlkIjoiMWI2OGU4ZWYtOGI2Ny00ZTcxLTkzM2EtZDQ2MTFmNjFhMTcxIn0.EyuMWIcgdb5JcnafMXu-_99OoBQPT8P4yV5VCOIIIoj5GzyTvyZHc3mToYgkEqEGuJObeF317f7DH8-5I1crDQ';
 
 export const db = createClient({
-  url: TURSO_URL,
-  authToken: TURSO_AUTH_TOKEN,
+  url: process.env.TURSO_URL as string,
+  authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
 function mapToUser(row: any): User {
   return {
     id: row.id,
-    // TODO: Get rid of password interface member
+    // TODO: Get rid of password interface member?
     password: row.password,
     username: row.username,
     email: row.email,
