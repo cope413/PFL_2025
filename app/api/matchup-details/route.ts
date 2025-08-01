@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbQueries } from '@/lib/database';
 import { verifyToken } from '@/lib/auth';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getLineup, getTeamNameMap, getUserById } from '@/lib/database';
 
 interface PlayerScore {
   playerId: string;
@@ -41,68 +39,56 @@ export async function GET(request: NextRequest) {
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No authorization token provided' 
+      return NextResponse.json({
+        success: false,
+        error: 'No authorization token provided'
       }, { status: 401 });
     }
 
     const token = authHeader.substring(7);
     const user = verifyToken(token);
-    
+
     if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Invalid or expired token' 
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid or expired token'
       }, { status: 401 });
     }
 
     // Get the user's full data from the database to get their team
-    const userData = dbQueries.getUserById.get(user.id) as any;
-    
+    const userData = await getUserById(user.id);
+
     if (!userData) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found' 
+      return NextResponse.json({
+        success: false,
+        error: 'User not found'
       }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
-    const week = searchParams.get('week');
+    const weekStr = searchParams.get('week');
 
-    if (!week) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Week parameter is required' 
+    if (!weekStr) {
+      return NextResponse.json({
+        success: false,
+        error: 'Week parameter is required'
       }, { status: 400 });
     }
 
+    const week = parseInt(weekStr);
+
     console.log('Getting matchup details for user:', userData.team, 'week:', week);
 
-    // Connect to the database
-    const dbPath = path.join(process.cwd(), 'PFL_2025.db');
-    const db = new Database(dbPath);
-
-    // Get team names from user table
-    const teamNames = db.prepare(`
-      SELECT team, COALESCE(team_name, username) as display_name 
-      FROM user 
-      ORDER BY team
-    `).all() as Array<{team: string, display_name: string}>;
-    
-    const teamNameMap = new Map<string, string>();
-    teamNames.forEach(team => {
-      teamNameMap.set(team.team, team.display_name);
-    });
+    const teamNameMap = await getTeamNameMap();
 
     // Generate mock opponent for this week
     const opponents = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'];
-    const opponent = opponents[(parseInt(week) - 1) % opponents.length];
+    const opponent = opponents[(parseInt(weekStr) - 1) % opponents.length];
     const opponentName = teamNameMap.get(opponent) || opponent;
 
     // Get user's lineup for this week
-    const userLineup = dbQueries.getLineup.get(userData.team, week) as any;
-    
+    const userLineup = await getLineup(userData.team, week);
+
     // Get opponent's lineup for this week (mock data)
     const opponentLineup = {
       QB: 'opp_qb_1',
@@ -150,19 +136,19 @@ export async function GET(request: NextRequest) {
       positions.forEach((pos, index) => {
         const playerId = lineup[pos.slot];
         if (playerId) {
-          const positionType = pos.slot === 'QB' ? 'QB' : 
-                             pos.slot === 'RB_1' ? 'RB' : 
-                             pos.slot === 'WR_1' ? 'WR' : 
-                             pos.slot === 'TE' ? 'TE' : 
-                             pos.slot === 'K' ? 'K' : 
+          const positionType = pos.slot === 'QB' ? 'QB' :
+                             pos.slot === 'RB_1' ? 'RB' :
+                             pos.slot === 'WR_1' ? 'WR' :
+                             pos.slot === 'TE' ? 'TE' :
+                             pos.slot === 'K' ? 'K' :
                              pos.slot === 'DEF' ? 'DEF' : 'FLEX';
-          
+
           const nameIndex = index % 4;
-          const playerName = isUserTeam ? 
+          const playerName = isUserTeam ?
             mockPlayerNames[positionType as keyof typeof mockPlayerNames]?.[nameIndex] || `Player ${index + 1}` :
             `Opponent ${positionType} ${index + 1}`;
-          
-          const nflTeam = isUserTeam ? 
+
+          const nflTeam = isUserTeam ?
             mockNFLTeams[positionType as keyof typeof mockNFLTeams]?.[nameIndex] || 'NFL' :
             'OPP';
 
@@ -223,7 +209,7 @@ export async function GET(request: NextRequest) {
     else if (userTotalScore === opponentTotalScore) result = 'T';
 
     const matchupDetails: MatchupDetails = {
-      week: parseInt(week),
+      week: parseInt(weekStr),
       team1: {
         teamId: userData.team,
         teamName: teamNameMap.get(userData.team) || userData.team,
@@ -239,8 +225,8 @@ export async function GET(request: NextRequest) {
         players: opponentPlayers
       },
       result,
-      date: `2024-09-${String(parseInt(week) + 20).padStart(2, '0')}`,
-      isComplete: parseInt(week) < 5 // Assume weeks 1-4 are complete
+      date: `2024-09-${String(parseInt(weekStr) + 20).padStart(2, '0')}`,
+      isComplete: parseInt(weekStr) < 5 // Assume weeks 1-4 are complete
     };
 
     return NextResponse.json({
@@ -250,9 +236,9 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching matchup details:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to fetch matchup details' 
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to fetch matchup details'
     }, { status: 500 });
   }
-} 
+}

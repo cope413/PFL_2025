@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
-import Database from 'better-sqlite3'
-import path from 'path'
 import bcrypt from 'bcryptjs'
+import { db, getUserById } from '@/lib/database'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,13 +28,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'New password must be at least 8 characters long' }, { status: 400 })
     }
 
-    // Connect to database
-    const dbPath = path.join(process.cwd(), 'PFL_2025.db')
-    const db = new Database(dbPath)
 
     // Get user's current password hash
-    const user = db.prepare('SELECT password FROM user WHERE id = ?').get(decoded.id) as { password: string } | undefined
-    
+    const user = await getUserById(decoded.id) as any
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
@@ -51,10 +46,7 @@ export async function POST(request: NextRequest) {
     const newPasswordHash = await bcrypt.hash(newPassword, saltRounds)
 
     // Update password in database
-    const updateStmt = db.prepare('UPDATE user SET password = ? WHERE id = ?')
-    updateStmt.run(newPasswordHash, decoded.id)
-
-    db.close()
+    await db.execute('UPDATE user SET password = ? WHERE id = ?', [newPasswordHash, decoded.id])
 
     return NextResponse.json({ 
       message: 'Password updated successfully' 

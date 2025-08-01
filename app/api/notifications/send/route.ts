@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { dbQueries, getNotificationQueries } from '@/lib/database';
 import { NotificationService } from '@/lib/email';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getNotificationPreferences, getUserById } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,28 +28,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields: type, userId, data' }, { status: 400 });
     }
 
-    // Connect to database
-    const dbPath = path.join(process.cwd(), 'PFL_2025.db');
-    const db = new Database(dbPath);
-
     // Get user information
-    const user = dbQueries.getUserById.get(userId) as any;
+    const user = await getUserById(userId) as any;
     if (!user) {
-      db.close();
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     // Get user's notification preferences
-    const notificationQueries = getNotificationQueries();
-    let preferences = null;
-    
-    if (notificationQueries) {
-      preferences = notificationQueries.getNotificationPreferences.get(userId) as any;
-    }
+    const preferences = await getNotificationPreferences(userId);;
 
     // Check if user has email notifications enabled
     if (preferences && !preferences.email_notifications) {
-      db.close();
       return NextResponse.json({ message: 'Email notifications disabled for this user' });
     }
 
@@ -132,8 +119,6 @@ export async function POST(request: NextRequest) {
     } catch (err) {
       error = err instanceof Error ? err.message : 'Failed to send notification';
     }
-
-    db.close();
 
     if (error) {
       return NextResponse.json({ error }, { status: 500 });

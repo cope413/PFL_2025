@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { dbQueries, generateId, parseJsonField } from '@/lib/database';
 import { ApiResponse, Team } from '@/lib/types';
+import { getTeamById } from '@/lib/mockData';
 
 export async function GET(request: Request) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
     // If teamId is provided, return specific team with roster
     if (teamId) {
-      const team = dbQueries.getTeamById.get(teamId);
+      const team = await getTeamById(teamId);
       if (!team) {
         return NextResponse.json<ApiResponse<null>>({
           success: false,
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
       }
 
       // Get team roster with player details
-      const teamPlayers = dbQueries.getTeamPlayers.all(teamId);
+      const teamPlayers = await getTeamPlayers(teamId);
       const roster = teamPlayers.map(tp => ({
         id: tp.player_id,
         name: tp.name,
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
 
     // If leagueId is provided, return teams for that league
     if (leagueId) {
-      const leagueTeams = dbQueries.getTeamsByLeague.all(leagueId);
+      const leagueTeams = await getTeamsByLeague.all(leagueId);
       const teams = leagueTeams.map(team => ({
         id: team.id,
         name: team.name,
@@ -80,7 +80,7 @@ export async function GET(request: Request) {
     }
 
     // Return all teams
-    const allTeams = dbQueries.getTeams.all();
+    const allTeams = await getTeams.all();
     const teams = allTeams.map(team => ({
       id: team.id,
       name: team.name,
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     const teamId = generateId('t');
     
     // Insert team into database
-    dbQueries.createTeam.run(
+    await createTeam(
       teamId,
       name,
       owner,
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
     // Add players to team if provided
     if (players.length > 0) {
       for (const playerId of players) {
-        dbQueries.addPlayerToTeam.run(teamId, playerId, false, null);
+        await addPlayerToTeam(teamId, playerId, false, null);
       }
     }
 
@@ -187,7 +187,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const existingTeam = dbQueries.getTeamById.get(teamId);
+    const existingTeam = await getTeamById(teamId);
     
     if (!existingTeam) {
       return NextResponse.json<ApiResponse<null>>({
@@ -197,7 +197,7 @@ export async function PUT(request: Request) {
     }
 
     // Update team in database
-    dbQueries.updateTeam.run(
+    await updateTeam(
       body.name || existingTeam.name,
       body.owner || existingTeam.owner,
       body.record?.wins ?? existingTeam.wins,
@@ -210,7 +210,7 @@ export async function PUT(request: Request) {
     );
 
     // Get updated team
-    const updatedTeam = dbQueries.getTeamById.get(teamId);
+    const updatedTeam = await getTeamById(teamId);
     const teamData: Team = {
       id: updatedTeam.id,
       name: updatedTeam.name,
@@ -255,7 +255,7 @@ export async function DELETE(request: Request) {
       }, { status: 400 });
     }
 
-    const existingTeam = dbQueries.getTeamById.get(teamId);
+    const existingTeam = await getTeamById(teamId);
     
     if (!existingTeam) {
       return NextResponse.json<ApiResponse<null>>({
@@ -265,7 +265,7 @@ export async function DELETE(request: Request) {
     }
 
     // Delete team from database (cascade will handle related records)
-    dbQueries.deleteTeam.run(teamId);
+    await deleteTeam(teamId);
 
     const deletedTeam: Team = {
       id: existingTeam.id,

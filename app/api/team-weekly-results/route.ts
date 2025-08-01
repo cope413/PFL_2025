@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { db } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,28 +25,28 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Connect to database
-    const dbPath = path.join(process.cwd(), 'PFL_2025.db');
-    const db = new Database(dbPath);
-
     // Get team information from standings
-    const teamStanding = db.prepare(`
-      SELECT 
-        s.Team_ID as teamId,
-        COALESCE(u.team_name, u.username) as teamName,
-        COALESCE(s.Wins, 0) as wins,
-        COALESCE(s.Losses, 0) as losses,
-        COALESCE(s.Ties, 0) as ties,
-        COALESCE(s.PF, 0.0) as pointsFor,
-        COALESCE(s.PA, 0.0) as pointsAgainst,
-        COALESCE(s.Division, 'A') as division
-      FROM Standings s
-      LEFT JOIN user u ON s.Team_ID = u.team
-      WHERE s.Team_ID = ?
-    `).get(teamId) as any;
+    const teamStandingResult = await db.execute({
+      sql: `
+        SELECT
+          s.Team_ID as teamId,
+          COALESCE(u.team_name, u.username) as teamName,
+          COALESCE(s.Wins, 0) as wins,
+          COALESCE(s.Losses, 0) as losses,
+          COALESCE(s.Ties, 0) as ties,
+          COALESCE(s.PF, 0.0) as pointsFor,
+          COALESCE(s.PA, 0.0) as pointsAgainst,
+          COALESCE(s.Division, 'A') as division
+        FROM Standings s
+        LEFT JOIN user u ON s.Team_ID = u.team
+        WHERE s.Team_ID = ?
+      `,
+      args: [teamId]
+    });
+
+    const teamStanding = teamStandingResult.rows[0] as any;
 
     if (!teamStanding) {
-      db.close();
       return NextResponse.json({
         success: false,
         error: 'Team not found in standings'
@@ -55,15 +54,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate rank
-    const allStandings = db.prepare(`
-      SELECT 
+    const allStandingsResult = await db.execute(`
+      SELECT
         s.Team_ID,
         COALESCE(s.Wins, 0) as wins,
         COALESCE(s.PF, 0.0) as pointsFor
       FROM Standings s
       ORDER BY s.Wins DESC, s.PF DESC
-    `).all() as any[];
+    `);
 
+    const allStandings = allStandingsResult.rows as any[];
     const rank = allStandings.findIndex(s => s.Team_ID === teamId) + 1;
 
     const teamInfo = {
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 
     // Get weekly results (mock data for now since we don't have actual weekly scores)
     const weeklyResults = [];
-    
+
     // Generate mock weekly results for weeks 1-18
     for (let weekNum = 1; weekNum <= 18; weekNum++) {
       // Skip if specific week is requested and doesn't match
@@ -93,14 +93,18 @@ export async function GET(request: NextRequest) {
       // Generate mock opponent
       const opponents = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'];
       const opponent = opponents[(weekNum - 1) % opponents.length];
-      
+
       // Get opponent name
-      const opponentData = db.prepare(`
-        SELECT COALESCE(team_name, username) as display_name 
-        FROM user 
-        WHERE team = ?
-      `).get(opponent) as any;
-      
+      const opponentDataResult = await db.execute({
+        sql: `
+          SELECT COALESCE(team_name, username) as display_name
+          FROM user
+          WHERE team = ?
+        `,
+        args: [opponent]
+      });
+
+      const opponentData = opponentDataResult.rows[0] as any;
       const opponentName = opponentData?.display_name || opponent;
 
       // Generate mock scores
@@ -127,8 +131,6 @@ export async function GET(request: NextRequest) {
         isComplete: weekNum < 5 // Assume weeks 1-4 are complete
       });
     }
-
-    db.close();
 
     // If specific week requested, return only that week
     if (week) {
@@ -164,4 +166,4 @@ export async function GET(request: NextRequest) {
       error: 'Internal server error'
     }, { status: 500 });
   }
-} 
+}
