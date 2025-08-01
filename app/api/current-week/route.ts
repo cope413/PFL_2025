@@ -4,8 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET() {
   try {
     // Check if Weeks table exists
-    const tableExists = getResults(
-      `
+    const tableExists = getResults(`
       SELECT name FROM sqlite_master
       WHERE type='table' AND name='Weeks'
     `);

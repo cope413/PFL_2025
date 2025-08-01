@@ -75,15 +75,14 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
+    console.log('Getting matchup details for user:', userData.team, 'week:', weekStr);
+
     const week = parseInt(weekStr);
-
-    console.log('Getting matchup details for user:', userData.team, 'week:', week);
-
     const teamNameMap = await getTeamNameMap();
 
     // Generate mock opponent for this week
     const opponents = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'];
-    const opponent = opponents[(parseInt(weekStr) - 1) % opponents.length];
+    const opponent = opponents[(week - 1) % opponents.length];
     const opponentName = teamNameMap.get(opponent) || opponent;
 
     // Get user's lineup for this week
@@ -209,7 +208,7 @@ export async function GET(request: NextRequest) {
     else if (userTotalScore === opponentTotalScore) result = 'T';
 
     const matchupDetails: MatchupDetails = {
-      week: parseInt(weekStr),
+      week,
       team1: {
         teamId: userData.team,
         teamName: teamNameMap.get(userData.team) || userData.team,
@@ -225,8 +224,8 @@ export async function GET(request: NextRequest) {
         players: opponentPlayers
       },
       result,
-      date: `2024-09-${String(parseInt(weekStr) + 20).padStart(2, '0')}`,
-      isComplete: parseInt(weekStr) < 5 // Assume weeks 1-4 are complete
+      date: `2024-09-${String(week + 20).padStart(2, '0')}`,
+      isComplete: week < 5 // Assume weeks 1-4 are complete
     };
 
     return NextResponse.json({
