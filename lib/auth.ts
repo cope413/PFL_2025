@@ -1,10 +1,7 @@
 import { NextRequest } from 'next/server';
-import { dbQueries, generateId } from './database';
 import { User } from './types';
 import bcrypt from 'bcryptjs';
-
-// Simple JWT-like token system (in production, use a proper JWT library)
-const SECRET_KEY = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+import { createUser, getUserById, getUserByUsername, updateUser as updateDbUser } from './database';
 
 export interface AuthUser {
   id: string;
@@ -12,6 +9,7 @@ export interface AuthUser {
   email?: string;
   team?: string;
   team_name?: string;
+  avatar?: string;
 }
 
 export interface LoginCredentials {
@@ -34,7 +32,7 @@ export function generateToken(user: AuthUser): string {
     team_name: user.team_name,
     exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
   };
-  
+
   // Simple base64 encoding (use proper JWT in production)
   return Buffer.from(JSON.stringify(payload)).toString('base64');
 }
@@ -43,12 +41,12 @@ export function generateToken(user: AuthUser): string {
 export function verifyToken(token: string): AuthUser | null {
   try {
     const payload = JSON.parse(Buffer.from(token, 'base64').toString());
-    
+
     // Check if token is expired
     if (payload.exp < Math.floor(Date.now() / 1000)) {
       return null;
     }
-    
+
     return {
       id: payload.id,
       username: payload.username,
@@ -66,7 +64,7 @@ export function getUserFromRequest(request: NextRequest): AuthUser | null {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
-  
+
   const token = authHeader.substring(7);
   return verifyToken(token);
 }
@@ -80,20 +78,23 @@ export function requireAuth(request: NextRequest): AuthUser {
   return user;
 }
 
+export function computeHash(input: string, saltRounds: number = 10): Promise<string> {
+  return bcrypt.hash(input, saltRounds);
+} 
+
 // User registration
 export async function registerUser(data: RegisterData): Promise<AuthUser> {
   // Check if username already exists
-  const existingUser = dbQueries.getUserByUsername?.get(data.username) as User | undefined;
+  const existingUser = await getUserByUsername(data.username) as User | undefined;
   if (existingUser) {
     throw new Error('Username already exists');
   }
-  
+
   // Hash the password using bcrypt
-  const saltRounds = 10;
-  const hashedPassword = await bcrypt.hash(data.password, saltRounds);
-  
+  const hashedPassword = await computeHash(data.password);
+
   // Insert user into database
-  const result = dbQueries.createUser.run(
+  const result = await createUser(
     data.username,
     hashedPassword,
     data.teamId,
@@ -115,18 +116,16 @@ export async function registerUser(data: RegisterData): Promise<AuthUser> {
 export async function loginUser(credentials: LoginCredentials): Promise<AuthUser> {
   try {
     console.log('Login attempt for username:', credentials.username);
-    
-    // Check if the query exists
-    if (!dbQueries.getUserByUsername) {
-      console.error('getUserByUsername query is not defined');
-      throw new Error('Database query not available');
-    }
-    
+
     // Get user from database
-    const user = dbQueries.getUserByUsername.get(credentials.username) as User | undefined;
-    
+    const result = await await getUserByUsername(credentials.username);
+
+    console.log('Database query result:', result);
+
+    const user = result as User | undefined;
+
     console.log('User found:', user);
-    
+
     if (!user) {
       console.log('No user found with username:', credentials.username);
       throw new Error('Invalid credentials');
@@ -153,33 +152,19 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthUser
   }
 }
 
-// Get user by ID
-export async function getUserById(userId: string): Promise<AuthUser | null> {
-  const user = dbQueries.getUserById.get(userId) as User | undefined;
-  if (!user) {
-    return null;
-  }
 
-  return {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    team: user.team,
-    team_name: user.team_name
-  };
-}
-
+// TODO: Why wrap the updateUser db function in this auth library?
 // Update user profile
 export async function updateUser(userId: string, updates: Partial<AuthUser>): Promise<AuthUser> {
-  const existingUser = dbQueries.getUserById.get(userId) as User | undefined;
+  const existingUser = await getUserById(userId) as User | undefined;
   if (!existingUser) {
     throw new Error('User not found');
   }
 
   // Update user in database
-  dbQueries.updateUser?.run(
+  await updateDbUser(
     updates.username || existingUser.username,
-    updates.email || existingUser.email || null,
+    updates.email || existingUser.email || '',
     userId
   );
 
@@ -190,4 +175,4 @@ export async function updateUser(userId: string, updates: Partial<AuthUser>): Pr
     team: existingUser.team,
     team_name: existingUser.team_name
   };
-} 
+}

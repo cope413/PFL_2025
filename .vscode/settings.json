@@ -1,0 +1,31 @@
+{
+  "typescript.preferences.openTsServerLog": "verbose",
+  "typescript.preferences.includePackageJsonAutoImports": "auto",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/.next": true,
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/.next": true,
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/.git": true
+  },
+  "debug.node.autoAttach": "on",
+  "debug.javascript.codelens.npmScripts": "all",
+  "debug.terminal.clearBeforeReusing": true,
+  "javascript.preferences.openTsServerLog": "verbose",
+  "typescript.suggest.autoImports": true,
+  "javascript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always"
+}

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
-import Database from 'better-sqlite3'
-import path from 'path'
+import { db } from '@/lib/database'
 
 export async function PUT(request: NextRequest) {
   try {
@@ -24,40 +23,33 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'At least one field is required' }, { status: 400 })
     }
 
-    // Connect to database
-    const dbPath = path.join(process.cwd(), 'PFL_2025.db')
-    const db = new Database(dbPath)
-
     // Update user profile in database
     let updateQuery = 'UPDATE user SET '
     const updateParams = []
-    
+
     if (displayName) {
       updateQuery += 'username = ?, '
       updateParams.push(displayName)
     }
-    
+
     if (teamName) {
       updateQuery += 'team_name = ?, '
       updateParams.push(teamName)
     }
-    
+
     if (email) {
       updateQuery += 'email = ?, '
       updateParams.push(email)
     }
-    
+
     // Remove trailing comma and space
     updateQuery = updateQuery.slice(0, -2)
     updateQuery += ' WHERE id = ?'
     updateParams.push(decoded.id)
 
-    const updateStmt = db.prepare(updateQuery)
-    updateStmt.run(...updateParams)
+    await db.execute(updateQuery, updateParams)
 
-    db.close()
-
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: 'Profile updated successfully',
       updatedFields: {
         displayName: displayName || undefined,
@@ -70,4 +62,4 @@ export async function PUT(request: NextRequest) {
     console.error('Profile update error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-} 
+}

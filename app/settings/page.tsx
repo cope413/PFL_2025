@@ -701,7 +701,7 @@ export default function SettingsPage() {
                   <div className="space-y-0.5">
                     <Label className="text-base">Show Team Statistics</Label>
                     <p className="text-sm text-muted-foreground">
-                      Display your team's performance stats
+                      { "Display your team's performance stats" }
                     </p>
                   </div>
                   <Switch

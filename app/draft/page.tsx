@@ -351,7 +351,7 @@ export default function DraftPage() {
                           </CardHeader>
                           <CardContent>
                             <p className="text-sm text-muted-foreground">
-                              Value-Based Drafting (VBD) is a strategy that compares a player's projected points to a
+                              Value-Based Drafting (VBD) is a strategy that compares a player&apos;s projected points to a
                               baseline at their position. This helps you identify which players offer the most value
                               relative to their draft position.
                             </p>

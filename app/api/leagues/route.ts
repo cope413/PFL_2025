@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { mockLeagues, mockTeams, mockMatchups, getTeamById } from '@/lib/mockData';
+import { mockLeagues, mockTeams, mockMatchups } from '@/lib/mockData';
 import { ApiResponse } from '@/lib/types';
 
 export async function GET(request: Request) {

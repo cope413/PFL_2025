@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { dbQueries, generateId } from '@/lib/database';
-import { ApiResponse, Player } from '@/lib/types';
+import { createPlayer, createPlayerStats, deletePlayer, generateId, getPlayerById, getPlayers, getPlayersByPosition, getPlayersByTeam, getPlayerStats, updatePlayer } from '@/lib/database';
+import { ApiResponse, Player, PlayerStats } from '@/lib/types';
 
 export async function GET(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
 
     // If playerId is provided, return specific player
     if (playerId) {
-      const player = dbQueries.getPlayerById.get(playerId);
+      const player = await getPlayerById(playerId);
       if (!player) {
         return NextResponse.json<ApiResponse<null>>({
           success: false,
@@ -19,17 +19,8 @@ export async function GET(request: Request) {
         }, { status: 404 });
       }
 
-      // Get player stats for current week (you can modify this logic)
-      const playerStats = dbQueries.getPlayerStats.get(playerId, 1, 2024) || {
-        fantasy_points: 0,
-        passing_yards: 0,
-        passing_tds: 0,
-        rushing_yards: 0,
-        rushing_tds: 0,
-        receptions: 0,
-        receiving_yards: 0,
-        receiving_tds: 0
-      };
+      // Get player stats for current week
+      const playerStats = await getPlayerStats(playerId, 1, 2024) as PlayerStats;
 
       const playerData: Player = {
         id: player.id,
@@ -57,36 +48,41 @@ export async function GET(request: Request) {
     }
 
     // Get all players from database
-    let players = dbQueries.getPlayers.all();
+    let players;
 
     // Filter by position if specified
     if (position) {
-      players = dbQueries.getPlayersByPosition.all(position);
+      players = await getPlayersByPosition(position);
     }
-
     // Filter by team if specified
-    if (team) {
-      players = dbQueries.getPlayersByTeam.all(team);
+    else if (team) {
+      players = await getPlayersByTeam(team);
+    }
+    // Get all players
+    else {
+      players = await getPlayers();
     }
 
+    // TODO: Consider if there's a way to optimize this query and avoid multiple awaitable calls (collect the stats in a single query)
+    // Esseentially is this getPlayerStats, with a filter...
     // Convert to Player objects with stats
-    const playersWithStats = players.map(player => {
-      const stats = dbQueries.getPlayerStats.get(player.id, 1, 2024) || {
+    const playersWithStats = await Promise.all(players.map(async (player: any) => {
+      const stats = await getPlayerStats(String(player.player_ID || player.id), 1, 2024) || {
         fantasy_points: 0
       };
 
       return {
-        id: player.id,
-        name: player.name,
-        position: player.position,
-        team: player.team,
-        nflTeam: player.nfl_team,
-        image: player.image,
+        id: String(player.player_ID || player.id),
+        name: String(player.name),
+        position: String(player.position) as "QB" | "RB" | "WR" | "TE" | "K" | "DEF",
+        team: String(player.team),
+        nflTeam: String(player.nfl_team),
+        image: String(player.image || ''),
         stats: {
-          fantasyPoints: stats.fantasy_points
+          fantasyPoints: Number(stats.fantasy_points || 0)
         }
       };
-    });
+    }));
 
     // Sort by fantasy points (descending)
     playersWithStats.sort((a, b) => b.stats.fantasyPoints - a.stats.fantasyPoints);
@@ -109,7 +105,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, position, team, nflTeam, stats } = body;
+    const { name, position, team, nflTeam, image, stats } = body;
 
     if (!name || !position || !team || !nflTeam) {
       return NextResponse.json<ApiResponse<null>>({
@@ -119,40 +115,41 @@ export async function POST(request: Request) {
     }
 
     const playerId = generateId('p');
-    
+
     // Insert player into database
-    dbQueries.createPlayer.run(
+    await createPlayer(
       playerId,
       name,
       position,
       team,
       nflTeam,
-      null // image
+      image || ''
     );
 
     // Add player stats if provided
     if (stats) {
-      dbQueries.createPlayerStats.run(
+      await createPlayerStats(
         playerId,
         1, // week
         2024, // season
+        stats.fantasyPoints || 0,
         stats.passingYards || 0,
         stats.passingTDs || 0,
-        stats.passingInts || 0,
         stats.rushingYards || 0,
         stats.rushingTDs || 0,
         stats.receptions || 0,
         stats.receivingYards || 0,
-        stats.receivingTDs || 0,
-        stats.fumbles || 0,
-        stats.fieldGoals || 0,
-        stats.extraPoints || 0,
-        stats.sacks || 0,
-        stats.interceptions || 0,
-        stats.fumbleRecoveries || 0,
-        stats.defensiveTDs || 0,
-        stats.pointsAllowed || 0,
-        stats.fantasyPoints || 0
+        stats.receivingTDs || 0
+        // Not received as parameters, but can be added later
+        // stats.fumbles || 0,
+        // stats.fieldGoals || 0,
+        // stats.extraPoints || 0,
+        // stats.sacks || 0,
+        // stats.interceptions || 0,
+        // stats.fumbleRecoveries || 0,
+        // stats.defensiveTDs || 0,
+        // stats.pointsAllowed || 0,
+        // stats.fantasyPoints || 0
       );
     }
 
@@ -162,6 +159,7 @@ export async function POST(request: Request) {
       position,
       team,
       nflTeam,
+      image: image || '',
       stats: stats || { fantasyPoints: 0 }
     };
 
@@ -185,7 +183,7 @@ export async function PUT(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const playerId = searchParams.get('playerId');
-    
+
     if (!playerId) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
@@ -194,8 +192,8 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const existingPlayer = dbQueries.getPlayerById.get(playerId);
-    
+    const existingPlayer = await getPlayerById(playerId);
+
     if (!existingPlayer) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
@@ -204,7 +202,7 @@ export async function PUT(request: Request) {
     }
 
     // Update player in database
-    dbQueries.updatePlayer.run(
+    await updatePlayer(
       body.name || existingPlayer.name,
       body.position || existingPlayer.position,
       body.team || existingPlayer.team,
@@ -215,32 +213,33 @@ export async function PUT(request: Request) {
 
     // Update player stats if provided
     if (body.stats) {
-      dbQueries.createPlayerStats.run(
+      await createPlayerStats(
         playerId,
         1, // week
         2024, // season
+        body.stats.fantasyPoints || 0,
         body.stats.passingYards || 0,
         body.stats.passingTDs || 0,
-        body.stats.passingInts || 0,
         body.stats.rushingYards || 0,
         body.stats.rushingTDs || 0,
         body.stats.receptions || 0,
         body.stats.receivingYards || 0,
-        body.stats.receivingTDs || 0,
-        body.stats.fumbles || 0,
-        body.stats.fieldGoals || 0,
-        body.stats.extraPoints || 0,
-        body.stats.sacks || 0,
-        body.stats.interceptions || 0,
-        body.stats.fumbleRecoveries || 0,
-        body.stats.defensiveTDs || 0,
-        body.stats.pointsAllowed || 0,
-        body.stats.fantasyPoints || 0
+        body.stats.receivingTDs || 0
+        // Not received as parameters, but can be added later
+        // body.stats.fumbles || 0,
+        // body.stats.fieldGoals || 0,
+        // body.stats.extraPoints || 0,
+        // body.stats.sacks || 0,
+        // body.stats.interceptions || 0,
+        // body.stats.fumbleRecoveries || 0,
+        // body.stats.defensiveTDs || 0,
+        // body.stats.pointsAllowed || 0,
+        // body.stats.fantasyPoints || 0
       );
     }
 
     // Get updated player
-    const updatedPlayer = dbQueries.getPlayerById.get(playerId);
+    const updatedPlayer = await getPlayerById(playerId);
     const playerData: Player = {
       id: updatedPlayer.id,
       name: updatedPlayer.name,
@@ -271,7 +270,7 @@ export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const playerId = searchParams.get('playerId');
-    
+
     if (!playerId) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
@@ -279,8 +278,8 @@ export async function DELETE(request: Request) {
       }, { status: 400 });
     }
 
-    const existingPlayer = dbQueries.getPlayerById.get(playerId);
-    
+    const existingPlayer = await getPlayerById(playerId);
+
     if (!existingPlayer) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
@@ -289,7 +288,7 @@ export async function DELETE(request: Request) {
     }
 
     // Delete player from database (cascade will handle related records)
-    dbQueries.deletePlayer.run(playerId);
+    await deletePlayer(playerId);
 
     const deletedPlayer: Player = {
       id: existingPlayer.id,
@@ -314,4 +313,4 @@ export async function DELETE(request: Request) {
       error: 'Internal server error'
     }, { status: 500 });
   }
-} 
+}

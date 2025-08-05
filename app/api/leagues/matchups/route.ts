@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getCurrentWeek, getResults, getTeamNameMap } from '@/lib/database';
 
 export interface Matchup {
   id: string;
@@ -24,68 +23,10 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
-// Function to determine current week based on date ranges
-function getCurrentWeek(db: Database.Database, requestId?: string): number {
-  try {
-    const currentDate = new Date();
-    const currentDateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-    
-    console.log(`[${requestId || 'unknown'}] Current date:`, currentDateStr);
-    
-    // First, let's see what's in the Weeks table
-    const allWeeks = db.prepare('SELECT * FROM Weeks ORDER BY week').all();
-    console.log(`[${requestId || 'unknown'}] All weeks in database:`, allWeeks);
-    
-    // Check each week individually to see which one matches
-    for (const weekRow of allWeeks) {
-      const startDate = (weekRow as any).start;
-      const endDate = (weekRow as any).end;
-      const weekNum = (weekRow as any).week;
-      
-      console.log(`[${requestId || 'unknown'}] Checking week ${weekNum}: ${startDate} to ${endDate}`);
-      console.log(`[${requestId || 'unknown'}] Current date ${currentDateStr} between ${startDate} and ${endDate}? ${currentDateStr >= startDate && currentDateStr <= endDate}`);
-      
-      if (currentDateStr >= startDate && currentDateStr <= endDate) {
-        console.log(`[${requestId || 'unknown'}] Found matching week: ${weekNum}`);
-        return weekNum;
-      }
-    }
-    
-    console.log(`[${requestId || 'unknown'}] No current week found in date ranges`);
-    
-    // If no current week found, check if we're in the offseason
-    if (allWeeks.length > 0) {
-      const firstWeek = allWeeks[0] as any;
-      const lastWeek = allWeeks[allWeeks.length - 1] as any;
-      
-      console.log(`[${requestId || 'unknown'}] First week starts: ${firstWeek.start}, Last week ends: ${lastWeek.end}`);
-      
-      // If current date is before the season starts, return week 1
-      if (currentDateStr < firstWeek.start) {
-        console.log(`[${requestId || 'unknown'}] Current date is before season starts, returning week 1`);
-        return 1;
-      }
-      
-      // If current date is after the season ends, return the last week
-      if (currentDateStr > lastWeek.end) {
-        console.log(`[${requestId || 'unknown'}] Current date is after season ends, returning last week: ${lastWeek.week}`);
-        return lastWeek.week;
-      }
-    }
-    
-    // If no weeks found in Weeks table, default to week 1
-    console.log(`[${requestId || 'unknown'}] No weeks found in Weeks table, defaulting to week 1`);
-    return 1;
-  } catch (error) {
-    console.error(`[${requestId || 'unknown'}] Error determining current week:`, error);
-    return 1; // Default fallback
-  }
-}
-
 export async function GET(request: NextRequest) {
   const requestId = Math.random().toString(36).substring(7);
   console.log(`[${requestId}] API call started`);
-  
+
   try {
     const { searchParams } = new URL(request.url);
     let week = searchParams.get('week');
@@ -93,58 +34,35 @@ export async function GET(request: NextRequest) {
 
     console.log(`[${requestId}] Request parameters - week: ${week}, leagueId: ${leagueId}`);
 
-    // Connect to the PFL_2025.db database
-    const dbPath = path.join(process.cwd(), 'PFL_2025.db');
-    const db = new Database(dbPath);
-
-    // Check what tables exist
-    const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
-    console.log(`[${requestId}] Available tables:`, tables);
-
     // If no week parameter provided, determine current week
     if (!week) {
-      const currentWeek = getCurrentWeek(db, requestId);
+      const currentWeek = getCurrentWeek();
       week = currentWeek.toString();
       console.log(`[${requestId}] No week parameter provided, using current week: ${week}`);
     }
 
     // Check if WeeklyMatchups table exists
-    const tableExists = db.prepare(`
-      SELECT name FROM sqlite_master 
+    const tableExists = await getResults(`
+      SELECT name FROM sqlite_master
       WHERE type='table' AND name='WeeklyMatchups'
-    `).get();
+    `);
 
     console.log(`[${requestId}] WeeklyMatchups table exists:`, !!tableExists);
 
     if (tableExists) {
       // Check if there's data in WeeklyMatchups table
-      const weeklyMatchupsData = db.prepare(`
-        SELECT * FROM WeeklyMatchups WHERE week = ?
-      `).all(week);
-      
+      const weeklyMatchupsData = await getResults({
+        sql: 'SELECT * FROM WeeklyMatchups WHERE week = ?',
+        args: [week]
+      });
       console.log(`[${requestId}] WeeklyMatchups data for week ${week}:`, weeklyMatchupsData);
     }
 
     if (!tableExists) {
       // If WeeklyMatchups doesn't exist, return mock data with real team names
-      
-      // Get team names from user table
-      const teamNames = db.prepare(`
-        SELECT team, COALESCE(team_name, username) as display_name 
-        FROM user 
-        ORDER BY team
-      `).all() as Array<{team: string, display_name: string}>;
-      
-      console.log(`[${requestId}] Team names from database:`, teamNames);
-      
-      // Create a map of team IDs to display names
-      const teamNameMap = new Map<string, string>();
-      teamNames.forEach(team => {
-        teamNameMap.set(team.team, team.display_name);
-      });
-      
-      console.log(`[${requestId}] Team name map:`, Object.fromEntries(teamNameMap));
-      
+
+      const teamNameMap = await getTeamNameMap();
+
       const mockMatchups: Matchup[] = [
         {
           id: 'm1',
@@ -214,52 +132,41 @@ export async function GET(request: NextRequest) {
     // If WeeklyMatchups exists, query it and transform the data
     let query = `SELECT * FROM WeeklyMatchups`;
     const params: any[] = [];
-    
+
     if (week) {
       query += ' WHERE Week = ?';
       params.push(parseInt(week));
     }
-    
+
     query += ' ORDER BY Week DESC';
 
-    const weeklyData = db.prepare(query).all(...params) as any[];
+    const weeklyData = await getResults({
+      sql: query,
+      args: params
+    });
 
     // Get team names from user table for mapping
-    const teamNames = db.prepare(`
-      SELECT team, COALESCE(team_name, username) as display_name 
-      FROM user 
-      ORDER BY team
-    `).all() as Array<{team: string, display_name: string}>;
-    
-    console.log(`[${requestId}] Team names from database:`, teamNames);
-    
-    // Create a map of team IDs to display names
-    const teamNameMap = new Map<string, string>();
-    teamNames.forEach(team => {
-      teamNameMap.set(team.team, team.display_name);
-    });
-    
-    console.log(`[${requestId}] Team name map:`, Object.fromEntries(teamNameMap));
+    const teamNameMap = await getTeamNameMap();
 
     // Transform the weekly data into individual matchups
     const matchups: Matchup[] = [];
-    
-    weeklyData.forEach((weekRow, weekIndex) => {
+
+    weeklyData.forEach((weekRow) => {
       const weekNumber = weekRow.Week;
-      
+
       // Create 8 matchups from the 16 teams (8 pairs)
       for (let i = 0; i < 8; i++) {
         const team1Index = i * 2 + 1;
         const team2Index = i * 2 + 2;
-        
+
         const team1Id = weekRow[`Team_${team1Index}`];
         const team2Id = weekRow[`Team_${team2Index}`];
-        
+
         if (team1Id && team2Id) {
           // Map team IDs to display names
           const team1Name = teamNameMap.get(team1Id) || team1Id;
           const team2Name = teamNameMap.get(team2Id) || team2Id;
-          
+
           matchups.push({
             id: `week${weekNumber}_match${i + 1}`,
             week: weekNumber,
@@ -356,10 +263,10 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching matchups:', error);
-    
+
     return NextResponse.json<ApiResponse<null>>({
       success: false,
       error: `Failed to fetch matchups: ${error instanceof Error ? error.message : 'Unknown error'}`
     }, { status: 500 });
   }
-} 
+}

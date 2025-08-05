@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Database from 'better-sqlite3';
-import path from 'path';
+import { getResults } from '@/lib/database';
 
 export interface Standing {
   id: string;
@@ -15,19 +14,9 @@ export interface Standing {
   rank: number;
 }
 
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
 
 export async function GET(request: NextRequest) {
   try {
-    // Connect to the database
-    const dbPath = path.join(process.cwd(), 'PFL_2025.db');
-    const db = new Database(dbPath);
-
     // Query standings data, joining with user table to get team names
     // Using COALESCE to convert NULL values to 0
     const standingsQuery = `
@@ -47,7 +36,7 @@ export async function GET(request: NextRequest) {
       ORDER BY s.Wins DESC, s.PF DESC
     `;
 
-    const standings = db.prepare(standingsQuery).all() as Standing[];
+    const standings = await getResults(standingsQuery) as Standing[];
 
     console.log('Standings query result:', standings);
 
@@ -59,11 +48,11 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error fetching standings:', error);
-    
+
     return NextResponse.json({
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
       message: 'Failed to fetch standings data'
     }, { status: 500 });
   }
-} 
+}

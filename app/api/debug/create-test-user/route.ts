@@ -1,25 +1,27 @@
 import { NextResponse } from 'next/server';
-import { dbQueries } from '@/lib/database';
+import { createUser } from '@/lib/database';
+import { computeHash } from '@/lib/auth';
 
 export async function POST() {
   try {
+
+    const hashedPassword = await computeHash('password123');
+    
     // Create a test user
-    const result = dbQueries.createUser.run(
-      'cope413',
-      'password123',
-      'A1',
+    const result = await createUser(
+      'jlewin5',
+      hashedPassword,
+      'A8',
       'Test Team'
     );
-    
+
     const userId = result.lastInsertRowid?.toString() || '0';
-    
+
     return NextResponse.json({
       success: true,
       data: {
         message: 'Test user created',
         userId: userId,
-        username: 'cope413',
-        password: 'password123'
       }
     });
   } catch (error) {
@@ -30,4 +32,4 @@ export async function POST() {
       data: null
     }, { status: 500 });
   }
-} 
+}

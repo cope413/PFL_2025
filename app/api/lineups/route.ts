@@ -1,35 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { dbQueries } from '@/lib/database';
 import { verifyToken } from '@/lib/auth';
+import { getLineup, getUserById, saveLineup } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No authorization token provided' 
+      return NextResponse.json({
+        success: false,
+        error: 'No authorization token provided'
       }, { status: 401 });
     }
 
     const token = authHeader.substring(7);
     const user = verifyToken(token);
-    
+
     if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Invalid or expired token' 
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid or expired token'
       }, { status: 401 });
     }
 
     // Get the user's full data from the database to get their team
-    const userData = dbQueries.getUserById.get(user.id) as any;
-    
+    const userData = await getUserById(user.id) as any;
+
     if (!userData) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found' 
+      return NextResponse.json({
+        success: false,
+        error: 'User not found'
       }, { status: 404 });
     }
 
@@ -37,9 +37,9 @@ export async function POST(request: NextRequest) {
     const { week, lineup } = body;
 
     if (!week || !lineup) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Missing required fields: week, lineup' 
+      return NextResponse.json({
+        success: false,
+        error: 'Missing required fields: week, lineup'
       }, { status: 400 });
     }
 
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // Insert or update the lineup in the database
     try {
-      dbQueries.saveLineup.run(
+      await saveLineup(
         lineupData.owner_ID,
         lineupData.week,
         lineupData.QB,
@@ -74,26 +74,26 @@ export async function POST(request: NextRequest) {
         lineupData.K,
         lineupData.DEF
       );
-      
+
       console.log('Lineup saved successfully');
-      
+
       return NextResponse.json({
         success: true,
         message: 'Lineup saved successfully'
       });
     } catch (error) {
       console.error('Error saving lineup:', error);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Failed to save lineup' 
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to save lineup'
       }, { status: 500 });
     }
 
   } catch (error) {
     console.error('Error in lineup save API:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to save lineup' 
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to save lineup'
     }, { status: 500 });
   }
 }
@@ -103,47 +103,47 @@ export async function GET(request: NextRequest) {
     // Get the authorization header
     const authHeader = request.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No authorization token provided' 
+      return NextResponse.json({
+        success: false,
+        error: 'No authorization token provided'
       }, { status: 401 });
     }
 
     const token = authHeader.substring(7);
     const user = verifyToken(token);
-    
+
     if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Invalid or expired token' 
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid or expired token'
       }, { status: 401 });
     }
 
     // Get the user's full data from the database to get their team
-    const userData = dbQueries.getUserById.get(user.id) as any;
-    
+    const userData = await getUserById(user.id) as any;
     if (!userData) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found' 
+      return NextResponse.json({
+        success: false,
+        error: 'User not found'
       }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
-    const week = searchParams.get('week');
+    
+    const week = Number.parseInt(searchParams.get('week'));
 
     if (!week) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Week parameter is required' 
+      return NextResponse.json({
+        success: false,
+        error: 'Week parameter is required'
       }, { status: 400 });
     }
 
     console.log('Getting lineup for user:', userData.team, 'week:', week);
 
     // Get the lineup from the database
-    const lineup = dbQueries.getLineup.get(userData.team, week) as any;
-    
+    const lineup = await getLineup(userData.team, week) as any;
+
     if (!lineup) {
       return NextResponse.json({
         success: true,
@@ -159,9 +159,9 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in lineup get API:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to get lineup' 
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to get lineup'
     }, { status: 500 });
   }
-} 
+}

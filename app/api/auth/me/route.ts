@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserFromRequest, getUserById } from '@/lib/auth';
+import { getUserFromRequest } from '@/lib/auth';
 import { ApiResponse } from '@/lib/types';
+import { getUserById } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
