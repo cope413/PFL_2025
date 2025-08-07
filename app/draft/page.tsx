@@ -1,20 +1,52 @@
 "use client"
 
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ClubIcon as Football, Settings, Filter, Plus, Calendar, Users, LogOut } from "lucide-react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  ClubIcon as Football,
+  Settings,
+  AlertTriangle,
+  TrendingUp,
+  TrendingDown,
+  RotateCcw,
+  Save,
+  Zap,
+  Clock,
+  Users,
+  Trophy,
+  Calendar,
+  BarChart3,
+  Target,
+  Award,
+  LogOut,
+  Menu,
+  X,
+  Plus,
+  Filter,
+} from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { useRouter } from "next/navigation"
 
 export default function DraftPage() {
-  const router = useRouter();
-  const { user, logout } = useAuth();
-  
+  const { user, loading: authLoading, logout } = useAuth()
+  const router = useRouter()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      // Redirect to login if no user is authenticated
+      router.push('/auth')
+      return
+    }
+  }, [user, authLoading, router])
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,6 +55,8 @@ export default function DraftPage() {
             <img src="/PFL Logo.png" alt="PFL Logo" className="h-6 w-6" />
             <span className="text-xl font-bold">PFL</span>
           </div>
+          
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-6">
             <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Home
@@ -49,6 +83,7 @@ export default function DraftPage() {
               Draft
             </Link>
           </nav>
+          
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
@@ -62,8 +97,82 @@ export default function DraftPage() {
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
+            
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t bg-background">
+            <nav className="container mx-auto max-w-7xl px-4 py-4 space-y-2">
+              <Link 
+                href="/" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                href="/leagues"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Standings
+              </Link>
+              <Link
+                href="/players"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Players
+              </Link>
+              <Link 
+                href="/team-dashboard" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Team Dashboard
+              </Link>
+              <Link 
+                href="/teams" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Teams
+              </Link>
+              <Link
+                href="/draft"
+                className="block py-2 text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Draft
+              </Link>
+              <div className="pt-2 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start bg-transparent" 
+                  onClick={() => {
+                    router.push('/settings')
+                    setIsMobileMenuOpen(false)
+                  }}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
       <main className="flex-1">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">

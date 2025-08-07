@@ -1,0 +1,8 @@
+tunnel: 74c02aa9-00f1-41a0-9a20-8ecc91cd1240
+credentials-file: /home/cope413/.cloudflared/74c02aa9-00f1-41a0-9a20-8ecc91cd1240.json
+
+ingress:
+  - hostname: pfl.landryfam.com  # Replace with your actual domain
+    service: http://localhost:3000
+  - service: http_status:404
+

@@ -1,0 +1,16 @@
+[Unit]
+Description=PFL 2025 Next.js Application
+After=network.target
+
+[Service]
+Type=simple
+User=cope413
+WorkingDirectory=/home/cope413/Documents/GitHub/PFL_2025
+ExecStart=/home/cope413/Documents/GitHub/PFL_2025/start-production.sh
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+

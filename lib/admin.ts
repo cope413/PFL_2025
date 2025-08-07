@@ -28,3 +28,4 @@ export function requireAdmin(request: NextRequest): AdminUser {
 export function isAdmin(user: any): boolean {
   return user && user.is_admin === true;
 }
+

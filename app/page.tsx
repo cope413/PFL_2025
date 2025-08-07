@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -28,6 +29,7 @@ import {
   LogOut,
   LogIn,
   UserPlus,
+  X,
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useStandings } from "@/hooks/useStandings"
@@ -48,6 +50,7 @@ export default function Home() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const { standings, loading: standingsLoading, error: standingsError } = useStandings();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Function to get top teams for home page display
   const getTopTeamsForHome = () => {
@@ -184,6 +187,16 @@ export default function Home() {
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </Button>
+                
+                {/* Mobile Menu Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="md:hidden"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                </Button>
               </>
             ) : (
               <div className="flex items-center gap-2">
@@ -191,10 +204,86 @@ export default function Home() {
                   <LogIn className="mr-2 h-4 w-4" />
                   Login
                 </Button>
+                
+                {/* Mobile Menu Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="md:hidden"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                >
+                  {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                </Button>
               </div>
             )}
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t bg-background">
+            <nav className="container mx-auto max-w-7xl px-4 py-4 space-y-2">
+              <Link 
+                href="/" 
+                className="block py-2 text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                href="/leagues"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Standings
+              </Link>
+              <Link
+                href="/players"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Players
+              </Link>
+              <Link 
+                href="/team-dashboard" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Team Dashboard
+              </Link>
+              <Link 
+                href="/teams" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Teams
+              </Link>
+              <Link
+                href="/draft"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Draft
+              </Link>
+              {user && (
+                <div className="pt-2 border-t">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start bg-transparent" 
+                    onClick={() => {
+                      router.push('/settings')
+                      setIsMobileMenuOpen(false)
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
       </header>
       <main className="flex-1">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">

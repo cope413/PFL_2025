@@ -23,3 +23,4 @@ export async function GET(request: NextRequest) {
     }, { status: error instanceof Error && error.message.includes('Admin privileges') ? 403 : 500 });
   }
 }
+

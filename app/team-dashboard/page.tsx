@@ -25,6 +25,8 @@ import {
   Target,
   Award,
   LogOut,
+  Menu,
+  X,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
@@ -78,6 +80,7 @@ export default function TeamDashboard() {
   const [selectedWeek, setSelectedWeek] = useState<string>("")
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const [hasSavedLineup, setHasSavedLineup] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -510,6 +513,8 @@ export default function TeamDashboard() {
             <img src="/PFL Logo.png" alt="PFL Logo" className="h-6 w-6" />
             <span className="text-xl font-bold">PFL</span>
           </div>
+          
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex gap-6">
             <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Home
@@ -539,6 +544,7 @@ export default function TeamDashboard() {
               Draft
             </Link>
           </nav>
+
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
               <Settings className="mr-2 h-4 w-4" />
@@ -552,8 +558,82 @@ export default function TeamDashboard() {
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
+            
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t bg-background">
+            <nav className="container mx-auto max-w-7xl px-4 py-4 space-y-2">
+              <Link 
+                href="/" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                href="/leagues"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Standings
+              </Link>
+              <Link
+                href="/players"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Players
+              </Link>
+              <Link 
+                href="/team-dashboard" 
+                className="block py-2 text-sm font-medium transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Team Dashboard
+              </Link>
+              <Link 
+                href="/teams" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Teams
+              </Link>
+              <Link
+                href="/draft"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Draft
+              </Link>
+              <div className="pt-2 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start bg-transparent" 
+                  onClick={() => {
+                    router.push('/settings')
+                    setIsMobileMenuOpen(false)
+                  }}
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
       <main className="flex-1">
         <div className="container mx-auto max-w-7xl px-4 py-6">

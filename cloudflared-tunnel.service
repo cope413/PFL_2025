@@ -1,0 +1,14 @@
+[Unit]
+Description=Cloudflare Tunnel for PFL 2025
+After=network.target
+
+[Service]
+Type=simple
+User=cope413
+ExecStart=/usr/bin/cloudflared tunnel --config /home/cope413/Documents/GitHub/PFL_2025/cloudflared-config.yml run
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
