@@ -476,11 +476,26 @@ export async function getTeamNameByTeamId(teamId: string) {
   });
 }
 
-export async function updateUserProfile(userId: string, username: string, email: string) {
-  return await db.execute({
-    sql: 'UPDATE user SET username = ?, email = ? WHERE id = ?',
-    args: [username, email, userId]
-  });
+export async function updateUserProfile(userId: string, username: string, email: string, teamName?: string) {
+  console.log('updateUserProfile called with:', { userId, username, email, teamName });
+  
+  if (teamName !== undefined && teamName !== null) {
+    console.log('Updating with team_name:', teamName);
+    const result = await db.execute({
+      sql: 'UPDATE user SET username = ?, email = ?, team_name = ? WHERE id = ?',
+      args: [username, email, teamName, userId]
+    });
+    console.log('Update result:', result);
+    return result;
+  } else {
+    console.log('Updating without team_name');
+    const result = await db.execute({
+      sql: 'UPDATE user SET username = ?, email = ? WHERE id = ?',
+      args: [username, email, userId]
+    });
+    console.log('Update result:', result);
+    return result;
+  }
 }
 
 export async function getTeamRoster(teamId: string) {
@@ -585,16 +600,28 @@ export async function getAllPlayersWithStats() {
   // Get all players with proper column mapping
   const players = await getResults("SELECT player_ID, player_name as name, position, team_id, team_name as nfl_team, owner_ID FROM Players ORDER BY player_name");
   
-  // Get all player stats for weeks 1-14
-  const stats = await getResults("SELECT * FROM PlayerStats WHERE week BETWEEN 1 AND 14 ORDER BY player_id, week");
+  // Get all player stats for weeks 1-14 from Points table
+  const stats = await getResults("SELECT player_ID, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12, week_13, week_14 FROM Points ORDER BY player_ID");
   
-  // Group stats by player
+  // Create a map of stats by player ID
   const statsByPlayer = new Map();
   stats.forEach(stat => {
-    if (!statsByPlayer.has(stat.player_id)) {
-      statsByPlayer.set(stat.player_id, {});
-    }
-    statsByPlayer.get(stat.player_id)[`week${stat.week}`] = stat.fantasy_points || 0;
+    statsByPlayer.set(stat.player_ID, {
+      week1: stat.week_1 || 0,
+      week2: stat.week_2 || 0,
+      week3: stat.week_3 || 0,
+      week4: stat.week_4 || 0,
+      week5: stat.week_5 || 0,
+      week6: stat.week_6 || 0,
+      week7: stat.week_7 || 0,
+      week8: stat.week_8 || 0,
+      week9: stat.week_9 || 0,
+      week10: stat.week_10 || 0,
+      week11: stat.week_11 || 0,
+      week12: stat.week_12 || 0,
+      week13: stat.week_13 || 0,
+      week14: stat.week_14 || 0,
+    });
   });
   
   // Combine players with their stats
@@ -629,35 +656,22 @@ export async function updatePlayerWithStats(
 ) {
   // Update player basic info with correct column names
   await db.execute({
-    sql: "UPDATE Players SET player_name = ?, position = ?, team_id = ?, team_name = ?, owner_ID = ? WHERE player_ID = ?",
-    args: [name, position, parseInt(team), nflTeam, ownerId, playerId]
+    sql: "UPDATE Players SET player_name = ?, position = ?, team_name = ?, owner_ID = ? WHERE player_ID = ?",
+    args: [name, position, nflTeam, ownerId, playerId]
   });
   
-  // Update weekly stats
+  // Update weekly stats in the Points table
   for (let week = 1; week <= 14; week++) {
     const weekKey = `week${week}`;
     if (weeklyStats[weekKey] !== undefined) {
       const points = weeklyStats[weekKey];
+      const pointsColumn = `week_${week}`;
       
-      // Check if stats exist for this week
-      const existingStats = await getFirstResult({
-        sql: "SELECT * FROM PlayerStats WHERE player_id = ? AND week = ? AND year = 2025",
-        args: [playerId, week]
+      // Update points for this week
+      await db.execute({
+        sql: `UPDATE Points SET ${pointsColumn} = ? WHERE player_ID = ?`,
+        args: [points, playerId]
       });
-      
-      if (existingStats) {
-        // Update existing stats
-        await db.execute({
-          sql: "UPDATE PlayerStats SET fantasy_points = ? WHERE player_id = ? AND week = ? AND year = 2025",
-          args: [points, playerId, week]
-        });
-      } else {
-        // Insert new stats
-        await db.execute({
-          sql: "INSERT INTO PlayerStats (player_id, week, year, fantasy_points) VALUES (?, ?, 2025, ?)",
-          args: [playerId, week, points]
-        });
-      }
     }
   }
 }

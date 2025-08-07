@@ -38,7 +38,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
-  const { user, loading: authLoading, updateProfile } = useAuth()
+  const { user, loading: authLoading, updateProfile: updateUserProfile } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   
@@ -76,6 +76,8 @@ export default function SettingsPage() {
     }
     if (user?.team_name) {
       setTeamName(user.team_name)
+    } else {
+      setTeamName("") // Clear if no team name
     }
   }, [user?.email, user?.team_name])
 
@@ -129,58 +131,30 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async () => {
     try {
-      const token = localStorage.getItem('auth_token')
-      if (!token) {
+      // Validate that username is not empty
+      if (!displayName || displayName.trim() === '') {
         toast({
-          title: "Authentication Error",
-          description: "Please log in again.",
+          title: "Error",
+          description: "Username cannot be empty. Please enter a valid username.",
           variant: "destructive",
         })
         return
       }
 
-      const response = await fetch('/api/auth/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          displayName,
-          teamName,
-          email
-        })
+      // Use the auth context's updateProfile function
+      await updateUserProfile({
+        username: displayName.trim(),
+        teamName,
+        email
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update profile')
-      }
 
       // Show success dialog
       setShowProfileSuccessDialog(true)
       
-      // Refresh the user data to show the updated email
-      try {
-        const token = localStorage.getItem('auth_token')
-        if (token) {
-          const response = await fetch('/api/auth/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          })
-          if (response.ok) {
-            const userData = await response.json()
-            if (userData.data) {
-              // Update the local state to reflect the new email
-              setEmail(userData.data.email || "")
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Failed to refresh user data:', error)
-      }
+      // Update local state to reflect the changes
+      setEmail(user?.email || "")
+      setTeamName(user?.team_name || "")
+      setDisplayName(user?.username || "")
     } catch (error) {
       toast({
         title: "Error",

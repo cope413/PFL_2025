@@ -26,6 +26,9 @@ export async function GET(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const adminUser = requireAdmin(request);
+    const body = await request.json();
+    console.log('Admin players PATCH request:', body);
+    
     const { 
       playerId, 
       name, 
@@ -34,9 +37,11 @@ export async function PATCH(request: NextRequest) {
       nflTeam, 
       ownerId, 
       weeklyStats 
-    } = await request.json();
+    } = body;
     
     await updatePlayerWithStats(playerId, name, position, team, nflTeam, ownerId, weeklyStats);
+    
+    console.log('Player update successful for playerId:', playerId);
     
     return NextResponse.json({
       success: true,

@@ -167,11 +167,12 @@ class ApiService {
     return this.fetchApi('/auth/me');
   }
 
-  async updateProfile(updates: { username?: string; email?: string }) {
-    return this.fetchApi('/auth/me', {
+  async updateProfile(updates: { username?: string; email?: string; teamName?: string }) {
+    const result = await this.fetchApi('/auth/update-profile', {
       method: 'PUT',
       body: JSON.stringify(updates)
     });
+    return result; // Return the updated user data directly
   }
 
   // Helper method for error handling

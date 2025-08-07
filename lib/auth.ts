@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { User } from './types';
 import bcrypt from 'bcryptjs';
-import { createUser, getUserById, getUserByUsername, updateUser as updateDbUser } from './database';
+import { createUser, getUserById, getUserByUsername, updateUserProfile as updateDbUser } from './database';
 
 export interface AuthUser {
   id: string;
@@ -160,23 +160,38 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthUser
 // TODO: Why wrap the updateUser db function in this auth library?
 // Update user profile
 export async function updateUser(userId: string, updates: Partial<AuthUser>): Promise<AuthUser> {
+  console.log('Auth updateUser called with:', { userId, updates });
+  
   const existingUser = await getUserById(userId) as User | undefined;
   if (!existingUser) {
+    console.log('User not found');
     throw new Error('User not found');
   }
 
+  console.log('Existing user:', existingUser);
+
+  // Only update fields that are provided and not empty
+  const usernameToUpdate = updates.username !== undefined ? updates.username : existingUser.username;
+  const emailToUpdate = updates.email !== undefined ? updates.email : existingUser.email || '';
+  const teamNameToUpdate = updates.team_name !== undefined ? updates.team_name : undefined;
+
+  console.log('Values to update:', { usernameToUpdate, emailToUpdate, teamNameToUpdate });
+
   // Update user in database
+  console.log('Calling updateDbUser...');
   await updateDbUser(
-    updates.username || existingUser.username,
-    updates.email || existingUser.email || '',
-    userId
+    userId,
+    usernameToUpdate,
+    emailToUpdate,
+    teamNameToUpdate
   );
+  console.log('updateDbUser completed');
 
   return {
     id: userId,
-    username: updates.username || existingUser.username,
-    email: updates.email || existingUser.email,
+    username: usernameToUpdate,
+    email: emailToUpdate,
     team: existingUser.team,
-    team_name: existingUser.team_name
+    team_name: teamNameToUpdate || existingUser.team_name
   };
 }

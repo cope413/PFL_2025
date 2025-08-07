@@ -399,7 +399,7 @@ export default function AdminDashboard() {
           playerId: editingPlayer.player_ID,
           name: playerEditForm.name,
           position: playerEditForm.position,
-          team: playerEditForm.team,
+          team: playerEditForm.nflTeam, // Use nflTeam as the team parameter
           nflTeam: playerEditForm.nflTeam,
           ownerId: playerEditForm.ownerId,
           weeklyStats: {
@@ -422,19 +422,23 @@ export default function AdminDashboard() {
       });
       
       if (response.ok) {
+        const result = await response.json();
         toast({
           title: "Success",
-          description: "Player information updated successfully",
+          description: result.message || "Player information updated successfully",
         });
         closePlayerEditDialog();
         fetchPlayers(); // Refresh the list
       } else {
-        throw new Error('Failed to update player');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('Player update error:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
     } catch (error) {
+      console.error('Player update failed:', error);
       toast({
         title: "Error",
-        description: "Failed to update player information",
+        description: error instanceof Error ? error.message : "Failed to update player information",
         variant: "destructive",
       });
     }
@@ -849,13 +853,14 @@ export default function AdminDashboard() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="player-team" className="text-right">
-                  Team
+                  PFL Team
                 </Label>
                 <Input
                   id="player-team"
                   value={playerEditForm.team}
                   onChange={(e) => setPlayerEditForm({ ...playerEditForm, team: e.target.value })}
                   className="col-span-3"
+                  placeholder="e.g., A1, B2, C3"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -867,6 +872,7 @@ export default function AdminDashboard() {
                   value={playerEditForm.nflTeam}
                   onChange={(e) => setPlayerEditForm({ ...playerEditForm, nflTeam: e.target.value })}
                   className="col-span-3"
+                  placeholder="e.g., Raiders, Patriots"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -878,6 +884,7 @@ export default function AdminDashboard() {
                   value={playerEditForm.ownerId}
                   onChange={(e) => setPlayerEditForm({ ...playerEditForm, ownerId: e.target.value })}
                   className="col-span-3"
+                  placeholder="e.g., A1, B2, C3"
                 />
               </div>
             </div>
