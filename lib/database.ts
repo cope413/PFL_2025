@@ -16,6 +16,7 @@ function mapToUser(row: any): User {
     email: row.email,
     team: row.team,
     team_name: row.team_name,
+    is_admin: row.is_admin === 1,
   };
 }
 
@@ -515,4 +516,148 @@ export async function getTeamRoster(teamId: string) {
     `,
     args: [teamId]
   });
+}
+
+// Admin-specific database functions
+export async function getAllUsers() {
+  return await getResults({
+    sql: `
+      SELECT 
+        id,
+        username,
+        email,
+        team,
+        team_name,
+        is_admin
+      FROM user
+      ORDER BY username
+    `
+  });
+}
+
+export async function updateUserAdminStatus(userId: string, isAdmin: boolean) {
+  return await db.execute({
+    sql: 'UPDATE user SET is_admin = ? WHERE id = ?',
+    args: [isAdmin ? 1 : 0, userId]
+  });
+}
+
+export async function deleteUserById(userId: string) {
+  return await db.execute({
+    sql: 'DELETE FROM user WHERE id = ?',
+    args: [userId]
+  });
+}
+
+export async function updateUserInfo(userId: string, username: string, team: string, email: string) {
+  return await db.execute({
+    sql: 'UPDATE user SET username = ?, team = ?, email = ? WHERE id = ?',
+    args: [username, team, email, userId]
+  });
+}
+
+export async function getSystemStats() {
+  const userCount = await getFirstResult({
+    sql: 'SELECT COUNT(*) as count FROM user'
+  });
+
+  const playerCount = await getFirstResult({
+    sql: 'SELECT COUNT(*) as count FROM Players'
+  });
+
+  const lineupCount = await getFirstResult({
+    sql: 'SELECT COUNT(*) as count FROM Lineups'
+  });
+
+  const adminCount = await getFirstResult({
+    sql: 'SELECT COUNT(*) as count FROM user WHERE is_admin = 1'
+  });
+
+  return {
+    userCount: userCount?.count || 0,
+    playerCount: playerCount?.count || 0,
+    lineupCount: lineupCount?.count || 0,
+    adminCount: adminCount?.count || 0
+  };
+}
+
+export async function getAllPlayersWithStats() {
+  // Get all players with proper column mapping
+  const players = await getResults("SELECT player_ID, player_name as name, position, team_id, team_name as nfl_team, owner_ID FROM Players ORDER BY player_name");
+  
+  // Get all player stats for weeks 1-14
+  const stats = await getResults("SELECT * FROM PlayerStats WHERE week BETWEEN 1 AND 14 ORDER BY player_id, week");
+  
+  // Group stats by player
+  const statsByPlayer = new Map();
+  stats.forEach(stat => {
+    if (!statsByPlayer.has(stat.player_id)) {
+      statsByPlayer.set(stat.player_id, {});
+    }
+    statsByPlayer.get(stat.player_id)[`week${stat.week}`] = stat.fantasy_points || 0;
+  });
+  
+  // Combine players with their stats
+  return players.map(player => ({
+    ...player,
+    team: player.team_id.toString(), // Map team_id to team
+    week1: statsByPlayer.get(player.player_ID)?.week1 || 0,
+    week2: statsByPlayer.get(player.player_ID)?.week2 || 0,
+    week3: statsByPlayer.get(player.player_ID)?.week3 || 0,
+    week4: statsByPlayer.get(player.player_ID)?.week4 || 0,
+    week5: statsByPlayer.get(player.player_ID)?.week5 || 0,
+    week6: statsByPlayer.get(player.player_ID)?.week6 || 0,
+    week7: statsByPlayer.get(player.player_ID)?.week7 || 0,
+    week8: statsByPlayer.get(player.player_ID)?.week8 || 0,
+    week9: statsByPlayer.get(player.player_ID)?.week9 || 0,
+    week10: statsByPlayer.get(player.player_ID)?.week10 || 0,
+    week11: statsByPlayer.get(player.player_ID)?.week11 || 0,
+    week12: statsByPlayer.get(player.player_ID)?.week12 || 0,
+    week13: statsByPlayer.get(player.player_ID)?.week13 || 0,
+    week14: statsByPlayer.get(player.player_ID)?.week14 || 0,
+  }));
+}
+
+export async function updatePlayerWithStats(
+  playerId: string,
+  name: string,
+  position: string,
+  team: string,
+  nflTeam: string,
+  ownerId: string,
+  weeklyStats: { [key: string]: number }
+) {
+  // Update player basic info with correct column names
+  await db.execute({
+    sql: "UPDATE Players SET player_name = ?, position = ?, team_id = ?, team_name = ?, owner_ID = ? WHERE player_ID = ?",
+    args: [name, position, parseInt(team), nflTeam, ownerId, playerId]
+  });
+  
+  // Update weekly stats
+  for (let week = 1; week <= 14; week++) {
+    const weekKey = `week${week}`;
+    if (weeklyStats[weekKey] !== undefined) {
+      const points = weeklyStats[weekKey];
+      
+      // Check if stats exist for this week
+      const existingStats = await getFirstResult({
+        sql: "SELECT * FROM PlayerStats WHERE player_id = ? AND week = ? AND year = 2025",
+        args: [playerId, week]
+      });
+      
+      if (existingStats) {
+        // Update existing stats
+        await db.execute({
+          sql: "UPDATE PlayerStats SET fantasy_points = ? WHERE player_id = ? AND week = ? AND year = 2025",
+          args: [points, playerId, week]
+        });
+      } else {
+        // Insert new stats
+        await db.execute({
+          sql: "INSERT INTO PlayerStats (player_id, week, year, fantasy_points) VALUES (?, ?, 2025, ?)",
+          args: [playerId, week, points]
+        });
+      }
+    }
+  }
 }

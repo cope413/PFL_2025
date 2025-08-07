@@ -87,6 +87,7 @@ export interface User {
   team: string;
   team_name?: string;
   email?: string;
+  is_admin?: boolean;
 }
 
 export interface NewsItem {

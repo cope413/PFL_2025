@@ -19,6 +19,7 @@ import {
   Menu,
   Loader2,
   LogOut,
+  Shield,
 } from "lucide-react"
 import { useDashboard } from "@/hooks/useApi"
 import { useAuth } from "@/hooks/useAuth"
@@ -151,6 +152,15 @@ export default function DashboardPage() {
             >
               Draft
             </Link>
+            {user?.is_admin && (
+              <Link
+                href="/admin"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary flex items-center gap-1"
+              >
+                <Shield className="h-4 w-4" />
+                Admin
+              </Link>
+            )}
           </nav>
           <div className="flex items-center gap-4">
             <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>

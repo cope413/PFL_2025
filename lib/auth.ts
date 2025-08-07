@@ -10,6 +10,7 @@ export interface AuthUser {
   team?: string;
   team_name?: string;
   avatar?: string;
+  is_admin?: boolean;
 }
 
 export interface LoginCredentials {
@@ -30,6 +31,7 @@ export function generateToken(user: AuthUser): string {
     username: user.username,
     team: user.team,
     team_name: user.team_name,
+    is_admin: user.is_admin,
     exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
   };
 
@@ -51,7 +53,8 @@ export function verifyToken(token: string): AuthUser | null {
       id: payload.id,
       username: payload.username,
       team: payload.team,
-      team_name: payload.team_name
+      team_name: payload.team_name,
+      is_admin: payload.is_admin
     };
   } catch {
     return null;
@@ -144,7 +147,8 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthUser
       username: user.username,
       email: user.email,
       team: user.team,
-      team_name: user.team_name
+      team_name: user.team_name,
+      is_admin: user.is_admin
     };
   } catch (error) {
     console.error('Login error:', error);
