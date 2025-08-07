@@ -1,27 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWeek, getResults, getTeamNameMap } from '@/lib/database';
-
-export interface Matchup {
-  id: string;
-  week: number;
-  team1_id: string;
-  team2_id: string;
-  team1_name: string;
-  team2_name: string;
-  team1_score: number;
-  team2_score: number;
-  team1_projected: number;
-  team2_projected: number;
-  date: string;
-  is_complete: boolean;
-}
-
-export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
+import { Matchup, ApiResponse } from '@/lib/db-types';
 
 export async function GET(request: NextRequest) {
   const requestId = Math.random().toString(36).substring(7);

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
-import { db, getUserById } from '@/lib/database'
+import { getUserById, updateUserPassword } from '@/lib/database'
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     const newPasswordHash = await bcrypt.hash(newPassword, saltRounds)
 
     // Update password in database
-    await db.execute('UPDATE user SET password = ? WHERE id = ?', [newPasswordHash, decoded.id])
+    await updateUserPassword(decoded.id, newPasswordHash)
 
     return NextResponse.json({ 
       message: 'Password updated successfully' 

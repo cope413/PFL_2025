@@ -33,6 +33,7 @@ import { useTeamWeeklyResults } from "@/hooks/useTeamWeeklyResults"
 import { useMatchupDetails } from "@/hooks/useMatchupDetails"
 import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
 import { useRouter } from "next/navigation"
+import { useToast } from "@/hooks/use-toast"
 
 interface Player {
   id: string
@@ -77,6 +78,7 @@ export default function TeamDashboard() {
   const [selectedWeek, setSelectedWeek] = useState<string>("")
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const [hasSavedLineup, setHasSavedLineup] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -436,12 +438,27 @@ export default function TeamDashboard() {
         setHasUnsavedChanges(false)
         // Show success message
         console.log('Lineup saved successfully')
+        toast({
+          title: "Lineup Saved!",
+          description: `Your Week ${selectedWeek} lineup has been saved successfully.`,
+          variant: "default",
+        })
       } else {
         setError(result.error || 'Failed to save lineup')
+        toast({
+          title: "Save Failed",
+          description: result.error || 'Failed to save lineup',
+          variant: "destructive",
+        })
       }
     } catch (err) {
       console.error('Error saving lineup:', err)
       setError(err instanceof Error ? err.message : 'Failed to save lineup')
+      toast({
+        title: "Save Failed",
+        description: err instanceof Error ? err.message : 'Failed to save lineup',
+        variant: "destructive",
+      })
     }
   }
 

@@ -2,7 +2,7 @@ import { createClient } from "@libsql/client";
 import { User } from "./types";
 
 
-export const db = createClient({
+const db = createClient({
   url: process.env.TURSO_URL as string,
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
@@ -343,7 +343,7 @@ export async function saveLineup(
 export async function getLineup(ownerId: string, week: number) {
   return await getFirstResult({
     sql: "SELECT * FROM Lineups WHERE owner_ID = ? AND week = ?",
-    args: [ownerId, week],
+    args: [ownerId, week.toString()],
   });
 }
 
@@ -421,4 +421,98 @@ export function parseJsonField(field: string | null): any {
 
 export function stringifyJsonField(data: any): string {
   return JSON.stringify(data);
+}
+
+// Database operations for handlers
+export async function updateUserPassword(userId: string, newPasswordHash: string) {
+  return await db.execute({
+    sql: 'UPDATE user SET password = ? WHERE id = ?',
+    args: [newPasswordHash, userId]
+  });
+}
+
+export async function getTeamStanding(teamId: string) {
+  return await getFirstResult({
+    sql: `
+      SELECT
+        s.Team_ID as teamId,
+        COALESCE(u.team_name, u.username) as teamName,
+        COALESCE(s.Wins, 0) as wins,
+        COALESCE(s.Losses, 0) as losses,
+        COALESCE(s.Ties, 0) as ties,
+        COALESCE(s.PF, 0.0) as pointsFor,
+        COALESCE(s.PA, 0.0) as pointsAgainst,
+        COALESCE(s.Division, 'A') as division
+      FROM Standings s
+      LEFT JOIN user u ON s.Team_ID = u.team
+      WHERE s.Team_ID = ?
+    `,
+    args: [teamId]
+  });
+}
+
+export async function getAllStandings() {
+  return await getResults({
+    sql: `
+      SELECT
+        s.Team_ID,
+        COALESCE(s.Wins, 0) as wins,
+        COALESCE(s.PF, 0.0) as pointsFor
+      FROM Standings s
+      ORDER BY s.Wins DESC, s.PF DESC
+    `
+  });
+}
+
+export async function getTeamNameByTeamId(teamId: string) {
+  return await getFirstResult({
+    sql: `
+      SELECT COALESCE(team_name, username) as display_name
+      FROM user
+      WHERE team = ?
+    `,
+    args: [teamId]
+  });
+}
+
+export async function updateUserProfile(userId: string, username: string, email: string) {
+  return await db.execute({
+    sql: 'UPDATE user SET username = ?, email = ? WHERE id = ?',
+    args: [username, email, userId]
+  });
+}
+
+export async function getTeamRoster(teamId: string) {
+  return await getResults({
+    sql: `
+      SELECT
+        p.player_ID as id,
+        p.player_name as name,
+        p.position,
+        p.team_name as nflTeam,
+        p.owner_ID as team,
+        p.team_id,
+        COALESCE(n.bye, 0) as byeWeek,
+        COALESCE(pts.week_1, 0) as week_1,
+        COALESCE(pts.week_2, 0) as week_2,
+        COALESCE(pts.week_3, 0) as week_3,
+        COALESCE(pts.week_4, 0) as week_4,
+        COALESCE(pts.week_5, 0) as week_5,
+        COALESCE(pts.week_6, 0) as week_6,
+        COALESCE(pts.week_7, 0) as week_7,
+        COALESCE(pts.week_8, 0) as week_8,
+        COALESCE(pts.week_9, 0) as week_9,
+        COALESCE(pts.week_10, 0) as week_10,
+        COALESCE(pts.week_11, 0) as week_11,
+        COALESCE(pts.week_12, 0) as week_12,
+        COALESCE(pts.week_13, 0) as week_13,
+        COALESCE(pts.week_14, 0) as week_14
+      FROM Players p
+      LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
+      LEFT JOIN Points pts ON p.player_ID = pts.player_ID
+      WHERE p.owner_ID = ?
+      ORDER BY p.position, p.player_name
+    `,
+    args: [teamId]
+  });
 }

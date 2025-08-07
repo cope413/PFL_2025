@@ -1,18 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getResults } from '@/lib/database';
-
-export interface Standing {
-  id: string;
-  teamName: string;
-  teamField: string;
-  division: string;
-  wins: number;
-  losses: number;
-  ties: number;
-  pointsFor: number;
-  pointsAgainst: number;
-  rank: number;
-}
+import { Standing } from '@/lib/db-types';
 
 
 export async function GET(request: NextRequest) {

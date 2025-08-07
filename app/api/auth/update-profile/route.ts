@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyToken } from '@/lib/auth'
-import { db } from '@/lib/database'
+import { updateUserProfile } from '@/lib/database'
 
 export async function PUT(request: NextRequest) {
   try {
@@ -24,30 +24,9 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update user profile in database
-    let updateQuery = 'UPDATE user SET '
-    const updateParams = []
-
-    if (displayName) {
-      updateQuery += 'username = ?, '
-      updateParams.push(displayName)
+    if (displayName || email) {
+      await updateUserProfile(decoded.id, displayName || '', email || '')
     }
-
-    if (teamName) {
-      updateQuery += 'team_name = ?, '
-      updateParams.push(teamName)
-    }
-
-    if (email) {
-      updateQuery += 'email = ?, '
-      updateParams.push(email)
-    }
-
-    // Remove trailing comma and space
-    updateQuery = updateQuery.slice(0, -2)
-    updateQuery += ' WHERE id = ?'
-    updateParams.push(decoded.id)
-
-    await db.execute(updateQuery, updateParams)
 
     return NextResponse.json({
       message: 'Profile updated successfully',

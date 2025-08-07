@@ -1,38 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { getLineup, getTeamNameMap, getUserById } from '@/lib/database';
-
-interface PlayerScore {
-  playerId: string;
-  playerName: string;
-  position: string;
-  nflTeam: string;
-  points: number;
-  projectedPoints: number;
-  isStarter: boolean;
-  positionSlot: string;
-}
-
-interface MatchupDetails {
-  week: number;
-  team1: {
-    teamId: string;
-    teamName: string;
-    totalScore: number;
-    projectedScore: number;
-    players: PlayerScore[];
-  };
-  team2: {
-    teamId: string;
-    teamName: string;
-    totalScore: number;
-    projectedScore: number;
-    players: PlayerScore[];
-  };
-  result: 'W' | 'L' | 'T';
-  date: string;
-  isComplete: boolean;
-}
+import { PlayerScore, MatchupDetails } from '@/lib/db-types';
 
 export async function GET(request: NextRequest) {
   try {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { db } from '@/lib/database';
+import { getTeamStanding, getAllStandings, getTeamNameByTeamId } from '@/lib/database';
+import { TeamInfo, TeamWeeklyResult } from '@/lib/db-types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,25 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get team information from standings
-    const teamStandingResult = await db.execute({
-      sql: `
-        SELECT
-          s.Team_ID as teamId,
-          COALESCE(u.team_name, u.username) as teamName,
-          COALESCE(s.Wins, 0) as wins,
-          COALESCE(s.Losses, 0) as losses,
-          COALESCE(s.Ties, 0) as ties,
-          COALESCE(s.PF, 0.0) as pointsFor,
-          COALESCE(s.PA, 0.0) as pointsAgainst,
-          COALESCE(s.Division, 'A') as division
-        FROM Standings s
-        LEFT JOIN user u ON s.Team_ID = u.team
-        WHERE s.Team_ID = ?
-      `,
-      args: [teamId]
-    });
-
-    const teamStanding = teamStandingResult.rows[0] as any;
+    const teamStanding = await getTeamStanding(teamId) as any;
 
     if (!teamStanding) {
       return NextResponse.json({
@@ -54,16 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Calculate rank
-    const allStandingsResult = await db.execute(`
-      SELECT
-        s.Team_ID,
-        COALESCE(s.Wins, 0) as wins,
-        COALESCE(s.PF, 0.0) as pointsFor
-      FROM Standings s
-      ORDER BY s.Wins DESC, s.PF DESC
-    `);
-
-    const allStandings = allStandingsResult.rows as any[];
+    const allStandings = await getAllStandings() as any[];
     const rank = allStandings.findIndex(s => s.Team_ID === teamId) + 1;
 
     const teamInfo = {
@@ -95,16 +69,7 @@ export async function GET(request: NextRequest) {
       const opponent = opponents[(weekNum - 1) % opponents.length];
 
       // Get opponent name
-      const opponentDataResult = await db.execute({
-        sql: `
-          SELECT COALESCE(team_name, username) as display_name
-          FROM user
-          WHERE team = ?
-        `,
-        args: [opponent]
-      });
-
-      const opponentData = opponentDataResult.rows[0] as any;
+      const opponentData = await getTeamNameByTeamId(opponent) as any;
       const opponentName = opponentData?.display_name || opponent;
 
       // Generate mock scores
