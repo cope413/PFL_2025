@@ -18,6 +18,18 @@ export async function GET(request: NextRequest) {
 
     const preferences = await getNotificationPreferences(decoded.id) as any;
 
+    // If no preferences exist, return default values
+    if (!preferences) {
+      return NextResponse.json({
+        email_notifications: false,
+        push_notifications: false,
+        weekly_recaps: false,
+        trade_alerts: false,
+        matchup_reminders: false,
+        injury_alerts: false,
+      });
+    }
+
     return NextResponse.json({
       email_notifications: Boolean(preferences.email_notifications),
       push_notifications: Boolean(preferences.push_notifications),
@@ -57,29 +69,37 @@ export async function PUT(request: NextRequest) {
       injury_alerts,
     } = await request.json();
 
+    // Convert to boolean values to ensure proper data types
+    const emailNotifications = Boolean(email_notifications);
+    const pushNotifications = Boolean(push_notifications);
+    const weeklyRecaps = Boolean(weekly_recaps);
+    const tradeAlerts = Boolean(trade_alerts);
+    const matchupReminders = Boolean(matchup_reminders);
+    const injuryAlerts = Boolean(injury_alerts);
+
     const existingPreferences = await getNotificationPreferences(decoded.id);
 
     if (existingPreferences) {
       // Update existing preferences
       await updateNotificationPreferences(
-        email_notifications,
-        push_notifications,
-        weekly_recaps,
-        trade_alerts,
-        matchup_reminders,
-        injury_alerts,
+        emailNotifications,
+        pushNotifications,
+        weeklyRecaps,
+        tradeAlerts,
+        matchupReminders,
+        injuryAlerts,
         decoded.id
       );
     } else {
       // Create new preferences
       await createNotificationPreferences(
         decoded.id,
-        email_notifications,
-        push_notifications,
-        weekly_recaps,
-        trade_alerts,
-        matchup_reminders,
-        injury_alerts
+        emailNotifications,
+        pushNotifications,
+        weeklyRecaps,
+        tradeAlerts,
+        matchupReminders,
+        injuryAlerts
       );
     }
 

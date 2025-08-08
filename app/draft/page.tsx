@@ -82,6 +82,14 @@ export default function DraftPage() {
             <Link href="/draft" className="text-sm font-medium transition-colors hover:text-primary">
               Draft
             </Link>
+            {user?.is_admin && (
+              <Link
+                href="/admin"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+              >
+                Admin
+              </Link>
+            )}
           </nav>
           
           <div className="flex items-center gap-4">
@@ -156,6 +164,15 @@ export default function DraftPage() {
               >
                 Draft
               </Link>
+              {user?.is_admin && (
+                <Link
+                  href="/admin"
+                  className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin
+                </Link>
+              )}
               <div className="pt-2 border-t">
                 <Button 
                   variant="outline" 

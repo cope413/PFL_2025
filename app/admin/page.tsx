@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Dialog,
   DialogContent,
@@ -31,7 +33,10 @@ import {
   UserX,
   Database,
   Activity,
-  Edit
+  Edit,
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface User {
@@ -74,9 +79,10 @@ interface Player {
 }
 
 export default function AdminDashboard() {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -468,13 +474,159 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage users, view system statistics, and configure application settings.
-        </p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between max-w-7xl">
+          <div className="flex items-center gap-2">
+            <img src="/PFL Logo.png" alt="PFL Logo" className="h-8 w-8" />
+            <span className="text-xl font-bold">PFL</span>
+          </div>
+          <nav className="hidden md:flex gap-6">
+            <Link href="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Home
+            </Link>
+            <Link
+              href="/leagues"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Standings
+            </Link>
+            <Link
+              href="/players"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Players
+            </Link>
+            <Link href="/team-dashboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Team Dashboard
+            </Link>
+            <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Teams
+            </Link>
+            <Link
+              href="/draft"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Draft
+            </Link>
+            {user?.is_admin && (
+              <Link
+                href="/admin"
+                className="text-sm font-medium transition-colors hover:text-primary"
+              >
+                Admin
+              </Link>
+            )}
+          </nav>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
+              <Settings className="mr-2 h-4 w-4" />
+              Settings
+            </Button>
+            <Avatar>
+              <AvatarImage src="" alt={user?.username} />
+              <AvatarFallback>{user?.team || "U"}</AvatarFallback>
+            </Avatar>
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+            
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t bg-background">
+            <nav className="container mx-auto max-w-7xl px-4 py-4 space-y-2">
+              <Link 
+                href="/" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link
+                href="/leagues"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Standings
+              </Link>
+              <Link
+                href="/players"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Players
+              </Link>
+              <Link 
+                href="/team-dashboard" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Team Dashboard
+              </Link>
+              <Link 
+                href="/teams" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Teams
+              </Link>
+              <Link
+                href="/draft"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Draft
+              </Link>
+              {user?.is_admin && (
+                <Link
+                  href="/admin"
+                  className="block py-2 text-sm font-medium transition-colors hover:text-primary"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Admin
+                </Link>
+              )}
+              {user && (
+                <div className="pt-2 border-t">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start bg-transparent" 
+                    onClick={() => {
+                      router.push('/settings')
+                      setIsMobileMenuOpen(false)
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
+      </header>
+      <main className="flex-1">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-7xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <p className="text-muted-foreground">
+              Manage users, view system statistics, and configure application settings.
+            </p>
+          </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
@@ -939,6 +1091,8 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </div>
+      </main>
     </div>
   );
 }
