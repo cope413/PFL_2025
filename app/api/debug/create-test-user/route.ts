@@ -12,7 +12,8 @@ export async function POST() {
       'jlewin5',
       hashedPassword,
       'A8',
-      'Test Team'
+      'Test Team',
+      'John Lewin' // owner_name
     );
 
     const userId = result.lastInsertRowid?.toString() || '0';

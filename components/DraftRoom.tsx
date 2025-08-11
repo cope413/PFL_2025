@@ -9,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAuth } from "@/hooks/useAuth"
+import { useDraft } from "@/hooks/useDraft"
+import { usePlayers } from "@/hooks/usePlayers"
 import { 
   Clock, 
   Users, 
@@ -20,7 +23,13 @@ import {
   Play,
   Pause,
   SkipForward,
-  Undo2
+  Undo2,
+  Shield,
+  AlertCircle,
+  X,
+  Database,
+  RefreshCw,
+  Trash2
 } from "lucide-react"
 
 interface Player {
@@ -31,6 +40,7 @@ interface Player {
   adp: number
   projectedPoints: number
   bye: number
+  owner_ID?: string
 }
 
 interface DraftPick {
@@ -39,6 +49,21 @@ interface DraftPick {
   team: string
   player: Player | null
   timestamp: Date
+}
+
+interface TeamRoster {
+  teamId: string
+  teamName: string
+  players: Player[]
+}
+
+interface User {
+  id: string
+  username: string
+  team: string
+  team_name?: string
+  owner_name?: string
+  is_admin?: boolean
 }
 
 interface DraftRoomProps {
@@ -50,50 +75,89 @@ const DRAFT_ORDER = [
   "A3", "B3", "C3", "D3", "D4", "C4", "B4", "A4"
 ]
 
-const MOCK_PLAYERS: Player[] = [
-  { id: "1", name: "Christian McCaffrey", position: "RB", team: "SF", adp: 1.2, projectedPoints: 350, bye: 9 },
-  { id: "2", name: "Tyreek Hill", position: "WR", team: "MIA", adp: 2.1, projectedPoints: 320, bye: 11 },
-  { id: "3", name: "Breece Hall", position: "RB", team: "NYJ", adp: 3.5, projectedPoints: 310, bye: 7 },
-  { id: "4", name: "Ja'Marr Chase", position: "WR", team: "CIN", adp: 4.2, projectedPoints: 305, bye: 12 },
-  { id: "5", name: "Saquon Barkley", position: "RB", team: "PHI", adp: 5.1, projectedPoints: 300, bye: 10 },
-  { id: "6", name: "CeeDee Lamb", position: "WR", team: "DAL", adp: 6.3, projectedPoints: 295, bye: 7 },
-  { id: "7", name: "Bijan Robinson", position: "RB", team: "ATL", adp: 7.2, projectedPoints: 290, bye: 11 },
-  { id: "8", name: "Amon-Ra St. Brown", position: "WR", team: "DET", adp: 8.1, projectedPoints: 285, bye: 9 },
-  { id: "9", name: "Travis Kelce", position: "TE", team: "KC", adp: 9.5, projectedPoints: 280, bye: 10 },
-  { id: "10", name: "Derrick Henry", position: "RB", team: "BAL", adp: 10.2, projectedPoints: 275, bye: 13 },
-  { id: "11", name: "Josh Allen", position: "QB", team: "BUF", adp: 11.1, projectedPoints: 270, bye: 13 },
-  { id: "12", name: "Stefon Diggs", position: "WR", team: "HOU", adp: 12.3, projectedPoints: 265, bye: 7 },
-  { id: "13", name: "Nick Chubb", position: "RB", team: "CLE", adp: 13.2, projectedPoints: 260, bye: 5 },
-  { id: "14", name: "Davante Adams", position: "WR", team: "LV", adp: 14.1, projectedPoints: 255, bye: 13 },
-  { id: "15", name: "Patrick Mahomes", position: "QB", team: "KC", adp: 15.5, projectedPoints: 250, bye: 10 },
-  { id: "16", name: "Austin Ekeler", position: "RB", team: "WAS", adp: 16.2, projectedPoints: 245, bye: 14 },
-  { id: "17", name: "DeVonta Smith", position: "WR", team: "PHI", adp: 17.3, projectedPoints: 240, bye: 10 },
-  { id: "18", name: "Mark Andrews", position: "TE", team: "BAL", adp: 18.1, projectedPoints: 235, bye: 13 },
-  { id: "19", name: "Jahmyr Gibbs", position: "RB", team: "DET", adp: 19.2, projectedPoints: 230, bye: 9 },
-  { id: "20", name: "DK Metcalf", position: "WR", team: "SEA", adp: 20.1, projectedPoints: 225, bye: 11 },
-]
+
+
+// Helper function to generate the correct draft order for a specific round and pick
+const getDraftOrderForPosition = (round: number, pick: number): string => {
+  const baseOrder = [
+    "A1", "B1", "C1", "D1", "D2", "C2", "B2", "A2",
+    "A3", "B3", "C3", "D3", "D4", "C4", "B4", "A4"
+  ];
+  
+  if (round % 2 === 1) {
+    // Odd rounds: forward order
+    return baseOrder[pick - 1];
+  } else {
+    // Even rounds: reverse order
+    return baseOrder[16 - pick];
+  }
+}
 
 export default function DraftRoom({ onClose }: DraftRoomProps) {
   const [currentRound, setCurrentRound] = useState(1)
   const [currentPick, setCurrentPick] = useState(1)
   const [draftPicks, setDraftPicks] = useState<DraftPick[]>([])
-  const [availablePlayers, setAvailablePlayers] = useState<Player[]>(MOCK_PLAYERS)
+  const [availablePlayers, setAvailablePlayers] = useState<Player[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<string>("")
   const [isDraftActive, setIsDraftActive] = useState(false)
   const [timeRemaining, setTimeRemaining] = useState(90) // 90 seconds per pick
   const [searchTerm, setSearchTerm] = useState("")
   const [positionFilter, setPositionFilter] = useState("ALL")
+  const [selectedTeamRoster, setSelectedTeamRoster] = useState<TeamRoster | null>(null)
+  const [showRosterModal, setShowRosterModal] = useState(false)
+  const [isMaximized, setIsMaximized] = useState(false)
+  const [showTimeWarning, setShowTimeWarning] = useState(false)
+  const [users, setUsers] = useState<User[]>([])
+  const { user } = useAuth()
+  const { draftPicks: dbDraftPicks, progress, savePick, clearDraft, refreshDraft, isLoading: draftLoading, error: draftError } = useDraft()
+  const { players, isLoading: playersLoading, error: playersError, refreshPlayers } = usePlayers()
+
+  // Fetch users for team information
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    }
+  };
+
+  // Set available players when players are loaded from database
+  useEffect(() => {
+    if (players.length > 0) {
+      setAvailablePlayers(players);
+    }
+  }, [players]);
+
+  // Fetch users on component mount
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // Helper function to get owner name for a team
+  const getOwnerNameForTeam = (teamId: string): string => {
+    const user = users.find(u => u.team === teamId);
+    return user?.owner_name || user?.username || teamId;
+  };
 
   // Initialize draft picks
   useEffect(() => {
     const picks: DraftPick[] = []
     for (let round = 1; round <= 16; round++) {
       for (let pick = 1; pick <= 16; pick++) {
-        const teamIndex = (round % 2 === 1) ? pick - 1 : 16 - pick
+        const team = getDraftOrderForPosition(round, pick)
         picks.push({
           round,
           pick,
-          team: DRAFT_ORDER[teamIndex],
+          team,
           player: null,
           timestamp: new Date()
         })
@@ -102,6 +166,79 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     setDraftPicks(picks)
   }, [])
 
+  // Load draft from database and restore state
+  useEffect(() => {
+    if (dbDraftPicks.length > 0) {
+      console.log('Restoring draft from database:', dbDraftPicks);
+      
+      // Create a new picks array with database data
+      const restoredPicks: DraftPick[] = []
+      
+      // Initialize all 256 draft slots
+      for (let round = 1; round <= 16; round++) {
+        for (let pick = 1; pick <= 16; pick++) {
+          const team = getDraftOrderForPosition(round, pick)
+          
+          // Find if this slot has a player in the database
+          const dbPick = dbDraftPicks.find(p => p.round === round && p.pick === pick)
+          
+          if (dbPick && dbPick.player_id && dbPick.player_id.trim() !== '') {
+            // This slot has a player - find the player data
+            const player = players.find(p => p.id === dbPick.player_id)
+            if (player) {
+              restoredPicks.push({
+                round,
+                pick,
+                team,
+                player: { ...player, owner_ID: dbPick.team_id },
+                timestamp: new Date(dbPick.timestamp || Date.now())
+              })
+              
+              // Remove player from available list
+              setAvailablePlayers(prev => prev.filter(p => p.id !== dbPick.player_id))
+            } else {
+              // Player not found in MOCK_PLAYERS, create placeholder
+              restoredPicks.push({
+                round,
+                pick,
+                team,
+                player: {
+                  id: dbPick.player_id,
+                  name: dbPick.player_name || 'Unknown Player',
+                  position: dbPick.position || 'Unknown',
+                  team: dbPick.team || 'Unknown',
+                  adp: 999,
+                  projectedPoints: 0,
+                  bye: 0,
+                  owner_ID: dbPick.team_id
+                },
+                timestamp: new Date(dbPick.timestamp || Date.now())
+              })
+            }
+          } else {
+            // This slot is empty
+            restoredPicks.push({
+              round,
+              pick,
+              team,
+              player: null,
+              timestamp: new Date()
+            })
+          }
+        }
+      }
+      
+      setDraftPicks(restoredPicks)
+      
+      // Set current position based on progress
+      if (progress) {
+        console.log('Setting draft progress:', progress);
+        setCurrentRound(progress.currentRound)
+        setCurrentPick(progress.currentPick)
+      }
+    }
+  }, [dbDraftPicks, progress, players])
+
   // Timer countdown
   useEffect(() => {
     let interval: NodeJS.Timeout
@@ -109,9 +246,9 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
       interval = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            // Auto-pick the highest ADP available player
-            autoPick()
-            return 90
+            // Show time warning instead of auto-picking
+            setShowTimeWarning(true)
+            return 0
           }
           return prev - 1
         })
@@ -119,6 +256,13 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     }
     return () => clearInterval(interval)
   }, [isDraftActive, timeRemaining])
+
+  // Clear time warning when a pick is made
+  useEffect(() => {
+    if (timeRemaining > 0) {
+      setShowTimeWarning(false)
+    }
+  }, [timeRemaining])
 
   const getCurrentTeam = () => {
     if (currentRound <= 0 || currentPick <= 0) return ""
@@ -133,7 +277,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     return draftPicks[nextPickIndex]?.team || ""
   }
 
-  const makePick = () => {
+  const makePick = async () => {
     if (!selectedPlayer) return
 
     const player = availablePlayers.find(p => p.id === selectedPlayer)
@@ -141,78 +285,83 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
 
     const pickIndex = (currentRound - 1) * 16 + (currentPick - 1)
     if (pickIndex >= draftPicks.length) return
-    
-    const updatedPicks = [...draftPicks]
-    updatedPicks[pickIndex].player = player
-    updatedPicks[pickIndex].timestamp = new Date()
-    setDraftPicks(updatedPicks)
 
-    // Remove player from available list
-    setAvailablePlayers(prev => prev.filter(p => p.id !== selectedPlayer))
-    setSelectedPlayer("")
+    try {
+      // Update player with owner_ID
+      const updatedPlayer = { ...player, owner_ID: getCurrentTeam() }
+      
+      const updatedPicks = [...draftPicks]
+      updatedPicks[pickIndex].player = updatedPlayer
+      updatedPicks[pickIndex].timestamp = new Date()
+      setDraftPicks(updatedPicks)
 
-    // Move to next pick
-    if (currentPick === 16) {
-      if (currentRound === 16) {
-        // Draft complete
-        setIsDraftActive(false)
+      // Save pick to database
+      console.log('Saving pick to database:', {
+        round: currentRound,
+        pick: currentPick,
+        team_id: getCurrentTeam(),
+        player_id: player.id,
+        player_name: player.name,
+        position: player.position,
+        team: player.team
+      });
+
+      await savePick({
+        round: currentRound,
+        pick: currentPick,
+        team_id: getCurrentTeam(),
+        player_id: player.id,
+        player_name: player.name,
+        position: player.position,
+        team: player.team
+      })
+
+      // Remove player from available list
+      setAvailablePlayers(prev => prev.filter(p => p.id !== selectedPlayer))
+      setSelectedPlayer("")
+
+      // Move to next pick
+      if (currentPick === 16) {
+        if (currentRound === 16) {
+          // Draft complete
+          setIsDraftActive(false)
+        } else {
+          setCurrentRound(prev => prev + 1)
+          setCurrentPick(1)
+        }
       } else {
-        setCurrentRound(prev => prev + 1)
-        setCurrentPick(1)
+        setCurrentPick(prev => prev + 1)
       }
-    } else {
-      setCurrentPick(prev => prev + 1)
+
+      // Reset timer
+      setTimeRemaining(90)
+      
+      console.log('Pick saved successfully');
+    } catch (error) {
+      console.error('Error saving pick:', error);
+      // Revert the local state change if database save failed
+      const revertedPicks = [...draftPicks]
+      revertedPicks[pickIndex].player = null
+      setDraftPicks(revertedPicks)
+      // Show error to user
+      alert('Failed to save pick. Please try again.');
     }
-
-    // Reset timer
-    setTimeRemaining(90)
-  }
-
-  const autoPick = () => {
-    if (availablePlayers.length === 0) return
-
-    // Pick the highest ADP available player
-    const player = availablePlayers[0]
-    const pickIndex = (currentRound - 1) * 16 + (currentPick - 1)
-    if (pickIndex >= draftPicks.length) return
-    
-    const updatedPicks = [...draftPicks]
-    updatedPicks[pickIndex].player = player
-    updatedPicks[pickIndex].timestamp = new Date()
-    setDraftPicks(updatedPicks)
-
-    // Remove player from available list
-    setAvailablePlayers(prev => prev.filter(p => p.id !== player.id))
-
-    // Move to next pick
-    if (currentPick === 16) {
-      if (currentRound === 16) {
-        setIsDraftActive(false)
-      } else {
-        setCurrentRound(prev => prev + 1)
-        setCurrentPick(1)
-      }
-    } else {
-      setCurrentPick(prev => prev + 1)
-    }
-
-    // Reset timer
-    setTimeRemaining(90)
   }
 
   const startDraft = () => {
     setIsDraftActive(true)
-    setCurrentRound(1)
-    setCurrentPick(1)
+    setShowTimeWarning(false)
+    // Use current progress from database instead of resetting to beginning
+    if (progress) {
+      setCurrentRound(progress.currentRound)
+      setCurrentPick(progress.currentPick)
+    }
     setTimeRemaining(90)
   }
 
   const pauseDraft = () => {
     setIsDraftActive(false)
-  }
-
-  const skipPick = () => {
-    autoPick()
+    setShowTimeWarning(false)
   }
 
   const undoLastPick = () => {
@@ -224,13 +373,26 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     const lastPick = draftPicks[lastPickIndex]
     if (!lastPick.player) return
 
-    // Add player back to available list
-    setAvailablePlayers(prev => [lastPick.player!, ...prev].sort((a, b) => a.adp - b.adp))
+    // Add player back to available list (without owner_ID)
+    const playerWithoutOwner = { ...lastPick.player }
+    delete playerWithoutOwner.owner_ID
+    setAvailablePlayers(prev => [playerWithoutOwner, ...prev].sort((a, b) => a.adp - b.adp))
 
     // Remove player from pick
     const updatedPicks = [...draftPicks]
     updatedPicks[lastPickIndex].player = null
     setDraftPicks(updatedPicks)
+
+    // Update database - save the undone pick as null
+    savePick({
+      round: lastPick.round,
+      pick: lastPick.pick,
+      team_id: lastPick.team,
+      player_id: '',
+      player_name: '',
+      position: '',
+      team: ''
+    })
 
     // Go back to previous pick
     if (lastPick.pick === 1) {
@@ -249,6 +411,36 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     setTimeRemaining(90)
   }
 
+  const handleClearDraft = async () => {
+    if (confirm('Are you sure you want to clear the entire draft? This action cannot be undone.')) {
+      await clearDraft()
+      // Reset local state
+      setDraftPicks([])
+      setCurrentRound(1)
+      setCurrentPick(1)
+      setAvailablePlayers([...players]) // Reset to all players from the database
+      setIsDraftActive(false)
+      setTimeRemaining(90)
+      setSelectedPlayer("")
+    }
+  }
+
+  const showTeamRoster = (teamId: string) => {
+    const teamPlayers = draftPicks
+      .filter(pick => pick.team === teamId && pick.player)
+      .map(pick => pick.player!)
+      .sort((a, b) => a.adp - b.adp)
+
+    const teamRoster: TeamRoster = {
+      teamId,
+      teamName: getOwnerNameForTeam(teamId),
+      players: teamPlayers
+    }
+
+    setSelectedTeamRoster(teamRoster)
+    setShowRosterModal(true)
+  }
+
   const filteredPlayers = availablePlayers.filter(player => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.team.toLowerCase().includes(searchTerm.toLowerCase())
@@ -263,243 +455,474 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="border-b p-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold">PFL Draft Room</h2>
-            <p className="text-muted-foreground">Round {currentRound}, Pick {currentPick}</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Current Team</div>
-              <div className="text-xl font-bold">{getCurrentTeam()}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Next Team</div>
-              <div className="text-xl font-bold">{getNextTeam()}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-sm text-muted-foreground">Time Remaining</div>
-              <div className={`text-xl font-bold ${timeRemaining <= 10 ? 'text-red-500' : ''}`}>
-                {formatTime(timeRemaining)}
+    <>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className={`bg-background rounded-lg shadow-xl overflow-hidden transition-all duration-300 ${
+          isMaximized 
+            ? 'w-full h-full max-w-none max-h-none' 
+            : 'w-full max-w-7xl max-h-[90vh]'
+        }`}>
+          {/* Header */}
+          <div className="border-b p-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">PFL Draft Room</h2>
+              <p className="text-muted-foreground">Round {currentRound}, Pick {currentPick}</p>
+              <div className="flex items-center gap-2 mt-1">
+                {user?.is_admin ? (
+                  <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-medium">
+                    <Shield className="h-3 w-3" />
+                    Admin Access
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded text-xs font-medium">
+                    <AlertCircle className="h-3 w-3" />
+                    View Only
+                  </div>
+                )}
+                <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs font-medium">
+                  <Database className="h-3 w-3" />
+                  {draftLoading ? 'Syncing...' : 'Auto-save Enabled'}
+                </div>
               </div>
             </div>
-            <Button variant="outline" onClick={onClose}>Close</Button>
-          </div>
-        </div>
-
-        <div className="flex h-[calc(90vh-120px)]">
-          {/* Left Panel - Available Players */}
-          <div className="w-1/3 border-r p-4 overflow-y-auto">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Input
-                  placeholder="Search players..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <Select value={positionFilter} onValueChange={setPositionFilter}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ALL">All</SelectItem>
-                    <SelectItem value="QB">QB</SelectItem>
-                    <SelectItem value="RB">RB</SelectItem>
-                    <SelectItem value="WR">WR</SelectItem>
-                    <SelectItem value="TE">TE</SelectItem>
-                    <SelectItem value="K">K</SelectItem>
-                    <SelectItem value="DEF">DEF</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground">Current Team</div>
+                <div className="text-xl font-bold">{getCurrentTeam()}</div>
+                <div className="text-xs text-muted-foreground">
+                  {getOwnerNameForTeam(getCurrentTeam())}
+                </div>
               </div>
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground">Next Team</div>
+                <div className="text-xl font-bold">{getNextTeam()}</div>
+                <div className="text-xs text-muted-foreground">
+                  {getOwnerNameForTeam(getNextTeam())}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground">Time Remaining</div>
+                <div className={`text-xl font-bold ${timeRemaining <= 10 ? 'text-red-500' : ''}`}>
+                  {formatTime(timeRemaining)}
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setIsMaximized(!isMaximized)}
+              >
+                {isMaximized ? 'Minimize' : 'Maximize'}
+              </Button>
+              <Button variant="outline" onClick={onClose}>Close</Button>
+            </div>
+          </div>
 
-              <div className="space-y-2">
-                {filteredPlayers.map((player) => (
-                  <Card 
-                    key={player.id} 
-                    className={`cursor-pointer transition-colors ${
-                      selectedPlayer === player.id ? 'ring-2 ring-primary' : ''
-                    }`}
-                    onClick={() => setSelectedPlayer(player.id)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
-                            <AvatarFallback>{player.position}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{player.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {player.team} • {player.position} • Bye {player.bye}
+          <div className={`flex ${isMaximized ? 'h-[calc(100vh-120px)]' : 'h-[calc(90vh-120px)]'}`}>
+            {/* Left Panel - Available Players */}
+            <div className="w-1/3 border-r p-4 overflow-y-auto">
+              <div className="space-y-4">
+                {!user?.is_admin && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-2">
+                    <div className="flex items-center gap-2 text-blue-700">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">View Only Mode</span>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-1">
+                      You can browse players and see the draft board, but only administrators can submit picks and control the draft.
+                    </p>
+                  </div>
+                )}
+
+                {/* Time Warning */}
+                {showTimeWarning && (
+                  <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-2">
+                    <div className="flex items-center gap-2 text-red-700">
+                      <AlertCircle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Time Warning</span>
+                    </div>
+                    <p className="text-xs text-red-600 mt-1">
+                      Time Warning. Please submit your pick.
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Search players..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Select value={positionFilter} onValueChange={setPositionFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ALL">All</SelectItem>
+                      <SelectItem value="QB">QB</SelectItem>
+                      <SelectItem value="RB">RB</SelectItem>
+                      <SelectItem value="WR">WR</SelectItem>
+                      <SelectItem value="TE">TE</SelectItem>
+                      <SelectItem value="K">K</SelectItem>
+                      <SelectItem value="DEF">DEF</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  {filteredPlayers.map((player) => (
+                    <Card 
+                      key={player.id} 
+                      className={`cursor-pointer transition-colors ${
+                        selectedPlayer === player.id 
+                          ? user?.is_admin 
+                            ? 'ring-2 ring-primary' 
+                            : 'ring-2 ring-amber-400'
+                          : ''
+                      }`}
+                      onClick={() => setSelectedPlayer(player.id)}
+                    >
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarFallback>{player.position}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{player.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {player.team} • {player.position} • Bye {player.bye}
+                              </div>
                             </div>
                           </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">ADP: {player.adp}</div>
+                            <div className="text-xs text-muted-foreground">{player.projectedPoints} pts</div>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <div className="text-sm font-medium">ADP: {player.adp}</div>
-                          <div className="text-xs text-muted-foreground">{player.projectedPoints} pts</div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Center Panel - Draft Board */}
+            <div className="flex-1 p-4 overflow-y-auto">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-semibold">Draft Board</h3>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={refreshDraft}
+                      disabled={draftLoading}
+                    >
+                      <Database className="h-4 w-4 mr-2" />
+                      Refresh
+                    </Button>
+                  </div>
+                  {user?.is_admin ? (
+                    <div className="flex items-center gap-2">
+                      {!isDraftActive ? (
+                        <Button onClick={startDraft}>
+                          <Play className="mr-2 h-4 w-4" />
+                          Start Draft
+                        </Button>
+                      ) : (
+                        <>
+                          <Button variant="outline" onClick={pauseDraft}>
+                            <Pause className="mr-2 h-4 w-4" />
+                            Pause
+                          </Button>
+                          <Button variant="outline" onClick={undoLastPick}>
+                            <Undo2 className="mr-2 h-4 w-4" />
+                            Undo
+                          </Button>
+                        </>
+                      )}
+                      <Button variant="destructive" onClick={handleClearDraft}>
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Clear Draft
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-muted-foreground flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4" />
+                      Draft controls are admin-only
+                    </div>
+                  )}
+                </div>
+
+                {/* Loading and Error States */}
+                {draftLoading && (
+                  <div className="flex items-center gap-2 text-blue-600 bg-blue-50 p-3 rounded-md border border-blue-200">
+                    <Database className="h-4 w-4 animate-spin" />
+                    <span>Loading draft data...</span>
+                  </div>
+                )}
+
+                {draftError && (
+                  <div className="flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+                    <AlertCircle className="h-4 w-4" />
+                    <span>Error: {draftError}</span>
+                  </div>
+                )}
+
+                {/* Debug Info (Admin Only) */}
+                {user?.is_admin && (
+                  <Card className="mt-2">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-sm">
+                        <Database className="h-3 w-3" />
+                        Debug Info (Admin Only)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2 text-xs">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <h4 className="font-semibold mb-1 text-xs">Local State</h4>
+                          <p>Round: {currentRound}, Pick: {currentPick}</p>
+                          <p>Available: {availablePlayers.length}, Drafted: {draftPicks.filter(p => p.player).length}</p>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold mb-1 text-xs">Database State</h4>
+                          <p>DB Picks: {dbDraftPicks.length}</p>
+                          <p>Progress: {progress ? `${progress.currentRound}.${progress.currentPick}` : 'Loading...'}</p>
+                          <p>Total: {progress?.totalPicks || 0}</p>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-1 text-xs">Players API Status</h4>
+                        <p>Loading: {playersLoading ? 'Yes' : 'No'}, Error: {playersError || 'None'}, Total: {players.length}</p>
+                        <div className="flex gap-1 mt-1">
+                          <Button 
+                            onClick={refreshPlayers} 
+                            size="sm" 
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Refresh
+                          </Button>
+                          <Button onClick={refreshDraft} size="sm" variant="outline" className="h-6 px-2 text-xs">
+                            <RefreshCw className="h-3 w-3 mr-1" />
+                            Draft
+                          </Button>
+                          <Button onClick={handleClearDraft} size="sm" variant="destructive" className="h-6 px-2 text-xs">
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Clear
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
-                ))}
-              </div>
-            </div>
-          </div>
+                )}
 
-          {/* Center Panel - Draft Board */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Draft Board</h3>
-                <div className="flex items-center gap-2">
-                  {!isDraftActive ? (
-                    <Button onClick={startDraft}>
-                      <Play className="mr-2 h-4 w-4" />
-                      Start Draft
-                    </Button>
-                  ) : (
-                    <>
-                      <Button variant="outline" onClick={pauseDraft}>
-                        <Pause className="mr-2 h-4 w-4" />
-                        Pause
-                      </Button>
-                      <Button variant="outline" onClick={skipPick}>
-                        <SkipForward className="mr-2 h-4 w-4" />
-                        Skip
-                      </Button>
-                      <Button variant="outline" onClick={undoLastPick}>
-                        <Undo2 className="mr-2 h-4 w-4" />
-                        Undo
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              <div className="overflow-x-auto">
-                <div className="inline-block min-w-full">
-                  <div className="grid" style={{ gridTemplateColumns: 'repeat(17, minmax(80px, 1fr))' }}>
-                    {/* Header */}
-                    <div className="font-medium text-center p-2 bg-muted rounded">Round</div>
-                    {DRAFT_ORDER.map((team, index) => (
-                      <div key={index} className="font-medium text-center p-2 bg-muted rounded">
-                        {team}
-                      </div>
-                    ))}
-
-                    {/* Draft Rounds */}
-                    {Array.from({ length: 16 }, (_, round) => (
-                      <div key={round + 1} className="contents">
-                        <div className="font-medium text-center p-2 bg-muted rounded">
-                          {round + 1}
+                <div className="overflow-x-auto">
+                  <div className="inline-block min-w-full">
+                    <div className="grid" style={{ gridTemplateColumns: 'repeat(17, minmax(80px, 1fr))' }}>
+                      {/* Header */}
+                      <div className="font-medium text-center p-2">Round</div>
+                      {DRAFT_ORDER.map((team, index) => (
+                        <div 
+                          key={index} 
+                          className="font-medium text-center p-2 bg-muted rounded cursor-pointer hover:bg-muted/80 transition-colors"
+                          onClick={() => showTeamRoster(team)}
+                          title={`Click to view ${getOwnerNameForTeam(team)} roster`}
+                        >
+                          <div className="text-xs font-bold">{team}</div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {getOwnerNameForTeam(team)}
+                          </div>
                         </div>
-                        {DRAFT_ORDER.map((team, teamIndex) => {
-                          const pickIndex = round * 16 + teamIndex
-                          const pick = draftPicks[pickIndex]
-                          const isCurrentPick = round + 1 === currentRound && teamIndex + 1 === currentPick
-                          
-                          return (
-                            <div
-                              key={`${round + 1}-${team}`}
-                              className={`p-2 border rounded text-center min-h-[60px] flex items-center justify-center ${
-                                isCurrentPick ? 'bg-primary text-primary-foreground' : 'bg-background'
-                              }`}
-                            >
-                              {pick?.player ? (
-                                <div className="text-center">
-                                  <div className="font-medium text-xs">{pick.player.name}</div>
-                                  <div className="text-xs opacity-80">{pick.player.position}</div>
-                                  <div className="text-xs opacity-60">{pick.player.team}</div>
-                                </div>
-                              ) : isCurrentPick ? (
-                                <div className="text-center">
-                                  <div className="text-sm font-bold">ON CLOCK</div>
-                                  <div className="text-xs">{formatTime(timeRemaining)}</div>
-                                </div>
-                              ) : (
-                                <div className="text-xs text-muted-foreground">-</div>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ))}
+                      ))}
+
+                      {/* Draft Rounds */}
+                      {Array.from({ length: 16 }, (_, round) => (
+                        <div key={round + 1} className="contents">
+                          <div className="font-medium text-center p-2 bg-muted rounded">
+                            {round + 1}
+                          </div>
+                          {DRAFT_ORDER.map((team, teamIndex) => {
+                            const pickIndex = round * 16 + teamIndex
+                            const pick = draftPicks[pickIndex]
+                            const isCurrentPick = round + 1 === currentRound && teamIndex + 1 === currentPick
+                            
+                            return (
+                              <div
+                                key={`${round + 1}-${team}`}
+                                className={`p-2 border rounded text-center min-h-[60px] flex items-center justify-center ${
+                                  isCurrentPick ? 'bg-primary text-primary-foreground' : 'bg-background'
+                                }`}
+                              >
+                                {pick?.player ? (
+                                  <div className="text-center">
+                                    <div className="font-medium text-xs">{pick.player.name}</div>
+                                    <div className="text-xs opacity-80">{pick.player.position}</div>
+                                    <div className="text-xs opacity-60">{pick.player.team}</div>
+                                  </div>
+                                ) : isCurrentPick ? (
+                                  <div className="text-center">
+                                    <div className="text-sm font-bold">ON CLOCK</div>
+                                    <div className="text-xs">{formatTime(timeRemaining)}</div>
+                                  </div>
+                                ) : (
+                                  <div className="text-xs text-muted-foreground">-</div>
+                                )}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Panel - Draft Controls & Info */}
-          <div className="w-80 border-l p-4 space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Draft Controls</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <Label htmlFor="player-select">Select Player</Label>
-                  <Select value={selectedPlayer} onValueChange={setSelectedPlayer}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose a player..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredPlayers.map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {player.name} ({player.position} - {player.team})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <Button 
-                  onClick={makePick} 
-                  disabled={!selectedPlayer || !isDraftActive}
-                  className="w-full"
-                >
-                  Make Pick
-                </Button>
-
-                <div className="text-sm text-muted-foreground">
-                  <div>Round: {currentRound}/16</div>
-                  <div>Pick: {currentPick}/16</div>
-                  <div>Players Remaining: {availablePlayers.length}</div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Picks</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {draftPicks
-                    .filter(pick => pick.player)
-                    .slice(-5)
-                    .reverse()
-                    .map((pick, index) => (
-                      <div key={index} className="flex items-center justify-between text-sm">
-                        <div>
-                          <div className="font-medium">{pick.player?.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            Round {pick.round}, Pick {pick.pick} • {pick.team}
-                          </div>
+            {/* Right Panel - Draft Controls & Info */}
+            <div className="w-80 border-l p-4 space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Draft Controls</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div>
+                    <Label htmlFor="player-select">Select Player</Label>
+                    <Select value={selectedPlayer} onValueChange={setSelectedPlayer}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose a player..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredPlayers.map((player) => (
+                          <SelectItem key={player.id} value={player.id}>
+                            {player.name} ({player.position} - {player.team})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    
+                    {selectedPlayer && !user?.is_admin && (
+                      <div className="mt-2 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
+                        <div className="flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          <span>Player selected but you need admin access to submit</span>
                         </div>
-                        <Badge variant="outline">{pick.player?.position}</Badge>
                       </div>
-                    ))}
-                </div>
-              </CardContent>
-            </Card>
+                    )}
+                  </div>
+                  
+                  {user?.is_admin ? (
+                    <Button 
+                      onClick={makePick} 
+                      disabled={!selectedPlayer || !isDraftActive}
+                      className="w-full"
+                    >
+                      Make Pick
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="text-sm font-medium">Admin Access Required</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground text-center">
+                        Only administrators can submit draft picks. Please contact an admin to make your selection.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="text-sm text-muted-foreground">
+                    <div>Round: {currentRound}/16</div>
+                    <div>Pick: {currentPick}/16</div>
+                    <div>Players Remaining: {availablePlayers.length}</div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Picks</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {draftPicks
+                      .filter(pick => pick.player)
+                      .slice(-5)
+                      .reverse()
+                      .map((pick, index) => (
+                        <div key={index} className="flex items-center justify-between text-sm">
+                          <div>
+                            <div className="font-medium">{pick.player?.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              Round {pick.round}, Pick {pick.pick} • {pick.team}
+                            </div>
+                          </div>
+                          <Badge variant="outline">{pick.player?.position}</Badge>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Team Roster Modal */}
+      {showRosterModal && selectedTeamRoster && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-background rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+            <div className="border-b p-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold">{selectedTeamRoster.teamName} Roster</h2>
+                <p className="text-sm text-muted-foreground">
+                  {selectedTeamRoster.players.length} players drafted
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setShowRosterModal(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-80px)]">
+              {selectedTeamRoster.players.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  No players drafted yet
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {selectedTeamRoster.players.map((player, index) => (
+                    <Card key={player.id}>
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>{player.position}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{player.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {player.team} • {player.position} • Bye {player.bye}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">ADP: {player.adp}</div>
+                            <div className="text-xs text-muted-foreground">{player.projectedPoints} pts</div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

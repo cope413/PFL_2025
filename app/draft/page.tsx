@@ -216,15 +216,14 @@ export default function DraftPage() {
                         <h3 className="text-lg font-bold">PFL</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          <span>August 31, 2025 • 8:00 AM EST</span>
+                          <span>August 31, 2025 • 8:00 AM PST</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                           <Users className="h-4 w-4" />
-                          <span>12 Teams • Standard • Snake Draft • Pick #3</span>
+                          <span>16 Teams • Snake Draft</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Button variant="outline">Draft Board</Button>
                         <Button onClick={() => setIsDraftRoomOpen(true)}>Enter Draft Room</Button>
                       </div>
                     </div>

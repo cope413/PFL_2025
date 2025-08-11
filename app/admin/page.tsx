@@ -45,6 +45,7 @@ interface User {
   email?: string;
   team: string;
   team_name?: string;
+  owner_name?: string;
   is_admin: boolean;
 }
 
@@ -91,7 +92,8 @@ export default function AdminDashboard() {
   const [editForm, setEditForm] = useState({
     username: '',
     team: '',
-    email: ''
+    email: '',
+    owner_name: ''
   });
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [players, setPlayers] = useState<Player[]>([]);
@@ -261,7 +263,8 @@ export default function AdminDashboard() {
     setEditForm({
       username: user.username,
       team: user.team,
-      email: user.email || ''
+      email: user.email || '',
+      owner_name: user.owner_name || ''
     });
     setIsEditDialogOpen(true);
   };
@@ -271,7 +274,8 @@ export default function AdminDashboard() {
     setEditForm({
       username: '',
       team: '',
-      email: ''
+      email: '',
+      owner_name: ''
     });
     setIsEditDialogOpen(false);
   };
@@ -290,7 +294,8 @@ export default function AdminDashboard() {
           userId: editingUser.id,
           username: editForm.username,
           team: editForm.team,
-          email: editForm.email
+          email: editForm.email,
+          owner_name: editForm.owner_name
         })
       });
       
@@ -955,6 +960,17 @@ export default function AdminDashboard() {
                 type="email"
                 value={editForm.email}
                 onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="owner_name" className="text-right">
+                Owner Name
+              </Label>
+              <Input
+                id="owner_name"
+                value={editForm.owner_name}
+                onChange={(e) => setEditForm({ ...editForm, owner_name: e.target.value })}
                 className="col-span-3"
               />
             </div>

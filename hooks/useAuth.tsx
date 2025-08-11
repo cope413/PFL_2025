@@ -8,6 +8,7 @@ interface User {
   username: string;
   team: string;
   team_name?: string;
+  owner_name?: string;
   email?: string;
   is_admin?: boolean;
 }

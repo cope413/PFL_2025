@@ -16,6 +16,7 @@ function mapToUser(row: any): User {
     email: row.email,
     team: row.team,
     team_name: row.team_name,
+    owner_name: row.owner_name,
     is_admin: row.is_admin === 1,
   };
 }
@@ -138,11 +139,12 @@ export async function createUser(
   password: string,
   team: string,
   teamName: string,
+  ownerName?: string,
 ) {
   return await db.execute({
     sql:
-      "INSERT INTO user (username, password, team, team_name) VALUES (?, ?, ?, ?)",
-    args: [username, password, team, teamName],
+      "INSERT INTO user (username, password, team, team_name, owner_name) VALUES (?, ?, ?, ?, ?)",
+    args: [username, password, team, teamName, ownerName || null],
   });
 }
 
@@ -476,22 +478,22 @@ export async function getTeamNameByTeamId(teamId: string) {
   });
 }
 
-export async function updateUserProfile(userId: string, username: string, email: string, teamName?: string) {
-  console.log('updateUserProfile called with:', { userId, username, email, teamName });
+export async function updateUserProfile(userId: string, username: string, email: string, teamName?: string, ownerName?: string) {
+  console.log('updateUserProfile called with:', { userId, username, email, teamName, ownerName });
   
   if (teamName !== undefined && teamName !== null) {
     console.log('Updating with team_name:', teamName);
     const result = await db.execute({
-      sql: 'UPDATE user SET username = ?, email = ?, team_name = ? WHERE id = ?',
-      args: [username, email, teamName, userId]
+      sql: 'UPDATE user SET username = ?, email = ?, team_name = ?, owner_name = ? WHERE id = ?',
+      args: [username, email, teamName, ownerName || null, userId]
     });
     console.log('Update result:', result);
     return result;
   } else {
     console.log('Updating without team_name');
     const result = await db.execute({
-      sql: 'UPDATE user SET username = ?, email = ? WHERE id = ?',
-      args: [username, email, userId]
+      sql: 'UPDATE user SET username = ?, email = ?, owner_name = ? WHERE id = ?',
+      args: [username, email, ownerName || null, userId]
     });
     console.log('Update result:', result);
     return result;
@@ -543,11 +545,12 @@ export async function getAllUsers() {
         email,
         team,
         team_name,
+        owner_name,
         is_admin
       FROM user
       ORDER BY username
     `
-  });
+  }, mapToUser);
 }
 
 export async function updateUserAdminStatus(userId: string, isAdmin: boolean) {
@@ -564,10 +567,10 @@ export async function deleteUserById(userId: string) {
   });
 }
 
-export async function updateUserInfo(userId: string, username: string, team: string, email: string) {
+export async function updateUserInfo(userId: string, username: string, team: string, email: string, ownerName?: string) {
   return await db.execute({
-    sql: 'UPDATE user SET username = ?, team = ?, email = ? WHERE id = ?',
-    args: [username, team, email, userId]
+    sql: 'UPDATE user SET username = ?, team = ?, email = ?, owner_name = ? WHERE id = ?',
+    args: [username, team, email, ownerName || null, userId]
   });
 }
 
@@ -673,5 +676,125 @@ export async function updatePlayerWithStats(
         args: [points, playerId]
       });
     }
+  }
+}
+
+// Draft-related database functions
+export async function saveDraftPick(
+  round: number,
+  pick: number,
+  team_id: string,
+  player_id: string,
+  player_name: string,
+  position: string,
+  team: string
+) {
+  return await db.execute({
+    sql: `
+      INSERT OR REPLACE INTO Draft (round, pick, team_id, player_id, player_name, position, team, timestamp)
+      VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `,
+    args: [round, pick, team_id, player_id, player_name, position, team]
+  });
+}
+
+export async function getDraftPicks() {
+  return await getResults({
+    sql: "SELECT * FROM Draft ORDER BY round, pick"
+  });
+}
+
+export async function getDraftPick(round: number, pick: number) {
+  return await getFirstResult({
+    sql: "SELECT * FROM Draft WHERE round = ? AND pick = ?",
+    args: [round, pick]
+  });
+}
+
+export async function getLastDraftPick() {
+  return await getFirstResult({
+    sql: "SELECT * FROM Draft WHERE player_id IS NOT NULL ORDER BY round DESC, pick DESC LIMIT 1"
+  });
+}
+
+export async function clearDraft() {
+  return await db.execute({
+    sql: "DELETE FROM Draft"
+  });
+}
+
+export async function getDraftProgress() {
+  const picks = await getDraftPicks();
+  if (picks.length === 0) {
+    return { currentRound: 1, currentPick: 1, totalPicks: 0 };
+  }
+
+  // Find the first pick that doesn't have a player (is empty)
+  const firstEmptyPick = picks.find(p => !p.player_id || p.player_id.trim() === '');
+  
+  if (!firstEmptyPick) {
+    // All picks are filled, draft is complete
+    return { currentRound: 16, currentPick: 16, totalPicks: picks.length, lastPick: picks[picks.length - 1] };
+  }
+
+  // Count how many picks have been made
+  const picksWithPlayers = picks.filter(p => p.player_id && p.player_id.trim() !== '');
+  const totalPicks = picksWithPlayers.length;
+  
+  // Return the first empty pick as the current pick
+  return {
+    currentRound: firstEmptyPick.round,
+    currentPick: firstEmptyPick.pick,
+    totalPicks,
+    lastPick: picksWithPlayers.length > 0 ? picksWithPlayers[picksWithPlayers.length - 1] : null
+  };
+}
+
+export async function initializeDraftSlots() {
+  try {
+    // Check if draft slots already exist
+    const existingSlots = await getDraftPicks();
+    if (existingSlots.length > 0) {
+      return; // Already initialized
+    }
+
+    // Create the full 256-position draft order with proper snake pattern
+    const baseOrder = [
+      "A1", "B1", "C1", "D1", "D2", "C2", "B2", "A2",
+      "A3", "B3", "C3", "D3", "D4", "C4", "B4", "A4"
+    ];
+    
+    // Create the full draft order array (256 positions)
+    const fullDraftOrder: string[] = [];
+    
+    for (let round = 1; round <= 16; round++) {
+      if (round % 2 === 1) {
+        // Odd rounds: forward order
+        fullDraftOrder.push(...baseOrder);
+      } else {
+        // Even rounds: reverse order
+        fullDraftOrder.push(...baseOrder.slice().reverse());
+      }
+    }
+
+    // Create all 256 draft slots
+    for (let i = 0; i < 256; i++) {
+      const round = Math.floor(i / 16) + 1;
+      const pick = (i % 16) + 1;
+      const teamId = fullDraftOrder[i];
+      
+      await db.execute({
+        sql: `
+          INSERT INTO Draft (round, pick, team_id, player_id, player_name, position, team, timestamp)
+          VALUES (?, ?, ?, NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP)
+        `,
+        args: [round, pick, teamId]
+      });
+    }
+    
+    console.log('Draft slots initialized successfully with correct 256-position order');
+  } catch (error) {
+    console.error('Error initializing draft slots:', error);
+    throw error;
   }
 }

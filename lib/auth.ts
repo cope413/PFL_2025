@@ -9,6 +9,7 @@ export interface AuthUser {
   email?: string;
   team?: string;
   team_name?: string;
+  owner_name?: string;
   avatar?: string;
   is_admin?: boolean;
 }
@@ -31,6 +32,7 @@ export function generateToken(user: AuthUser): string {
     username: user.username,
     team: user.team,
     team_name: user.team_name,
+    owner_name: user.owner_name,
     is_admin: user.is_admin,
     exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
   };
@@ -54,6 +56,7 @@ export function verifyToken(token: string): AuthUser | null {
       username: payload.username,
       team: payload.team,
       team_name: payload.team_name,
+      owner_name: payload.owner_name,
       is_admin: payload.is_admin
     };
   } catch {
@@ -148,6 +151,7 @@ export async function loginUser(credentials: LoginCredentials): Promise<AuthUser
       email: user.email,
       team: user.team,
       team_name: user.team_name,
+      owner_name: user.owner_name,
       is_admin: user.is_admin
     };
   } catch (error) {
@@ -174,8 +178,9 @@ export async function updateUser(userId: string, updates: Partial<AuthUser>): Pr
   const usernameToUpdate = updates.username !== undefined ? updates.username : existingUser.username;
   const emailToUpdate = updates.email !== undefined ? updates.email : existingUser.email || '';
   const teamNameToUpdate = updates.team_name !== undefined ? updates.team_name : undefined;
+  const ownerNameToUpdate = updates.owner_name !== undefined ? updates.owner_name : undefined;
 
-  console.log('Values to update:', { usernameToUpdate, emailToUpdate, teamNameToUpdate });
+  console.log('Values to update:', { usernameToUpdate, emailToUpdate, teamNameToUpdate, ownerNameToUpdate });
 
   // Update user in database
   console.log('Calling updateDbUser...');
@@ -183,7 +188,8 @@ export async function updateUser(userId: string, updates: Partial<AuthUser>): Pr
     userId,
     usernameToUpdate,
     emailToUpdate,
-    teamNameToUpdate
+    teamNameToUpdate,
+    ownerNameToUpdate
   );
   console.log('updateDbUser completed');
 
@@ -192,6 +198,7 @@ export async function updateUser(userId: string, updates: Partial<AuthUser>): Pr
     username: usernameToUpdate,
     email: emailToUpdate,
     team: existingUser.team,
-    team_name: teamNameToUpdate || existingUser.team_name
+    team_name: teamNameToUpdate || existingUser.team_name,
+    owner_name: ownerNameToUpdate || existingUser.owner_name
   };
 }

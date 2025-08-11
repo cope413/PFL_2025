@@ -47,9 +47,9 @@ export async function PUT(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const adminUser = requireAdmin(request);
-    const { userId, username, team, email } = await request.json();
+    const { userId, username, team, email, owner_name } = await request.json();
     
-    await updateUserInfo(userId, username, team, email);
+    await updateUserInfo(userId, username, team, email, owner_name);
     
     return NextResponse.json({
       success: true,

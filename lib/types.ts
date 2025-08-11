@@ -86,6 +86,7 @@ export interface User {
   password: string;
   team: string;
   team_name?: string;
+  owner_name?: string;
   email?: string;
   is_admin?: boolean;
 }

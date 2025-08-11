@@ -1,103 +1,40 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createPlayer, createPlayerStats, deletePlayer, generateId, getPlayerById, getPlayers, getPlayersByPosition, getPlayersByTeam, getPlayerStats, updatePlayer } from '@/lib/database';
 import { ApiResponse, Player, PlayerStats } from '@/lib/types';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const position = searchParams.get('position');
-    const team = searchParams.get('team');
-    const playerId = searchParams.get('playerId');
-
-    // If playerId is provided, return specific player
-    if (playerId) {
-      const player = await getPlayerById(playerId);
-      if (!player) {
-        return NextResponse.json<ApiResponse<null>>({
-          success: false,
-          error: 'Player not found'
-        }, { status: 404 });
-      }
-
-      // Get player stats for current week
-      const playerStats = await getPlayerStats(playerId, 1, 2024) as PlayerStats;
-
-      const playerData: Player = {
-        id: player.id,
-        name: player.name,
-        position: player.position,
-        team: player.team,
-        nflTeam: player.nfl_team,
-        image: player.image,
-        stats: {
-          fantasyPoints: playerStats.fantasy_points,
-          passingYards: playerStats.passing_yards,
-          passingTDs: playerStats.passing_tds,
-          rushingYards: playerStats.rushing_yards,
-          rushingTDs: playerStats.rushing_tds,
-          receptions: playerStats.receptions,
-          receivingYards: playerStats.receiving_yards,
-          receivingTDs: playerStats.receiving_tds
-        }
-      };
-
-      return NextResponse.json<ApiResponse<Player>>({
-        success: true,
-        data: playerData
-      });
-    }
-
-    // Get all players from database
-    let players;
-
-    // Filter by position if specified
-    if (position) {
-      players = await getPlayersByPosition(position);
-    }
-    // Filter by team if specified
-    else if (team) {
-      players = await getPlayersByTeam(team);
-    }
-    // Get all players
-    else {
-      players = await getPlayers();
-    }
-
-    // TODO: Consider if there's a way to optimize this query and avoid multiple awaitable calls (collect the stats in a single query)
-    // Esseentially is this getPlayerStats, with a filter...
-    // Convert to Player objects with stats
-    const playersWithStats = await Promise.all(players.map(async (player: any) => {
-      const stats = await getPlayerStats(String(player.player_ID || player.id), 1, 2024) || {
-        fantasy_points: 0
-      };
-
-      return {
-        id: String(player.player_ID || player.id),
-        name: String(player.name),
-        position: String(player.position) as "QB" | "RB" | "WR" | "TE" | "K" | "DEF",
-        team: String(player.team),
-        nflTeam: String(player.nfl_team),
-        image: String(player.image || ''),
-        stats: {
-          fantasyPoints: Number(stats.fantasy_points || 0)
-        }
-      };
+    const players = await getPlayers();
+    
+    // Filter for players that are Free Agents (owner_ID = "99") and have draftable positions
+    const draftablePositions = ["QB", "RB", "WR", "TE", "PK", "DEF"];
+    const availablePlayers = players.filter(player => 
+      player.owner_ID === "99" && 
+      draftablePositions.includes(player.position)
+    );
+    
+    // Transform the database players to match the frontend Player interface
+    const transformedPlayers = availablePlayers.map(player => ({
+      id: player.player_ID,
+      name: player.player_name || player.name,
+      position: player.position,
+      team: player.team_name || player.team,
+      adp: player.adp || 999, // Default ADP if not available
+      projectedPoints: player.projectedPoints || 0, // Default points if not available
+      bye: player.bye || 0, // Default bye if not available
+      owner_ID: player.owner_ID
     }));
 
-    // Sort by fantasy points (descending)
-    playersWithStats.sort((a, b) => b.stats.fantasyPoints - a.stats.fantasyPoints);
-
-    return NextResponse.json<ApiResponse<typeof playersWithStats>>({
+    return NextResponse.json({
       success: true,
-      data: playersWithStats
+      data: transformedPlayers
     });
-
   } catch (error) {
-    console.error('Players API Error:', error);
-    return NextResponse.json<ApiResponse<null>>({
-      success: false,
-      error: 'Internal server error'
-    }, { status: 500 });
+    console.error('Error fetching players:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch players' },
+      { status: 500 }
+    );
   }
 }
 

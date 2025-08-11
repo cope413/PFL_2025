@@ -45,6 +45,7 @@ export default function SettingsPage() {
   // Form states
   const [displayName, setDisplayName] = useState(user?.username || "")
   const [teamName, setTeamName] = useState(user?.team_name || "")
+  const [ownerName, setOwnerName] = useState(user?.owner_name || "")
   const [email, setEmail] = useState(user?.email || "")
   const [currentPassword, setCurrentPassword] = useState("")
   const [newPassword, setNewPassword] = useState("")
@@ -79,7 +80,12 @@ export default function SettingsPage() {
     } else {
       setTeamName("") // Clear if no team name
     }
-  }, [user?.email, user?.team_name])
+    if (user?.owner_name) {
+      setOwnerName(user.owner_name)
+    } else {
+      setOwnerName("") // Clear if no owner name
+    }
+  }, [user?.email, user?.team_name, user?.owner_name])
 
   // Load notification preferences
   useEffect(() => {
@@ -144,7 +150,8 @@ export default function SettingsPage() {
       // Use the auth context's updateProfile function
       await updateUserProfile({
         username: displayName.trim(),
-        teamName,
+        team_name: teamName,
+        owner_name: ownerName,
         email
       })
 
@@ -154,6 +161,7 @@ export default function SettingsPage() {
       // Update local state to reflect the changes
       setEmail(user?.email || "")
       setTeamName(user?.team_name || "")
+      setOwnerName(user?.owner_name || "")
       setDisplayName(user?.username || "")
     } catch (error) {
       toast({
@@ -401,6 +409,15 @@ export default function SettingsPage() {
                       value={teamName}
                       onChange={(e) => setTeamName(e.target.value)}
                       placeholder="Enter your team name"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ownerName">Owner Name</Label>
+                    <Input
+                      id="ownerName"
+                      value={ownerName}
+                      onChange={(e) => setOwnerName(e.target.value)}
+                      placeholder="Enter your real name"
                     />
                   </div>
                   <div className="space-y-2">
