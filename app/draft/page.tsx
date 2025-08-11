@@ -33,11 +33,13 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
+import DraftRoom from "@/components/DraftRoom"
 
 export default function DraftPage() {
   const { user, loading: authLoading, logout } = useAuth()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isDraftRoomOpen, setIsDraftRoomOpen] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -198,12 +200,6 @@ export default function DraftPage() {
               <h1 className="text-3xl font-bold tracking-tight">Draft Central</h1>
               <p className="text-muted-foreground">Prepare for your drafts and mock drafts.</p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New Mock Draft
-              </Button>
-            </div>
           </div>
 
           <div className="mt-6 space-y-6">
@@ -217,10 +213,10 @@ export default function DraftPage() {
                   <div className="rounded-lg border p-4">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <h3 className="text-lg font-bold">Friends & Family League</h3>
+                        <h3 className="text-lg font-bold">PFL</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
-                          <span>August 28, 2025 • 7:00 PM EST</span>
+                          <span>August 31, 2025 • 8:00 AM EST</span>
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                           <Users className="h-4 w-4" />
@@ -229,27 +225,7 @@ export default function DraftPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Button variant="outline">Draft Board</Button>
-                        <Button>Enter Draft Room</Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="rounded-lg border p-4">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <h3 className="text-lg font-bold">Office League</h3>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="h-4 w-4" />
-                          <span>August 30, 2025 • 8:00 PM EST</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <Users className="h-4 w-4" />
-                          <span>10 Teams • PPR • Auction Draft • $200 Budget</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="outline">Draft Board</Button>
-                        <Button>Enter Draft Room</Button>
+                        <Button onClick={() => setIsDraftRoomOpen(true)}>Enter Draft Room</Button>
                       </div>
                     </div>
                   </div>
@@ -535,46 +511,14 @@ export default function DraftPage() {
                 </Tabs>
               </CardContent>
             </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Mock Draft History</CardTitle>
-                <CardDescription>Your recent mock draft results</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="rounded-lg border p-4">
-                      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold">Mock Draft #{i + 1}</h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            <span>{`July ${15 - i}, 2025`}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                            <Users className="h-4 w-4" />
-                            <span>12 Teams • Standard • Snake Draft • Pick #{3 + i}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline">View Results</Button>
-                          <Button>Draft Analysis</Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button variant="outline" className="w-full bg-transparent">
-                  View All Mock Drafts
-                </Button>
-              </CardFooter>
-            </Card>
           </div>
         </div>
       </main>
+      
+      {/* Draft Room Modal */}
+      {isDraftRoomOpen && (
+        <DraftRoom onClose={() => setIsDraftRoomOpen(false)} />
+      )}
     </div>
   )
 }
