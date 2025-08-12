@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPlayer, createPlayerStats, deletePlayer, generateId, getPlayerById, getPlayers, getPlayersByPosition, getPlayersByTeam, getPlayerStats, updatePlayer } from '@/lib/database';
+import { createPlayer, createPlayerStats, deletePlayer, generateId, getPlayerById, getPlayers, getPlayersByPosition, getPlayersByTeam, getPlayersWithBye, getPlayerStats, updatePlayer } from '@/lib/database';
 import { ApiResponse, Player, PlayerStats } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
-    const players = await getPlayers();
+    // Get players with bye week data from NFL_Teams table
+    const players = await getPlayersWithBye();
     
     // Filter for players that are Free Agents (owner_ID = "99") and have draftable positions
     const draftablePositions = ["QB", "RB", "WR", "TE", "PK", "DEF"];
@@ -19,7 +20,6 @@ export async function GET(request: NextRequest) {
       name: player.player_name || player.name,
       position: player.position,
       team: player.team_name || player.team,
-      adp: player.adp || 999, // Default ADP if not available
       projectedPoints: player.projectedPoints || 0, // Default points if not available
       bye: player.bye || 0, // Default bye if not available
       owner_ID: player.owner_ID

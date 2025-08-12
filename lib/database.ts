@@ -184,6 +184,22 @@ export async function getPlayers() {
   return await getResults("SELECT * FROM Players");
 }
 
+export async function getPlayersWithBye() {
+  return await getResults(`
+    SELECT 
+      p.player_ID,
+      p.player_name,
+      p.position,
+      p.team_name,
+      p.owner_ID,
+      p.team_id,
+      COALESCE(n.bye, 0) as bye
+    FROM Players p
+    LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
+    ORDER BY p.player_name
+  `);
+}
+
 export async function getPlayersByOwner(id: string) {
   return await getResults({
     sql: "SELECT * FROM Players WHERE owner_ID = ?",

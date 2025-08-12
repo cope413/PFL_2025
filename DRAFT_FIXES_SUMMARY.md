@@ -168,3 +168,4 @@ The debug panel (admin only) shows:
 3. **Export Functionality**: Export draft results to various formats
 4. **Backup/Restore**: Save draft state to files
 5. **Multi-draft Support**: Handle multiple draft sessions
+

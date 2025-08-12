@@ -241,7 +241,7 @@ export default function DraftPage() {
                 <Tabs defaultValue="rankings">
                   <TabsList className="mb-4">
                     <TabsTrigger value="rankings">Rankings</TabsTrigger>
-                    <TabsTrigger value="adp">ADP</TabsTrigger>
+  
                     <TabsTrigger value="sleepers">Sleepers</TabsTrigger>
                     <TabsTrigger value="strategy">Strategy</TabsTrigger>
                   </TabsList>
@@ -267,7 +267,7 @@ export default function DraftPage() {
                             <TableHead>Pos</TableHead>
                             <TableHead className="text-right">Bye</TableHead>
                             <TableHead className="text-right">Proj Pts</TableHead>
-                            <TableHead className="text-right">ADP</TableHead>
+    
                             <TableHead className="text-right">Value</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -287,9 +287,7 @@ export default function DraftPage() {
                               <TableCell>Pos</TableCell>
                               <TableCell className="text-right">{7 + i}</TableCell>
                               <TableCell className="text-right">{350 - i * 15}</TableCell>
-                              <TableCell className="text-right">
-                                {i + 1}.{i + 1}
-                              </TableCell>
+                              
                               <TableCell className="text-right">
                                 <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+{5 - i}</Badge>
                               </TableCell>
@@ -307,71 +305,8 @@ export default function DraftPage() {
                       </div>
                     </div>
                   </TabsContent>
-                  <TabsContent value="adp">
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium">Average Draft Position</h3>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <Filter className="mr-2 h-4 w-4" />
-                            Filter
-                          </Button>
-                        </div>
-                      </div>
 
-                      <div className="rounded-lg border p-4">
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Average Draft Position (ADP) shows where players are typically being drafted across all
-                          fantasy leagues. Use this data to identify potential value picks and avoid reaching for
-                          players.
-                        </p>
 
-                        <div className="grid gap-4 md:grid-cols-2">
-                          <Card>
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-sm font-medium">ADP Risers</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                {Array.from({ length: 3 }).map((_, i) => (
-                                  <div key={i} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Avatar className="h-6 w-6">
-                                        <AvatarFallback>{`R${i + 1}`}</AvatarFallback>
-                                      </Avatar>
-                                      <div className="text-sm">Riser Player {i + 1}</div>
-                                    </div>
-                                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">↑ {i + 3}</Badge>
-                                  </div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-
-                          <Card>
-                            <CardHeader className="pb-2">
-                              <CardTitle className="text-sm font-medium">ADP Fallers</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-2">
-                                {Array.from({ length: 3 }).map((_, i) => (
-                                  <div key={i} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <Avatar className="h-6 w-6">
-                                        <AvatarFallback>{`F${i + 1}`}</AvatarFallback>
-                                      </Avatar>
-                                      <div className="text-sm">Falling Player {i + 1}</div>
-                                    </div>
-                                    <Badge className="bg-red-100 text-red-800 hover:bg-red-100">↓ {i + 2}</Badge>
-                                  </div>
-                                ))}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
                   <TabsContent value="sleepers">
                     <div className="space-y-4">
                       <h3 className="text-lg font-medium">Sleeper Picks</h3>
@@ -386,7 +321,7 @@ export default function DraftPage() {
                             <CardHeader className="pb-2">
                               <div className="flex items-center justify-between">
                                 <CardTitle className="text-base font-medium">Sleeper Player {i + 1}</CardTitle>
-                                <Badge variant="outline">ADP: {80 + i * 5}</Badge>
+
                               </div>
                               <CardDescription>Team • Position</CardDescription>
                             </CardHeader>

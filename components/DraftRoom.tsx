@@ -37,7 +37,6 @@ interface Player {
   name: string
   position: string
   team: string
-  adp: number
   projectedPoints: number
   bye: number
   owner_ID?: string
@@ -207,7 +206,6 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                   name: dbPick.player_name || 'Unknown Player',
                   position: dbPick.position || 'Unknown',
                   team: dbPick.team || 'Unknown',
-                  adp: 999,
                   projectedPoints: 0,
                   bye: 0,
                   owner_ID: dbPick.team_id
@@ -376,7 +374,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     // Add player back to available list (without owner_ID)
     const playerWithoutOwner = { ...lastPick.player }
     delete playerWithoutOwner.owner_ID
-    setAvailablePlayers(prev => [playerWithoutOwner, ...prev].sort((a, b) => a.adp - b.adp))
+    setAvailablePlayers(prev => [playerWithoutOwner, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
 
     // Remove player from pick
     const updatedPicks = [...draftPicks]
@@ -429,7 +427,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     const teamPlayers = draftPicks
       .filter(pick => pick.team === teamId && pick.player)
       .map(pick => pick.player!)
-      .sort((a, b) => a.adp - b.adp)
+      .sort((a, b) => a.name.localeCompare(b.name))
 
     const teamRoster: TeamRoster = {
       teamId,
@@ -595,7 +593,6 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm font-medium">ADP: {player.adp}</div>
                             <div className="text-xs text-muted-foreground">{player.projectedPoints} pts</div>
                           </div>
                         </div>
@@ -910,7 +907,6 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm font-medium">ADP: {player.adp}</div>
                             <div className="text-xs text-muted-foreground">{player.projectedPoints} pts</div>
                           </div>
                         </div>

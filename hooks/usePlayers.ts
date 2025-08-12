@@ -5,7 +5,6 @@ interface Player {
   name: string;
   position: string;
   team: string;
-  adp: number;
   projectedPoints: number;
   bye: number;
   owner_ID?: string;
@@ -59,3 +58,4 @@ export function usePlayers(): UsePlayersReturn {
     refreshPlayers
   };
 }
+
