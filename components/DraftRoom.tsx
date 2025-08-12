@@ -87,8 +87,8 @@ const getDraftOrderForPosition = (round: number, pick: number): string => {
     // Odd rounds: forward order
     return baseOrder[pick - 1];
   } else {
-    // Even rounds: reverse order
-    return baseOrder[16 - pick];
+    // Even rounds: reverse order (A4 first, then B4, etc.)
+    return baseOrder[baseOrder.length - pick];
   }
 }
 
@@ -110,6 +110,10 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   const { user } = useAuth()
   const { draftPicks: dbDraftPicks, progress, savePick, clearDraft, refreshDraft, isLoading: draftLoading, error: draftError } = useDraft()
   const { players, isLoading: playersLoading, error: playersError, refreshPlayers } = usePlayers()
+
+  const getCurrentPickingTeam = (): string => {
+    return getDraftOrderForPosition(currentRound, currentPick);
+  }
 
   // Fetch users for team information
   const fetchUsers = async () => {
@@ -281,8 +285,9 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     const player = availablePlayers.find(p => p.id === selectedPlayer)
     if (!player) return
 
-    const pickIndex = (currentRound - 1) * 16 + (currentPick - 1)
-    if (pickIndex >= draftPicks.length) return
+    // Find the correct index in the draftPicks array for this round and pick
+    const pickIndex = draftPicks.findIndex(p => p.round === currentRound && p.pick === currentPick)
+    if (pickIndex === -1 || pickIndex >= draftPicks.length) return
 
     try {
       // Update player with owner_ID
@@ -743,9 +748,11 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                             {round + 1}
                           </div>
                           {DRAFT_ORDER.map((team, teamIndex) => {
-                            const pickIndex = round * 16 + teamIndex
-                            const pick = draftPicks[pickIndex]
-                            const isCurrentPick = round + 1 === currentRound && teamIndex + 1 === currentPick
+                            // Find the pick for this team in this round
+                            const pick = draftPicks.find(p => p.team === team && p.round === round + 1)
+                            // Get the current picking team using the same logic as the draft order
+                            const currentPickingTeam = getCurrentPickingTeam()
+                            const isCurrentPick = round + 1 === currentRound && team === currentPickingTeam
                             
                             return (
                               <div
