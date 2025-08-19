@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { AuthProvider } from '@/hooks/useAuth'
 import { Toaster } from '@/components/ui/toaster'
+import { ThemeProvider } from '@/components/theme-provider'
 
 export const metadata: Metadata = {
   title: 'PFL 2025 - Fantasy Football League',
@@ -21,12 +22,19 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   )

@@ -32,6 +32,7 @@ import {
   X,
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useStandings } from "@/hooks/useStandings"
 
 // Type for public dashboard data
@@ -183,6 +184,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             {user ? (
               <>
+                <ThemeToggle />
                 <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
@@ -208,6 +210,7 @@ export default function Home() {
               </>
             ) : (
               <div className="flex items-center gap-2">
+                <ThemeToggle />
                 <Button variant="outline" size="sm" onClick={() => router.push('/auth')}>
                   <LogIn className="mr-2 h-4 w-4" />
                   Login

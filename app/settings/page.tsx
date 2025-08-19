@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -41,6 +42,7 @@ export default function SettingsPage() {
   const { user, loading: authLoading, updateProfile: updateUserProfile } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
+  const { theme, setTheme } = useTheme()
   
 
   
@@ -60,7 +62,6 @@ export default function SettingsPage() {
   const [matchupReminders, setMatchupReminders] = useState(true)
   const [injuryAlerts, setInjuryAlerts] = useState(true)
   const [defaultView, setDefaultView] = useState("dashboard")
-  const [theme, setTheme] = useState("system")
   const [timezone, setTimezone] = useState("America/New_York")
   
   // Privacy states
@@ -602,7 +603,7 @@ export default function SettingsPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="theme">Theme</Label>
-                  <Select value={theme} onValueChange={setTheme}>
+                  <Select value={theme || "system"} onValueChange={setTheme}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select theme" />
                     </SelectTrigger>
