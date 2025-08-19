@@ -42,7 +42,9 @@ export default function SettingsPage() {
   const router = useRouter()
   const { toast } = useToast()
   
-  // Form states
+
+  
+  // Form states - initialize with user data if available
   const [displayName, setDisplayName] = useState(user?.username || "")
   const [teamName, setTeamName] = useState(user?.team_name || "")
   const [ownerName, setOwnerName] = useState(user?.owner_name || "")
@@ -70,22 +72,15 @@ export default function SettingsPage() {
   const [showPasswordSuccessDialog, setShowPasswordSuccessDialog] = useState(false)
   const [showProfileSuccessDialog, setShowProfileSuccessDialog] = useState(false)
 
-  // Update email and team name state when user data changes
+  // Update form states when user data changes
   useEffect(() => {
-    if (user?.email) {
-      setEmail(user.email)
+    if (user) {
+      setDisplayName(user.username || "")
+      setEmail(user.email || "")
+      setTeamName(user.team_name || "")
+      setOwnerName(user.owner_name || "")
     }
-    if (user?.team_name) {
-      setTeamName(user.team_name)
-    } else {
-      setTeamName("") // Clear if no team name
-    }
-    if (user?.owner_name) {
-      setOwnerName(user.owner_name)
-    } else {
-      setOwnerName("") // Clear if no owner name
-    }
-  }, [user?.email, user?.team_name, user?.owner_name])
+  }, [user])
 
   // Load notification preferences
   useEffect(() => {
@@ -157,12 +152,6 @@ export default function SettingsPage() {
 
       // Show success dialog
       setShowProfileSuccessDialog(true)
-      
-      // Update local state to reflect the changes
-      setEmail(user?.email || "")
-      setTeamName(user?.team_name || "")
-      setOwnerName(user?.owner_name || "")
-      setDisplayName(user?.username || "")
     } catch (error) {
       toast({
         title: "Error",

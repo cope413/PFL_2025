@@ -167,10 +167,17 @@ class ApiService {
     return this.fetchApi('/auth/me');
   }
 
-  async updateProfile(updates: { username?: string; email?: string; teamName?: string }) {
+  async updateProfile(updates: { username?: string; email?: string; team_name?: string; owner_name?: string }) {
+    // Map the fields to match what the API expects
+    const apiUpdates: any = {};
+    if (updates.username !== undefined) apiUpdates.displayName = updates.username;
+    if (updates.email !== undefined) apiUpdates.email = updates.email;
+    if (updates.team_name !== undefined) apiUpdates.teamName = updates.team_name;
+    if (updates.owner_name !== undefined) apiUpdates.ownerName = updates.owner_name;
+    
     const result = await this.fetchApi('/auth/update-profile', {
       method: 'PUT',
-      body: JSON.stringify(updates)
+      body: JSON.stringify(apiUpdates)
     });
     return result; // Return the updated user data directly
   }

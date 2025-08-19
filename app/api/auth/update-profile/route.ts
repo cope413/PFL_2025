@@ -26,9 +26,9 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     console.log('Request body:', body)
     
-    const { displayName, teamName, email } = body
+    const { displayName, teamName, email, ownerName } = body
 
-    if (!displayName && !teamName && !email) {
+    if (!displayName && !teamName && !email && !ownerName) {
       console.log('No fields provided')
       return NextResponse.json({ error: 'At least one field is required' }, { status: 400 })
     }
@@ -44,6 +44,7 @@ export async function PUT(request: NextRequest) {
     if (displayName !== undefined) updates.username = displayName
     if (email !== undefined) updates.email = email
     if (teamName !== undefined) updates.team_name = teamName
+    if (ownerName !== undefined) updates.owner_name = ownerName
     
     console.log('Updates to apply:', updates)
     

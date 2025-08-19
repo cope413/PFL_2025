@@ -114,6 +114,7 @@ export default function PlayersPage() {
   }, [players, searchTerm, selectedPosition, selectedTeam, selectedOwnership])
 
 
+
   
   return (
     <div className="min-h-screen bg-background">
@@ -403,63 +404,65 @@ export default function PlayersPage() {
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Rank</TableHead>
-                        <TableHead>Player</TableHead>
-                        <TableHead>Position</TableHead>
-                        <TableHead>Team</TableHead>
-                        <TableHead className="text-right">Total Points</TableHead>
-                        <TableHead className="text-right">Avg Points</TableHead>
-                        <TableHead>Ownership</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredPlayers.length === 0 ? (
+                  <div className="max-h-[600px] overflow-y-auto">
+                    <Table>
+                      <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
-                          <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                            No players found matching your filters.
-                          </TableCell>
+                          <TableHead>Rank</TableHead>
+                          <TableHead>Player</TableHead>
+                          <TableHead>Position</TableHead>
+                          <TableHead>Team</TableHead>
+                          <TableHead className="text-right">Total Points</TableHead>
+                          <TableHead className="text-right">Avg Points</TableHead>
+                          <TableHead>Ownership</TableHead>
+                          <TableHead>Status</TableHead>
                         </TableRow>
-                      ) : (
-                        filteredPlayers.slice(0, 50).map((player, index) => (
-                          <TableRow key={player.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarFallback>
-                                    {player.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                  <div className="font-medium">{player.name}</div>
-                                  <div className="text-sm text-muted-foreground">{player.position}</div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>{player.position}</TableCell>
-                            <TableCell>{player.team}</TableCell>
-                            <TableCell className="text-right font-medium">{player.totalPoints.toFixed(1)}</TableCell>
-                            <TableCell className="text-right text-muted-foreground">{player.avgPoints.toFixed(1)}</TableCell>
-                            <TableCell>
-                              <Badge 
-                                variant={player.owner_ID === '99' ? 'outline' : 'default'} 
-                                className="text-xs"
-                              >
-                                {player.owner_ID === '99' ? 'Free Agent' : 'Rostered'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary" className="text-xs">{player.status}</Badge>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredPlayers.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                              No players found matching your filters.
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
+                        ) : (
+                          filteredPlayers.map((player, index) => (
+                            <TableRow key={player.id}>
+                              <TableCell>{index + 1}</TableCell>
+                              <TableCell>
+                                <div className="flex items-center gap-3">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>
+                                      {player.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <div className="font-medium">{player.name}</div>
+                                  </div>
+                                </div>
+                              </TableCell>
+                              <TableCell>{player.position}</TableCell>
+                              <TableCell>{player.team}</TableCell>
+                              <TableCell className="text-right font-medium">{player.totalPoints.toFixed(1)}</TableCell>
+                              <TableCell className="text-right text-muted-foreground">{player.avgPoints.toFixed(1)}</TableCell>
+                              <TableCell>
+                                <Badge 
+                                  variant={player.owner_ID === '99' ? 'outline' : 'default'} 
+                                  className="text-xs"
+                                >
+                                  {player.owner_ID === '99' ? 'Free Agent' : 'Rostered'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary" className="text-xs">{player.status}</Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+
 
                 )}
               </CardContent>
