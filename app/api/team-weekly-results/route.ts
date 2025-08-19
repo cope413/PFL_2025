@@ -5,19 +5,21 @@ import { TeamInfo, TeamWeeklyResult } from '@/lib/db-types';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get user from authentication token
-    const authUser = getUserFromRequest(request);
-    if (!authUser) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required'
-      }, { status: 401 });
-    }
-
-    // Get team ID from query parameters (optional - if not provided, use user's team)
     const { searchParams } = new URL(request.url);
-    const teamId = searchParams.get('teamId') || authUser.team;
+    let teamId = searchParams.get('teamId');
     const week = searchParams.get('week');
+
+    // If no teamId is provided, require authentication and use user's team
+    if (!teamId) {
+      const authUser = getUserFromRequest(request);
+      if (!authUser) {
+        return NextResponse.json({
+          success: false,
+          error: 'Authentication required when teamId is not provided'
+        }, { status: 401 });
+      }
+      teamId = authUser.team;
+    }
 
     if (!teamId) {
       return NextResponse.json({

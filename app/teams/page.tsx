@@ -53,7 +53,6 @@ interface Player {
   position: string;
   team: string;
   nflTeam: string;
-  projectedPoints: number;
   status: "healthy" | "questionable" | "doubtful" | "out" | "bye";
   byeWeek?: number;
 }
@@ -61,10 +60,12 @@ interface Player {
 interface WeeklyResult {
   week: number;
   opponent: string;
+  opponentName: string;
+  teamScore: number;
+  opponentScore: number;
   result: 'W' | 'L' | 'T';
-  pointsFor: number;
-  pointsAgainst: number;
-  projectedPoints: number;
+  date: string;
+  isComplete: boolean;
 }
 
 export default function TeamsPage() {
@@ -117,7 +118,7 @@ export default function TeamsPage() {
       const resultsResponse = await fetch(`/api/team-weekly-results?teamId=${team.id}`);
       if (resultsResponse.ok) {
         const resultsData = await resultsResponse.json();
-        setWeeklyResults(resultsData.data || []);
+        setWeeklyResults(resultsData.data?.weeklyResults || []);
       }
     } catch (error) {
       console.error('Error fetching team data:', error);
@@ -433,7 +434,6 @@ export default function TeamsPage() {
                       <TableHead>NFL Team</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Bye Week</TableHead>
-                      <TableHead>Proj. Points</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -448,7 +448,6 @@ export default function TeamsPage() {
                           </span>
                         </TableCell>
                         <TableCell>{player.byeWeek || '-'}</TableCell>
-                        <TableCell>{player.projectedPoints.toFixed(1)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -468,22 +467,26 @@ export default function TeamsPage() {
                       <TableHead>Result</TableHead>
                       <TableHead>Points For</TableHead>
                       <TableHead>Points Against</TableHead>
-                      <TableHead>Proj. Points</TableHead>
+                      <TableHead>Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {weeklyResults.map((result) => (
                       <TableRow key={result.week}>
                         <TableCell className="font-medium">Week {result.week}</TableCell>
-                        <TableCell>{result.opponent}</TableCell>
+                        <TableCell>{result.opponentName || result.opponent}</TableCell>
                         <TableCell>
                           <span className={`font-bold ${getResultColor(result.result)}`}>
-                            {result.result}
+                            {result.isComplete ? result.result : 'TBD'}
                           </span>
                         </TableCell>
-                        <TableCell>{result.pointsFor.toFixed(1)}</TableCell>
-                        <TableCell>{result.pointsAgainst.toFixed(1)}</TableCell>
-                        <TableCell>{result.projectedPoints.toFixed(1)}</TableCell>
+                        <TableCell>{result.isComplete ? result.teamScore.toFixed(1) : '-'}</TableCell>
+                        <TableCell>{result.isComplete ? result.opponentScore.toFixed(1) : '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant={result.isComplete ? 'default' : 'secondary'}>
+                            {result.isComplete ? 'Final' : 'Upcoming'}
+                          </Badge>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
