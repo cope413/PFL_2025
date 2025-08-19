@@ -346,31 +346,31 @@ export default function LeaguesPage() {
                         ) : (
                           <div className="space-y-4">
                             {matchups.map((matchup) => (
-                              <div key={matchup.id} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback>{matchup.team1_id}</AvatarFallback>
-                                  </Avatar>
-                                  <div>
+                              <div key={matchup.id} className="grid grid-cols-3 items-center gap-4">
+                                <div className="flex items-center gap-2 justify-end">
+                                  <div className="text-right">
                                     <div className="font-medium">{matchup.team1_name}</div>
                                     <div className="text-xs text-muted-foreground">
                                       {matchup.team1_score > 0 ? `${matchup.team1_score.toFixed(1)} pts` : 'Projected: ' + matchup.team1_projected.toFixed(1)}
                                     </div>
                                   </div>
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>{matchup.team1_id}</AvatarFallback>
+                                  </Avatar>
                                 </div>
-                                <div className="text-center mx-4">
-                                  <div className="text-sm font-bold">VS</div>
+                                <div className="text-center">
+                                  <div className="text-sm font-bold text-muted-foreground">vs</div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <div className="text-right">
+                                <div className="flex items-center gap-2 justify-start">
+                                  <Avatar className="h-8 w-8">
+                                    <AvatarFallback>{matchup.team2_id}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="text-left">
                                     <div className="font-medium">{matchup.team2_name}</div>
                                     <div className="text-xs text-muted-foreground">
                                       {matchup.team2_score > 0 ? `${matchup.team2_score.toFixed(1)} pts` : 'Projected: ' + matchup.team2_projected.toFixed(1)}
                                     </div>
                                   </div>
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback>{matchup.team2_id}</AvatarFallback>
-                                  </Avatar>
                                 </div>
                               </div>
                             ))}
