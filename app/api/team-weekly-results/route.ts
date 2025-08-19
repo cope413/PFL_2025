@@ -3,6 +3,32 @@ import { getUserFromRequest } from '@/lib/auth';
 import { getTeamStanding, getAllStandings, getTeamNameByTeamId, getCurrentWeek, getResults } from '@/lib/database';
 import { TeamInfo, TeamWeeklyResult } from '@/lib/db-types';
 
+// Function to get week dates from the database
+async function getWeekDate(weekNumber: number): Promise<string> {
+  try {
+    const weekData = await getResults({
+      sql: 'SELECT start FROM Weeks WHERE week = ?',
+      args: [weekNumber]
+    });
+    
+    if (weekData && weekData.length > 0) {
+      const startDate = weekData[0].start;
+      // Convert from M/D/YY format to YYYY-MM-DD format
+      const [month, day, year] = startDate.split('/');
+      const fullYear = year.length === 2 ? `20${year}` : year;
+      return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+  } catch (error) {
+    console.error('Error fetching week date:', error);
+  }
+  
+  // Fallback to a calculated date if database lookup fails
+  const baseDate = new Date('2025-09-04'); // Week 1 start date
+  const weekDate = new Date(baseDate);
+  weekDate.setDate(baseDate.getDate() + (weekNumber - 1) * 7);
+  return weekDate.toISOString().split('T')[0];
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -131,6 +157,9 @@ export async function GET(request: NextRequest) {
             result = 'L'; // Default for upcoming games
           }
 
+          // Get the proper date for this week from the database
+          const weekDate = await getWeekDate(weekNum);
+          
           weeklyResults.push({
             week: weekNum,
             opponent,
@@ -138,7 +167,7 @@ export async function GET(request: NextRequest) {
             teamScore,
             opponentScore,
             result,
-            date: `2024-09-${String(weekNum + 20).padStart(2, '0')}`, // Placeholder date
+            date: weekDate,
             isComplete
           });
         }
