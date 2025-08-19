@@ -3,21 +3,15 @@ import { getCurrentWeek, getResults, getTeamNameMap } from '@/lib/database';
 import { Matchup, ApiResponse } from '@/lib/db-types';
 
 export async function GET(request: NextRequest) {
-  const requestId = Math.random().toString(36).substring(7);
-  console.log(`[${requestId}] API call started`);
-
   try {
     const { searchParams } = new URL(request.url);
     let week = searchParams.get('week');
     const leagueId = searchParams.get('leagueId') || 'l1'; // Default league ID
 
-    console.log(`[${requestId}] Request parameters - week: ${week}, leagueId: ${leagueId}`);
-
     // If no week parameter provided, determine current week
     if (!week) {
-      const currentWeek = getCurrentWeek();
+      const currentWeek = await getCurrentWeek();
       week = currentWeek.toString();
-      console.log(`[${requestId}] No week parameter provided, using current week: ${week}`);
     }
 
     // Check if WeeklyMatchups table exists
@@ -26,18 +20,7 @@ export async function GET(request: NextRequest) {
       WHERE type='table' AND name='WeeklyMatchups'
     `);
 
-    console.log(`[${requestId}] WeeklyMatchups table exists:`, !!tableExists);
-
-    if (tableExists) {
-      // Check if there's data in WeeklyMatchups table
-      const weeklyMatchupsData = await getResults({
-        sql: 'SELECT * FROM WeeklyMatchups WHERE week = ?',
-        args: [week]
-      });
-      console.log(`[${requestId}] WeeklyMatchups data for week ${week}:`, weeklyMatchupsData);
-    }
-
-    if (!tableExists) {
+    if (!tableExists || tableExists.length === 0) {
       // If WeeklyMatchups doesn't exist, return mock data with real team names
 
       const teamNameMap = await getTeamNameMap();
@@ -225,7 +208,7 @@ export async function GET(request: NextRequest) {
         }
       ];
 
-      console.log(`[${requestId}] Final mock matchups:`, mockMatchups);
+
 
       return NextResponse.json({
         success: true,

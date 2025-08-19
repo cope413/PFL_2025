@@ -448,25 +448,23 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="border-b pb-4 last:border-0 last:pb-0">
+                    {dashboardData.matchups?.map((matchup, i) => (
+                      <div key={matchup.id} className="border-b pb-4 last:border-0 last:pb-0">
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-sm font-medium text-muted-foreground">
-                            {i === 0 ? "Your Matchup" : `Matchup ${i + 1}`}
+                            {matchup.team1_id === dashboardData.userTeam.id || matchup.team2_id === dashboardData.userTeam.id ? "Your Matchup" : `Matchup ${i + 1}`}
                           </div>
-                          <div className="text-sm text-muted-foreground">Sunday, 1:00 PM</div>
+                          <div className="text-sm text-muted-foreground">{matchup.date}</div>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
-                              <AvatarFallback>{`T${i * 2 + 1}`}</AvatarFallback>
+                              <AvatarFallback>{matchup.team1_id}</AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="font-medium">
-                                {i === 0 ? dashboardData.userTeam.name : `Team ${i * 2 + 1}`}
-                              </div>
+                              <div className="font-medium">{matchup.team1_name}</div>
                               <div className="text-xs text-muted-foreground">
-                                {`(${Math.floor(Math.random() * 3)}-${Math.floor(Math.random() * 3)}-0)`}
+                                {matchup.team1_score > 0 ? `${matchup.team1_score.toFixed(1)} pts` : `Proj: ${matchup.team1_projected.toFixed(1)}`}
                               </div>
                             </div>
                           </div>
@@ -475,13 +473,13 @@ export default function DashboardPage() {
                           </div>
                           <div className="flex items-center gap-3">
                             <div className="text-right">
-                              <div className="font-medium">{`Team ${i * 2 + 2}`}</div>
+                              <div className="font-medium">{matchup.team2_name}</div>
                               <div className="text-xs text-muted-foreground">
-                                {`(${Math.floor(Math.random() * 3)}-${Math.floor(Math.random() * 3)}-0)`}
+                                {matchup.team2_score > 0 ? `${matchup.team2_score.toFixed(1)} pts` : `Proj: ${matchup.team2_projected.toFixed(1)}`}
                               </div>
                             </div>
                             <Avatar className="h-8 w-8">
-                              <AvatarFallback>{`T${i * 2 + 2}`}</AvatarFallback>
+                              <AvatarFallback>{matchup.team2_id}</AvatarFallback>
                             </Avatar>
                           </div>
                         </div>
