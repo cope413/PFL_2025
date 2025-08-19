@@ -50,6 +50,8 @@ export default function PlayersPage() {
   const [selectedPosition, setSelectedPosition] = useState('all')
   const [selectedTeam, setSelectedTeam] = useState('all')
   const [selectedOwnership, setSelectedOwnership] = useState('all')
+  const [currentPage, setCurrentPage] = useState(1)
+  const playersPerPage = 50
 
   // Fetch players data
   useEffect(() => {
@@ -111,9 +113,14 @@ export default function PlayersPage() {
     }
 
     setFilteredPlayers(filtered)
+    setCurrentPage(1) // Reset to first page when filters change
   }, [players, searchTerm, selectedPosition, selectedTeam, selectedOwnership])
 
-
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPlayers.length / playersPerPage)
+  const startIndex = (currentPage - 1) * playersPerPage
+  const endIndex = startIndex + playersPerPage
+  const currentPlayers = filteredPlayers.slice(startIndex, endIndex)
   
   return (
     <div className="min-h-screen bg-background">
@@ -368,6 +375,7 @@ export default function PlayersPage() {
                         setSelectedPosition('all')
                         setSelectedTeam('all')
                         setSelectedOwnership('all')
+                        setCurrentPage(1)
                       }}
                     >
                       <Filter className="mr-2 h-4 w-4" />
@@ -417,16 +425,16 @@ export default function PlayersPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredPlayers.length === 0 ? (
+                      {currentPlayers.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                             No players found matching your filters.
                           </TableCell>
                         </TableRow>
                       ) : (
-                        filteredPlayers.slice(0, 50).map((player, index) => (
+                        currentPlayers.map((player, index) => (
                           <TableRow key={player.id}>
-                            <TableCell>{index + 1}</TableCell>
+                            <TableCell>{startIndex + index + 1}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <Avatar className="h-8 w-8">
@@ -460,7 +468,38 @@ export default function PlayersPage() {
                       )}
                     </TableBody>
                   </Table>
-
+                  
+                  {/* Pagination Controls */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-0 py-4 border-t mt-4">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {startIndex + 1}-{Math.min(endIndex, filteredPlayers.length)} of {filteredPlayers.length} players
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          disabled={currentPage === 1}
+                        >
+                          Previous
+                        </Button>
+                        
+                        <div className="text-sm text-muted-foreground">
+                          Page {currentPage} of {totalPages}
+                        </div>
+                        
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          disabled={currentPage === totalPages}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 )}
               </CardContent>
             </Card>
