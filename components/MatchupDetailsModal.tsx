@@ -78,18 +78,10 @@ export function MatchupDetailsModal({
       <div className="flex items-center gap-3">
         <div className="text-right">
           <div className="font-medium">{player.points} pts</div>
-          <div className="text-xs text-muted-foreground">
-            Proj: {player.projectedPoints}
-          </div>
         </div>
         <Badge variant="outline" className={`text-xs ${getPositionColor(player.position)}`}>
           {player.position}
         </Badge>
-        {player.points > player.projectedPoints ? (
-          <TrendingUp className="h-4 w-4 text-green-600" />
-        ) : player.points < player.projectedPoints ? (
-          <TrendingDown className="h-4 w-4 text-red-600" />
-        ) : null}
       </div>
     </div>
   );
@@ -128,8 +120,16 @@ export function MatchupDetailsModal({
     return null;
   }
 
-  const team1 = matchupDetails.team1;
-  const team2 = matchupDetails.team2;
+  const team1 = {
+    teamName: matchupDetails.team1Name,
+    totalScore: matchupDetails.team1Score,
+    players: matchupDetails.team1Players
+  };
+  const team2 = {
+    teamName: matchupDetails.team2Name,
+    totalScore: matchupDetails.team2Score,
+    players: matchupDetails.team2Players
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -151,7 +151,7 @@ export function MatchupDetailsModal({
                   {team1.teamName} vs {team2.teamName}
                 </CardTitle>
                 <CardDescription>
-                  {matchupDetails.date} • {matchupDetails.isComplete ? 'Final' : 'Projected'}
+                  Week {matchupDetails.week} • {matchupDetails.isComplete ? 'Final' : 'TBD'}
                 </CardDescription>
               </div>
               <div className="text-right">
@@ -172,16 +172,10 @@ export function MatchupDetailsModal({
               <div className="text-center">
                 <div className="text-lg font-medium">{team1.teamName}</div>
                 <div className="text-3xl font-bold text-green-600">{team1.totalScore}</div>
-                <div className="text-sm text-muted-foreground">
-                  Proj: {team1.projectedScore.toFixed(1)}
-                </div>
               </div>
               <div className="text-center">
                 <div className="text-lg font-medium">{team2.teamName}</div>
                 <div className="text-3xl font-bold text-red-600">{team2.totalScore}</div>
-                <div className="text-sm text-muted-foreground">
-                  Proj: {team2.projectedScore.toFixed(1)}
-                </div>
               </div>
             </div>
           </CardContent>
@@ -235,7 +229,7 @@ export function MatchupDetailsModal({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="text-center">
                 <div className="text-2xl font-bold">
                   {selectedTeam === 'team1' ? team1.totalScore : team2.totalScore}
@@ -250,15 +244,6 @@ export function MatchupDetailsModal({
                   }
                 </div>
                 <div className="text-sm text-muted-foreground">Avg per Player</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">
-                  {selectedTeam === 'team1' 
-                    ? team1.players.filter(p => p.points > p.projectedPoints).length
-                    : team2.players.filter(p => p.points > p.projectedPoints).length
-                  }
-                </div>
-                <div className="text-sm text-muted-foreground">Players Above Projection</div>
               </div>
             </div>
           </CardContent>

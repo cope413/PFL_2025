@@ -1071,10 +1071,7 @@ export default function TeamDashboard() {
                                 >
                                   {result.isComplete ? result.result : 'TBD'}
                                 </Badge>
-                                <div className="text-right text-sm">
-                                  <div className="text-muted-foreground">Projected</div>
-                                  <div>{result.teamProjected.toFixed(1)} - {result.opponentProjected.toFixed(1)}</div>
-                                </div>
+
                               </div>
                             </div>
                           ))}

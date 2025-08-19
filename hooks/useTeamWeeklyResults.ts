@@ -6,8 +6,6 @@ export interface WeeklyResult {
   opponentName: string;
   teamScore: number;
   opponentScore: number;
-  teamProjected: number;
-  opponentProjected: number;
   result: 'W' | 'L' | 'T';
   date: string;
   isComplete: boolean;

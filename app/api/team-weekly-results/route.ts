@@ -129,18 +129,12 @@ export async function GET(request: NextRequest) {
             result = 'L'; // Default for upcoming games
           }
 
-          // Calculate realistic projected scores
-          const teamProjected = Math.floor(Math.random() * 30) + 100; // 100-130 range
-          const opponentProjected = Math.floor(Math.random() * 30) + 100;
-
           weeklyResults.push({
             week: weekNum,
             opponent,
             opponentName,
             teamScore,
             opponentScore,
-            teamProjected,
-            opponentProjected,
             result,
             date: `2024-09-${String(weekNum + 20).padStart(2, '0')}`, // Placeholder date
             isComplete

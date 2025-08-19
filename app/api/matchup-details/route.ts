@@ -215,8 +215,6 @@ export async function GET(request: NextRequest) {
 
     const userTotalScore = userPlayers.reduce((sum, p) => sum + p.points, 0);
     const opponentTotalScore = opponentPlayers.reduce((sum, p) => sum + p.points, 0);
-    const userProjectedScore = userPlayers.reduce((sum, p) => sum + p.projectedPoints, 0);
-    const opponentProjectedScore = opponentPlayers.reduce((sum, p) => sum + p.projectedPoints, 0);
 
     // Determine result
     let result: 'W' | 'L' | 'T' = 'L';
@@ -225,22 +223,15 @@ export async function GET(request: NextRequest) {
 
     const matchupDetails: MatchupDetails = {
       week,
-      team1: {
-        teamId: userData.team,
-        teamName: teamNameMap.get(userData.team) || userData.team,
-        totalScore: userTotalScore,
-        projectedScore: userProjectedScore,
-        players: userPlayers
-      },
-      team2: {
-        teamId: opponent,
-        teamName: opponentName,
-        totalScore: opponentTotalScore,
-        projectedScore: opponentProjectedScore,
-        players: opponentPlayers
-      },
+      team1Id: userData.team,
+      team1Name: teamNameMap.get(userData.team) || userData.team,
+      team1Score: userTotalScore,
+      team2Id: opponent,
+      team2Name: opponentName,
+      team2Score: opponentTotalScore,
+      team1Players: userPlayers,
+      team2Players: opponentPlayers,
       result,
-      date: `2024-09-${String(week + 20).padStart(2, '0')}`,
       isComplete: week < currentWeek
     };
 

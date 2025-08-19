@@ -30,13 +30,12 @@ export interface MatchupDetails {
   team1Id: string;
   team1Name: string;
   team1Score: number;
-  team1Projected: number;
   team2Id: string;
   team2Name: string;
   team2Score: number;
-  team2Projected: number;
   team1Players: PlayerScore[];
   team2Players: PlayerScore[];
+  result: 'W' | 'L' | 'T';
   isComplete: boolean;
 }
 
