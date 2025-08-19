@@ -475,9 +475,14 @@ export async function getAllStandings() {
     sql: `
       SELECT
         s.Team_ID,
+        COALESCE(u.team_name, u.username) as teamName,
         COALESCE(s.Wins, 0) as wins,
-        COALESCE(s.PF, 0.0) as pointsFor
+        COALESCE(s.Losses, 0) as losses,
+        COALESCE(s.Ties, 0) as ties,
+        COALESCE(s.PF, 0.0) as pointsFor,
+        COALESCE(s.PA, 0.0) as pointsAgainst
       FROM Standings s
+      LEFT JOIN user u ON s.Team_ID = u.team
       ORDER BY s.Wins DESC, s.PF DESC
     `
   });

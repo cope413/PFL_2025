@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { getTeamStanding, getAllStandings, getTeamNameByTeamId } from '@/lib/database';
+import { getTeamStanding, getAllStandings, getTeamNameByTeamId, getCurrentWeek, getResults } from '@/lib/database';
 import { TeamInfo, TeamWeeklyResult } from '@/lib/db-types';
 
 export async function GET(request: NextRequest) {
@@ -54,47 +54,102 @@ export async function GET(request: NextRequest) {
       division: teamStanding.division
     };
 
-    // Get weekly results (mock data for now since we don't have actual weekly scores)
+    // Get weekly results from WeeklyMatchups and current week
     const weeklyResults = [];
+    const currentWeek = await getCurrentWeek();
+    
+    try {
+      // Get matchup data from WeeklyMatchups table
+      const matchupsQuery = week ? 
+        'SELECT * FROM WeeklyMatchups WHERE Week = ?' :
+        'SELECT * FROM WeeklyMatchups ORDER BY Week';
+      
+      const matchupsData = await getResults(week ? 
+        { sql: matchupsQuery, args: [parseInt(week)] } :
+        { sql: matchupsQuery }
+      );
 
-    // Generate mock weekly results for weeks 1-18
-    for (let weekNum = 1; weekNum <= 18; weekNum++) {
-      // Skip if specific week is requested and doesn't match
-      if (week && parseInt(week) !== weekNum) {
-        continue;
+      // Process each week's matchups to find this team's results
+      for (const weekRow of matchupsData) {
+        const weekNum = weekRow.Week;
+        
+        // Find which team slot this user's team is in
+        let opponent = null;
+        let isTeam1 = false;
+        
+        for (let i = 1; i <= 16; i++) {
+          if (weekRow[`Team_${i}`] === teamId) {
+            // Found the user's team, find their opponent
+            if (i % 2 === 1) {
+              // Odd number, opponent is the next team
+              opponent = weekRow[`Team_${i + 1}`];
+              isTeam1 = true;
+            } else {
+              // Even number, opponent is the previous team
+              opponent = weekRow[`Team_${i - 1}`];
+              isTeam1 = false;
+            }
+            break;
+          }
+        }
+
+        if (opponent) {
+          // Get opponent name
+          const opponentData = await getTeamNameByTeamId(opponent) as any;
+          const opponentName = opponentData?.display_name || opponent;
+
+          // Determine if this week is complete or upcoming
+          const isComplete = weekNum < currentWeek;
+          const isCurrentWeek = weekNum === currentWeek;
+          
+          // Generate realistic but placeholder scores/results
+          let teamScore = 0;
+          let opponentScore = 0;
+          let result: 'W' | 'L' | 'T' = 'L';
+          
+          if (isComplete) {
+            // For completed weeks, generate realistic scores
+            // In the future, this would come from actual WeeklyScores table
+            teamScore = Math.floor(Math.random() * 50) + 80; // 80-130 range
+            opponentScore = Math.floor(Math.random() * 50) + 80;
+            
+            // Determine result based on scores
+            if (teamScore > opponentScore) result = 'W';
+            else if (teamScore === opponentScore) result = 'T';
+            else result = 'L';
+          } else if (isCurrentWeek) {
+            // Current week - might be in progress
+            teamScore = 0;
+            opponentScore = 0;
+            result = 'L'; // Default until game is played
+          } else {
+            // Future weeks - no scores yet
+            teamScore = 0;
+            opponentScore = 0;
+            result = 'L'; // Default for upcoming games
+          }
+
+          // Calculate realistic projected scores
+          const teamProjected = Math.floor(Math.random() * 30) + 100; // 100-130 range
+          const opponentProjected = Math.floor(Math.random() * 30) + 100;
+
+          weeklyResults.push({
+            week: weekNum,
+            opponent,
+            opponentName,
+            teamScore,
+            opponentScore,
+            teamProjected,
+            opponentProjected,
+            result,
+            date: `2024-09-${String(weekNum + 20).padStart(2, '0')}`, // Placeholder date
+            isComplete
+          });
+        }
       }
-
-      // Generate mock opponent
-      const opponents = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'];
-      const opponent = opponents[(weekNum - 1) % opponents.length];
-
-      // Get opponent name
-      const opponentData = await getTeamNameByTeamId(opponent) as any;
-      const opponentName = opponentData?.display_name || opponent;
-
-      // Generate mock scores
-      const teamScore = Math.floor(Math.random() * 50) + 80; // 80-130 range
-      const opponentScore = Math.floor(Math.random() * 50) + 80;
-      const teamProjected = teamScore + Math.floor(Math.random() * 20) - 10; // ±10 from actual
-      const opponentProjected = opponentScore + Math.floor(Math.random() * 20) - 10;
-
-      // Determine result
-      let result: 'W' | 'L' | 'T' = 'L';
-      if (teamScore > opponentScore) result = 'W';
-      else if (teamScore === opponentScore) result = 'T';
-
-      weeklyResults.push({
-        week: weekNum,
-        opponent,
-        opponentName,
-        teamScore,
-        opponentScore,
-        teamProjected,
-        opponentProjected,
-        result,
-        date: `2024-09-${String(weekNum + 20).padStart(2, '0')}`,
-        isComplete: weekNum < 5 // Assume weeks 1-4 are complete
-      });
+    } catch (error) {
+      console.error('Error fetching weekly matchups:', error);
+      // Return empty results instead of mock data
     }
 
     // If specific week requested, return only that week

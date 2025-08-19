@@ -1,26 +1,26 @@
-import { NextResponse } from 'next/server';
-import { mockTeams, mockLeagues, mockMatchups, mockNews, getTeamById } from '@/lib/mockData';
+import { NextRequest, NextResponse } from 'next/server';
 import { ApiResponse } from '@/lib/types';
-import { getCurrentWeek, getResults, getTeamNameMap } from '@/lib/database';
+import { getCurrentWeek, getResults, getTeamNameMap, getAllStandings, getTeamStanding } from '@/lib/database';
 import { Matchup } from '@/lib/db-types';
+import { getUserFromRequest } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Get the main league (assuming first league for now)
-    const league = mockLeagues[0];
-    if (!league) {
+    // Get user from authentication token
+    const authUser = getUserFromRequest(request);
+    if (!authUser) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
-        error: 'No league found'
-      }, { status: 404 });
+        error: 'Authentication required'
+      }, { status: 401 });
     }
 
-    // Get user's team (assuming first team for now)
-    const userTeam = mockTeams[0];
-    if (!userTeam) {
+    // Get user's team information from standings
+    const userTeamStanding = await getTeamStanding(authUser.team);
+    if (!userTeamStanding) {
       return NextResponse.json<ApiResponse<null>>({
         success: false,
-        error: 'No team found'
+        error: 'Team not found in standings'
       }, { status: 404 });
     }
 
@@ -85,68 +85,45 @@ export async function GET() {
       console.error('Error fetching real matchups, falling back to mock data:', error);
     }
 
-    // If no real matchups found, use mock data as fallback but with real current week
+    // If no real matchups found, return empty array - no mock data fallback
     if (currentWeekMatchups.length === 0) {
-      const mockCurrentWeekMatchups = mockMatchups.filter(
-        matchup => matchup.leagueId === league.id && matchup.week === currentWeek
-      );
-      currentWeekMatchups = mockCurrentWeekMatchups.map(m => ({
-        id: m.id,
-        week: m.week,
-        team1_id: m.team1Id,
-        team2_id: m.team2Id,
-        team1_name: getTeamById(m.team1Id)?.name || m.team1Id,
-        team2_name: getTeamById(m.team2Id)?.name || m.team2Id,
-        team1_score: m.team1Score,
-        team2_score: m.team2Score,
-        team1_projected: m.team1Projected,
-        team2_projected: m.team2Projected,
-        date: m.date,
-        is_complete: m.isComplete
-      }));
+      console.log('No matchups found for current week:', currentWeek);
     }
 
     // Get user's current matchup
     const userMatchup = currentWeekMatchups.find(
-      matchup => matchup.team1_id === userTeam.id || matchup.team2_id === userTeam.id
+      matchup => matchup.team1_id === authUser.team || matchup.team2_id === authUser.team
     );
 
-    // Calculate league standings
-    const leagueTeams = mockTeams.filter(team => team.leagueId === league.id);
-    const standings = leagueTeams
-      .map(team => ({
-        teamId: team.id,
-        teamName: team.name,
-        wins: team.record.wins,
-        losses: team.record.losses,
-        ties: team.record.ties,
-        pointsFor: team.pointsFor,
-        pointsAgainst: team.pointsAgainst,
-        rank: 0 // Will be calculated below
-      }))
-      .sort((a, b) => {
-        // Sort by wins, then points for
-        if (a.wins !== b.wins) return b.wins - a.wins;
-        return b.pointsFor - a.pointsFor;
-      })
-      .map((team, index) => ({
-        ...team,
-        rank: index + 1
-      }));
+    // Get real league standings from database
+    const allStandings = await getAllStandings() as any[];
+    const standings = allStandings.map((standing, index) => ({
+      teamId: standing.Team_ID,
+      teamName: standing.teamName || standing.Team_ID,
+      wins: standing.wins,
+      losses: standing.losses || 0,
+      ties: standing.ties || 0,
+      pointsFor: standing.pointsFor,
+      pointsAgainst: standing.pointsAgainst || 0,
+      rank: index + 1
+    }));
 
     // Get user's rank
-    const userRank = standings.find(s => s.teamId === userTeam.id)?.rank || 0;
+    const userRank = allStandings.findIndex(s => s.Team_ID === authUser.team) + 1;
 
-    // Get recent news
-    const recentNews = mockNews.slice(0, 3);
+    // Remove news section - no real news data available
 
     const dashboardData = {
       userTeam: {
-        id: userTeam.id,
-        name: userTeam.name,
-        record: userTeam.record,
-        pointsFor: userTeam.pointsFor,
-        pointsAgainst: userTeam.pointsAgainst,
+        id: authUser.team,
+        name: userTeamStanding.teamName,
+        record: {
+          wins: userTeamStanding.wins,
+          losses: userTeamStanding.losses,
+          ties: userTeamStanding.ties
+        },
+        pointsFor: userTeamStanding.pointsFor,
+        pointsAgainst: userTeamStanding.pointsAgainst,
         rank: userRank,
         leaguePosition: `${userRank}${getOrdinalSuffix(userRank)}`
       },
@@ -158,18 +135,17 @@ export async function GET() {
         team1Projected: userMatchup.team1_projected,
         team2Projected: userMatchup.team2_projected,
         date: userMatchup.date,
-        isUserTeam1: userMatchup.team1_id === userTeam.id
+        isUserTeam1: userMatchup.team1_id === authUser.team
       } : null,
       matchups: currentWeekMatchups,
       league: {
-        id: league.id,
-        name: league.name,
-        type: league.type,
+        id: "main",
+        name: "PFL 2025",
+        type: "fantasy",
         currentWeek: currentWeek,
-        totalTeams: leagueTeams.length
+        totalTeams: standings.length
       },
-      standings: standings.slice(0, 6), // Top 6 teams
-      news: recentNews
+      standings: standings.slice(0, 6) // Top 6 teams
     };
 
 

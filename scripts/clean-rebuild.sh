@@ -66,12 +66,20 @@ clean_build_artifacts() {
 reinstall_dependencies() {
     echo "📦 Reinstalling dependencies..."
     
+    # Remove pnpm-lock.yaml if it exists to avoid conflicts
+    if [ -f "pnpm-lock.yaml" ]; then
+        rm pnpm-lock.yaml
+        echo "✅ Removed pnpm-lock.yaml"
+    fi
+    
     # Install dependencies with legacy peer deps to avoid conflicts
-    npm install --legacy-peer-deps
+    npm install --legacy-peer-deps 2>&1 | tee npm-install.log
     if [ $? -eq 0 ]; then
         echo "✅ Dependencies installed successfully"
+        rm -f npm-install.log
     else
         echo "❌ Failed to install dependencies"
+        echo "📋 Check npm-install.log for details"
         exit 1
     fi
 }
@@ -80,11 +88,16 @@ reinstall_dependencies() {
 build_project() {
     echo "🔨 Building project..."
     
-    npm run build
-    if [ $? -eq 0 ]; then
+    # Build with output capture to handle pnpm warnings
+    npm run build 2>&1 | tee build.log
+    BUILD_EXIT_CODE=${PIPESTATUS[0]}
+    
+    if [ $BUILD_EXIT_CODE -eq 0 ]; then
         echo "✅ Build completed successfully"
+        rm -f build.log
     else
         echo "❌ Build failed"
+        echo "📋 Check build.log for details"
         exit 1
     fi
 }
@@ -93,8 +106,9 @@ build_project() {
 start_server() {
     echo "🚀 Starting production server..."
     
-    # Start in background
-    npm start &
+    # Start in background with output redirection
+    npm start > server.log 2>&1 &
+    SERVER_PID=$!
     
     # Wait for server to start
     echo "⏳ Waiting for server to start..."
@@ -103,8 +117,13 @@ start_server() {
     # Check if server is running
     if curl -s http://localhost:3000 >/dev/null 2>&1; then
         echo "✅ Server is running on http://localhost:3000"
+        echo "📋 Server PID: $SERVER_PID"
     else
         echo "❌ Server failed to start"
+        echo "📋 Check server.log for details"
+        if kill -0 $SERVER_PID 2>/dev/null; then
+            kill $SERVER_PID 2>/dev/null || true
+        fi
         exit 1
     fi
 }

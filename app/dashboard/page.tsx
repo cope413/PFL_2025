@@ -62,7 +62,7 @@ interface DashboardData {
     pointsAgainst: number;
     rank: number;
   }>;
-  news: Array<{
+  news?: Array<{
     id: string;
     title: string;
     content: string;
@@ -386,7 +386,7 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {dashboardData.news.slice(0, 3).map((item) => (
+                      {dashboardData.news?.slice(0, 3).map((item) => (
                         <div key={item.id} className="border-b pb-4 last:border-0 last:pb-0">
                           <h3 className="font-medium">{item.title}</h3>
                           <p className="text-sm text-muted-foreground mt-1">
@@ -401,7 +401,11 @@ export default function DashboardPage() {
                             </span>
                           </div>
                         </div>
-                      ))}
+                      )) || (
+                        <div className="text-center text-muted-foreground">
+                          <p>No news available</p>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                   <CardFooter>

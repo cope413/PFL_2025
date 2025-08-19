@@ -1054,18 +1054,22 @@ export default function TeamDashboard() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <div className="text-sm font-medium">{teamInfo.teamName}</div>
-                                  <div className="text-lg font-bold">{result.teamScore}</div>
+                                  <div className="text-lg font-bold">
+                                    {result.isComplete ? result.teamScore : '-'}
+                                  </div>
                                   <div className="text-sm text-muted-foreground">vs</div>
-                                  <div className="text-lg font-bold">{result.opponentScore}</div>
+                                  <div className="text-lg font-bold">
+                                    {result.isComplete ? result.opponentScore : '-'}
+                                  </div>
                                   <div className="text-sm font-medium">{result.opponentName}</div>
                                 </div>
                               </div>
                               <div className="flex items-center gap-3">
                                 <Badge 
                                   variant="outline" 
-                                  className={`${getResultColor(result.result)} font-bold`}
+                                  className={`${result.isComplete ? getResultColor(result.result) : 'bg-gray-100 text-gray-800 border-gray-200'} font-bold`}
                                 >
-                                  {result.result}
+                                  {result.isComplete ? result.result : 'TBD'}
                                 </Badge>
                                 <div className="text-right text-sm">
                                   <div className="text-muted-foreground">Projected</div>
@@ -1095,19 +1099,34 @@ export default function TeamDashboard() {
                             <div className="flex items-center justify-between">
                               <span className="text-sm">Average Score</span>
                               <span className="font-medium">
-                                {(weeklyResults.reduce((sum, r) => sum + r.teamScore, 0) / weeklyResults.length).toFixed(1)} pts
+                                {(() => {
+                                  const completedGames = weeklyResults.filter(r => r.isComplete);
+                                  return completedGames.length > 0 
+                                    ? (completedGames.reduce((sum, r) => sum + r.teamScore, 0) / completedGames.length).toFixed(1)
+                                    : '0.0';
+                                })()} pts
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-sm">Highest Score</span>
                               <span className="font-medium">
-                                {Math.max(...weeklyResults.map(r => r.teamScore))} pts
+                                {(() => {
+                                  const completedGames = weeklyResults.filter(r => r.isComplete);
+                                  return completedGames.length > 0 
+                                    ? Math.max(...completedGames.map(r => r.teamScore))
+                                    : 0;
+                                })()} pts
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-sm">Lowest Score</span>
                               <span className="font-medium">
-                                {Math.min(...weeklyResults.map(r => r.teamScore))} pts
+                                {(() => {
+                                  const completedGames = weeklyResults.filter(r => r.isComplete);
+                                  return completedGames.length > 0 
+                                    ? Math.min(...completedGames.map(r => r.teamScore))
+                                    : 0;
+                                })()} pts
                               </span>
                             </div>
                           </div>
@@ -1115,19 +1134,19 @@ export default function TeamDashboard() {
                             <div className="flex items-center justify-between">
                               <span className="text-sm">Wins</span>
                               <span className="font-medium text-green-600">
-                                {weeklyResults.filter(r => r.result === 'W').length}
+                                {weeklyResults.filter(r => r.isComplete && r.result === 'W').length}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-sm">Losses</span>
                               <span className="font-medium text-red-600">
-                                {weeklyResults.filter(r => r.result === 'L').length}
+                                {weeklyResults.filter(r => r.isComplete && r.result === 'L').length}
                               </span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span className="text-sm">Ties</span>
                               <span className="font-medium text-yellow-600">
-                                {weeklyResults.filter(r => r.result === 'T').length}
+                                {weeklyResults.filter(r => r.isComplete && r.result === 'T').length}
                               </span>
                             </div>
                           </div>

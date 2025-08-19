@@ -21,73 +21,11 @@ export async function GET(request: NextRequest) {
     `);
 
     if (!tableExists || tableExists.length === 0) {
-      // If WeeklyMatchups doesn't exist, return mock data with real team names
-
-      const teamNameMap = await getTeamNameMap();
-
-      const mockMatchups: Matchup[] = [
-        {
-          id: 'm1',
-          week: parseInt(week),
-          team1_id: 'A1',
-          team2_id: 'A2',
-          team1_name: teamNameMap.get('A1') || 'A1',
-          team2_name: teamNameMap.get('A2') || 'A2',
-          team1_score: 124.2,
-          team2_score: 98.7,
-          team1_projected: 120.0,
-          team2_projected: 105.0,
-          date: '2024-09-22',
-          is_complete: true
-        },
-        {
-          id: 'm2',
-          week: parseInt(week),
-          team1_id: 'A3',
-          team2_id: 'A4',
-          team1_name: teamNameMap.get('A3') || 'A3',
-          team2_name: teamNameMap.get('A4') || 'A4',
-          team1_score: 0,
-          team2_score: 0,
-          team1_projected: 115.5,
-          team2_projected: 110.2,
-          date: '2024-09-22',
-          is_complete: false
-        },
-        {
-          id: 'm3',
-          week: parseInt(week),
-          team1_id: 'B1',
-          team2_id: 'B2',
-          team1_name: teamNameMap.get('B1') || 'B1',
-          team2_name: teamNameMap.get('B2') || 'B2',
-          team1_score: 0,
-          team2_score: 0,
-          team1_projected: 118.3,
-          team2_projected: 112.7,
-          date: '2024-09-22',
-          is_complete: false
-        },
-        {
-          id: 'm4',
-          week: parseInt(week),
-          team1_id: 'B3',
-          team2_id: 'B4',
-          team1_name: teamNameMap.get('B3') || 'B3',
-          team2_name: teamNameMap.get('B4') || 'B4',
-          team1_score: 0,
-          team2_score: 0,
-          team1_projected: 106.8,
-          team2_projected: 109.4,
-          date: '2024-09-22',
-          is_complete: false
-        }
-      ];
-
+      // If WeeklyMatchups doesn't exist, return empty array
       return NextResponse.json<ApiResponse<Matchup[]>>({
         success: true,
-        data: mockMatchups,
-        message: 'Mock matchups retrieved (WeeklyMatchups table not found)'
+        data: [],
+        message: 'No matchups available - WeeklyMatchups table not found'
       });
     }
 
@@ -147,73 +85,12 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // If no matchups found, return mock data
+    // If no matchups found, return empty array
     if (matchups.length === 0) {
-      const mockMatchups: Matchup[] = [
-        {
-          id: 'm1',
-          week: parseInt(week),
-          team1_id: 't1',
-          team2_id: 't2',
-          team1_name: 'The Touchdown Titans',
-          team2_name: 'Team A2',
-          team1_score: 124.2,
-          team2_score: 98.7,
-          team1_projected: 120.0,
-          team2_projected: 105.0,
-          date: '2024-09-22',
-          is_complete: true
-        },
-        {
-          id: 'm2',
-          week: parseInt(week),
-          team1_id: 't3',
-          team2_id: 't4',
-          team1_name: 'Team A3',
-          team2_name: 'Team A4',
-          team1_score: 0,
-          team2_score: 0,
-          team1_projected: 115.5,
-          team2_projected: 110.2,
-          date: '2024-09-22',
-          is_complete: false
-        },
-        {
-          id: 'm3',
-          week: parseInt(week),
-          team1_id: 't5',
-          team2_id: 't6',
-          team1_name: 'Team B1',
-          team2_name: 'Team B2',
-          team1_score: 0,
-          team2_score: 0,
-          team1_projected: 118.3,
-          team2_projected: 112.7,
-          date: '2024-09-22',
-          is_complete: false
-        },
-        {
-          id: 'm4',
-          week: parseInt(week),
-          team1_id: 't7',
-          team2_id: 't8',
-          team1_name: 'Team B3',
-          team2_name: 'Team B4',
-          team1_score: 0,
-          team2_score: 0,
-          team1_projected: 106.8,
-          team2_projected: 109.4,
-          date: '2024-09-22',
-          is_complete: false
-        }
-      ];
-
-
-
-      return NextResponse.json({
+      return NextResponse.json<ApiResponse<Matchup[]>>({
         success: true,
-        data: mockMatchups,
-        message: `Mock matchups retrieved (no data in WeeklyMatchups table)`
+        data: [],
+        message: `No matchups found for week ${week}`
       });
     }
 
