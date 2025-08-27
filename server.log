@@ -7,7 +7,7 @@
    - Network:      http://192.168.86.27:3000
 
  ✓ Starting...
- ✓ Ready in 573ms
+ ✓ Ready in 602ms
 Standings query result: [
   {
     id: 'A1',
@@ -202,6 +202,15 @@ Standings query result: [
     rank: 0
   }
 ]
+LeaguesPage render: {
+  matchups: [],
+  loading: true,
+  error: null,
+  currentWeekFromMatchups: 1
+}
+Current players state: []
+Starters: []
+Bench: []
 Login API called
 Login attempt for: cope413
 Calling loginUser function...
@@ -230,72 +239,6 @@ Login successful for user: cope413
 Login successful, generating token...
 Returning success response
 Current date: 2025-08-27
-Current date: 2025-08-27
-All weeks in database: [
-  { week: 1, start: '9/4/25', end: '9/10/25' },
-  { week: 2, start: '9/11/25', end: '9/17/25' },
-  { week: 3, start: '9/18/25', end: '9/24/25' },
-  { week: 4, start: '9/25/25', end: '10/1/25' },
-  { week: 5, start: '10/2/25', end: '10/8/25' },
-  { week: 6, start: '10/9/25', end: '10/15/25' },
-  { week: 7, start: '10/16/25', end: '10/22/25' },
-  { week: 8, start: '10/23/25', end: '10/29/25' },
-  { week: 9, start: '10/30/25', end: '11/5/25' },
-  { week: 10, start: '11/6/25', end: '11/12/25' },
-  { week: 11, start: '11/13/25', end: '11/19/25' },
-  { week: 12, start: '11/20/25', end: '11/26/25' },
-  { week: 13, start: '11/27/25', end: '12/3/25' },
-  { week: 14, start: '12/4/25', end: '12/10/25' },
-  { week: 15, start: '12/11/25', end: '12/17/25' },
-  { week: 16, start: '12/18/25', end: '12/24/25' },
-  { week: 17, start: '12/25/25', end: '12/31/25' },
-  { week: 18, start: '1/3/26', end: '1/9/26' },
-  { week: 19, start: '1/10/26', end: '1/16/26' },
-  { week: 20, start: '1/17/26', end: '1/23/26' }
-]
-Checking week 1: 9/4/25 to 9/10/25
-Current date 2025-08-27 between 9/4/25 and 9/10/25? false
-Checking week 2: 9/11/25 to 9/17/25
-Current date 2025-08-27 between 9/11/25 and 9/17/25? false
-Checking week 3: 9/18/25 to 9/24/25
-Current date 2025-08-27 between 9/18/25 and 9/24/25? false
-Checking week 4: 9/25/25 to 10/1/25
-Current date 2025-08-27 between 9/25/25 and 10/1/25? false
-Checking week 5: 10/2/25 to 10/8/25
-Current date 2025-08-27 between 10/2/25 and 10/8/25? false
-Checking week 6: 10/9/25 to 10/15/25
-Current date 2025-08-27 between 10/9/25 and 10/15/25? false
-Checking week 7: 10/16/25 to 10/22/25
-Current date 2025-08-27 between 10/16/25 and 10/22/25? false
-Checking week 8: 10/23/25 to 10/29/25
-Current date 2025-08-27 between 10/23/25 and 10/29/25? false
-Checking week 9: 10/30/25 to 11/5/25
-Current date 2025-08-27 between 10/30/25 and 11/5/25? false
-Checking week 10: 11/6/25 to 11/12/25
-Current date 2025-08-27 between 11/6/25 and 11/12/25? false
-Checking week 11: 11/13/25 to 11/19/25
-Current date 2025-08-27 between 11/13/25 and 11/19/25? false
-Checking week 12: 11/20/25 to 11/26/25
-Current date 2025-08-27 between 11/20/25 and 11/26/25? false
-Checking week 13: 11/27/25 to 12/3/25
-Current date 2025-08-27 between 11/27/25 and 12/3/25? false
-Checking week 14: 12/4/25 to 12/10/25
-Current date 2025-08-27 between 12/4/25 and 12/10/25? false
-Checking week 15: 12/11/25 to 12/17/25
-Current date 2025-08-27 between 12/11/25 and 12/17/25? false
-Checking week 16: 12/18/25 to 12/24/25
-Current date 2025-08-27 between 12/18/25 and 12/24/25? false
-Checking week 17: 12/25/25 to 12/31/25
-Current date 2025-08-27 between 12/25/25 and 12/31/25? false
-Checking week 18: 1/3/26 to 1/9/26
-Current date 2025-08-27 between 1/3/26 and 1/9/26? false
-Checking week 19: 1/10/26 to 1/16/26
-Current date 2025-08-27 between 1/10/26 and 1/16/26? false
-Checking week 20: 1/17/26 to 1/23/26
-Current date 2025-08-27 between 1/17/26 and 1/23/26? false
-No current week found in date ranges
-First week starts: 9/4/25, Last week ends: 1/23/26
-Current date is before season starts, returning week 1
 All weeks in database: [
   { week: 1, start: '9/4/25', end: '9/10/25' },
   { week: 2, start: '9/11/25', end: '9/17/25' },
@@ -362,6 +305,72 @@ No current week found in date ranges
 First week starts: 9/4/25, Last week ends: 1/23/26
 Current date is before season starts, returning week 1
 Current week determined: 1
+Current date: 2025-08-27
+All weeks in database: [
+  { week: 1, start: '9/4/25', end: '9/10/25' },
+  { week: 2, start: '9/11/25', end: '9/17/25' },
+  { week: 3, start: '9/18/25', end: '9/24/25' },
+  { week: 4, start: '9/25/25', end: '10/1/25' },
+  { week: 5, start: '10/2/25', end: '10/8/25' },
+  { week: 6, start: '10/9/25', end: '10/15/25' },
+  { week: 7, start: '10/16/25', end: '10/22/25' },
+  { week: 8, start: '10/23/25', end: '10/29/25' },
+  { week: 9, start: '10/30/25', end: '11/5/25' },
+  { week: 10, start: '11/6/25', end: '11/12/25' },
+  { week: 11, start: '11/13/25', end: '11/19/25' },
+  { week: 12, start: '11/20/25', end: '11/26/25' },
+  { week: 13, start: '11/27/25', end: '12/3/25' },
+  { week: 14, start: '12/4/25', end: '12/10/25' },
+  { week: 15, start: '12/11/25', end: '12/17/25' },
+  { week: 16, start: '12/18/25', end: '12/24/25' },
+  { week: 17, start: '12/25/25', end: '12/31/25' },
+  { week: 18, start: '1/3/26', end: '1/9/26' },
+  { week: 19, start: '1/10/26', end: '1/16/26' },
+  { week: 20, start: '1/17/26', end: '1/23/26' }
+]
+Checking week 1: 9/4/25 to 9/10/25
+Current date 2025-08-27 between 9/4/25 and 9/10/25? false
+Checking week 2: 9/11/25 to 9/17/25
+Current date 2025-08-27 between 9/11/25 and 9/17/25? false
+Checking week 3: 9/18/25 to 9/24/25
+Current date 2025-08-27 between 9/18/25 and 9/24/25? false
+Checking week 4: 9/25/25 to 10/1/25
+Current date 2025-08-27 between 9/25/25 and 10/1/25? false
+Checking week 5: 10/2/25 to 10/8/25
+Current date 2025-08-27 between 10/2/25 and 10/8/25? false
+Checking week 6: 10/9/25 to 10/15/25
+Current date 2025-08-27 between 10/9/25 and 10/15/25? false
+Checking week 7: 10/16/25 to 10/22/25
+Current date 2025-08-27 between 10/16/25 and 10/22/25? false
+Checking week 8: 10/23/25 to 10/29/25
+Current date 2025-08-27 between 10/23/25 and 10/29/25? false
+Checking week 9: 10/30/25 to 11/5/25
+Current date 2025-08-27 between 10/30/25 and 11/5/25? false
+Checking week 10: 11/6/25 to 11/12/25
+Current date 2025-08-27 between 11/6/25 and 11/12/25? false
+Checking week 11: 11/13/25 to 11/19/25
+Current date 2025-08-27 between 11/13/25 and 11/19/25? false
+Checking week 12: 11/20/25 to 11/26/25
+Current date 2025-08-27 between 11/20/25 and 11/26/25? false
+Checking week 13: 11/27/25 to 12/3/25
+Current date 2025-08-27 between 11/27/25 and 12/3/25? false
+Checking week 14: 12/4/25 to 12/10/25
+Current date 2025-08-27 between 12/4/25 and 12/10/25? false
+Checking week 15: 12/11/25 to 12/17/25
+Current date 2025-08-27 between 12/11/25 and 12/17/25? false
+Checking week 16: 12/18/25 to 12/24/25
+Current date 2025-08-27 between 12/18/25 and 12/24/25? false
+Checking week 17: 12/25/25 to 12/31/25
+Current date 2025-08-27 between 12/25/25 and 12/31/25? false
+Checking week 18: 1/3/26 to 1/9/26
+Current date 2025-08-27 between 1/3/26 and 1/9/26? false
+Checking week 19: 1/10/26 to 1/16/26
+Current date 2025-08-27 between 1/10/26 and 1/16/26? false
+Checking week 20: 1/17/26 to 1/23/26
+Current date 2025-08-27 between 1/17/26 and 1/23/26? false
+No current week found in date ranges
+First week starts: 9/4/25, Last week ends: 1/23/26
+Current date is before season starts, returning week 1
 Getting lineup for user: C2 week: 1
 Saving lineup for user: C2 week: 1
 Lineup data: {
@@ -375,151 +384,20 @@ Lineup data: {
   DEF: '99994'
 }
 Lineup saved successfully
+Getting lineup for user: C2 week: 1
 Submitting lineup for user: C2 week: 1
 Lineup data: {
   QB: '829',
   RB_1: '456',
   WR_1: '462',
-  FLEX_1: '',
-  FLEX_2: '',
+  FLEX_1: '71',
+  FLEX_2: '376',
   TE: '161',
-  K: '',
+  K: '523',
   DEF: '99994'
 }
-Current date: 2025-08-27
-All weeks in database: [
-  { week: 1, start: '9/4/25', end: '9/10/25' },
-  { week: 2, start: '9/11/25', end: '9/17/25' },
-  { week: 3, start: '9/18/25', end: '9/24/25' },
-  { week: 4, start: '9/25/25', end: '10/1/25' },
-  { week: 5, start: '10/2/25', end: '10/8/25' },
-  { week: 6, start: '10/9/25', end: '10/15/25' },
-  { week: 7, start: '10/16/25', end: '10/22/25' },
-  { week: 8, start: '10/23/25', end: '10/29/25' },
-  { week: 9, start: '10/30/25', end: '11/5/25' },
-  { week: 10, start: '11/6/25', end: '11/12/25' },
-  { week: 11, start: '11/13/25', end: '11/19/25' },
-  { week: 12, start: '11/20/25', end: '11/26/25' },
-  { week: 13, start: '11/27/25', end: '12/3/25' },
-  { week: 14, start: '12/4/25', end: '12/10/25' },
-  { week: 15, start: '12/11/25', end: '12/17/25' },
-  { week: 16, start: '12/18/25', end: '12/24/25' },
-  { week: 17, start: '12/25/25', end: '12/31/25' },
-  { week: 18, start: '1/3/26', end: '1/9/26' },
-  { week: 19, start: '1/10/26', end: '1/16/26' },
-  { week: 20, start: '1/17/26', end: '1/23/26' }
-]
-Checking week 1: 9/4/25 to 9/10/25
-Current date 2025-08-27 between 9/4/25 and 9/10/25? false
-Checking week 2: 9/11/25 to 9/17/25
-Current date 2025-08-27 between 9/11/25 and 9/17/25? false
-Checking week 3: 9/18/25 to 9/24/25
-Current date 2025-08-27 between 9/18/25 and 9/24/25? false
-Checking week 4: 9/25/25 to 10/1/25
-Current date 2025-08-27 between 9/25/25 and 10/1/25? false
-Checking week 5: 10/2/25 to 10/8/25
-Current date 2025-08-27 between 10/2/25 and 10/8/25? false
-Checking week 6: 10/9/25 to 10/15/25
-Current date 2025-08-27 between 10/9/25 and 10/15/25? false
-Checking week 7: 10/16/25 to 10/22/25
-Current date 2025-08-27 between 10/16/25 and 10/22/25? false
-Checking week 8: 10/23/25 to 10/29/25
-Current date 2025-08-27 between 10/23/25 and 10/29/25? false
-Checking week 9: 10/30/25 to 11/5/25
-Current date 2025-08-27 between 10/30/25 and 11/5/25? false
-Checking week 10: 11/6/25 to 11/12/25
-Current date 2025-08-27 between 11/6/25 and 11/12/25? false
-Checking week 11: 11/13/25 to 11/19/25
-Current date 2025-08-27 between 11/13/25 and 11/19/25? false
-Checking week 12: 11/20/25 to 11/26/25
-Current date 2025-08-27 between 11/20/25 and 11/26/25? false
-Checking week 13: 11/27/25 to 12/3/25
-Current date 2025-08-27 between 11/27/25 and 12/3/25? false
-Checking week 14: 12/4/25 to 12/10/25
-Current date 2025-08-27 between 12/4/25 and 12/10/25? false
-Checking week 15: 12/11/25 to 12/17/25
-Current date 2025-08-27 between 12/11/25 and 12/17/25? false
-Checking week 16: 12/18/25 to 12/24/25
-Current date 2025-08-27 between 12/18/25 and 12/24/25? false
-Checking week 17: 12/25/25 to 12/31/25
-Current date 2025-08-27 between 12/25/25 and 12/31/25? false
-Checking week 18: 1/3/26 to 1/9/26
-Current date 2025-08-27 between 1/3/26 and 1/9/26? false
-Checking week 19: 1/10/26 to 1/16/26
-Current date 2025-08-27 between 1/10/26 and 1/16/26? false
-Checking week 20: 1/17/26 to 1/23/26
-Current date 2025-08-27 between 1/17/26 and 1/23/26? false
-No current week found in date ranges
-First week starts: 9/4/25, Last week ends: 1/23/26
-Current date is before season starts, returning week 1
-Current week determined: 1
-Current date: 2025-08-27
-All weeks in database: [
-  { week: 1, start: '9/4/25', end: '9/10/25' },
-  { week: 2, start: '9/11/25', end: '9/17/25' },
-  { week: 3, start: '9/18/25', end: '9/24/25' },
-  { week: 4, start: '9/25/25', end: '10/1/25' },
-  { week: 5, start: '10/2/25', end: '10/8/25' },
-  { week: 6, start: '10/9/25', end: '10/15/25' },
-  { week: 7, start: '10/16/25', end: '10/22/25' },
-  { week: 8, start: '10/23/25', end: '10/29/25' },
-  { week: 9, start: '10/30/25', end: '11/5/25' },
-  { week: 10, start: '11/6/25', end: '11/12/25' },
-  { week: 11, start: '11/13/25', end: '11/19/25' },
-  { week: 12, start: '11/20/25', end: '11/26/25' },
-  { week: 13, start: '11/27/25', end: '12/3/25' },
-  { week: 14, start: '12/4/25', end: '12/10/25' },
-  { week: 15, start: '12/11/25', end: '12/17/25' },
-  { week: 16, start: '12/18/25', end: '12/24/25' },
-  { week: 17, start: '12/25/25', end: '12/31/25' },
-  { week: 18, start: '1/3/26', end: '1/9/26' },
-  { week: 19, start: '1/10/26', end: '1/16/26' },
-  { week: 20, start: '1/17/26', end: '1/23/26' }
-]
-Checking week 1: 9/4/25 to 9/10/25
-Current date 2025-08-27 between 9/4/25 and 9/10/25? false
-Checking week 2: 9/11/25 to 9/17/25
-Current date 2025-08-27 between 9/11/25 and 9/17/25? false
-Checking week 3: 9/18/25 to 9/24/25
-Current date 2025-08-27 between 9/18/25 and 9/24/25? false
-Checking week 4: 9/25/25 to 10/1/25
-Current date 2025-08-27 between 9/25/25 and 10/1/25? false
-Checking week 5: 10/2/25 to 10/8/25
-Current date 2025-08-27 between 10/2/25 and 10/8/25? false
-Checking week 6: 10/9/25 to 10/15/25
-Current date 2025-08-27 between 10/9/25 and 10/15/25? false
-Checking week 7: 10/16/25 to 10/22/25
-Current date 2025-08-27 between 10/16/25 and 10/22/25? false
-Checking week 8: 10/23/25 to 10/29/25
-Current date 2025-08-27 between 10/23/25 and 10/29/25? false
-Checking week 9: 10/30/25 to 11/5/25
-Current date 2025-08-27 between 10/30/25 and 11/5/25? false
-Checking week 10: 11/6/25 to 11/12/25
-Current date 2025-08-27 between 11/6/25 and 11/12/25? false
-Checking week 11: 11/13/25 to 11/19/25
-Current date 2025-08-27 between 11/13/25 and 11/19/25? false
-Checking week 12: 11/20/25 to 11/26/25
-Current date 2025-08-27 between 11/20/25 and 11/26/25? false
-Checking week 13: 11/27/25 to 12/3/25
-Current date 2025-08-27 between 11/27/25 and 12/3/25? false
-Checking week 14: 12/4/25 to 12/10/25
-Current date 2025-08-27 between 12/4/25 and 12/10/25? false
-Checking week 15: 12/11/25 to 12/17/25
-Current date 2025-08-27 between 12/11/25 and 12/17/25? false
-Checking week 16: 12/18/25 to 12/24/25
-Current date 2025-08-27 between 12/18/25 and 12/24/25? false
-Checking week 17: 12/25/25 to 12/31/25
-Current date 2025-08-27 between 12/25/25 and 12/31/25? false
-Checking week 18: 1/3/26 to 1/9/26
-Current date 2025-08-27 between 1/3/26 and 1/9/26? false
-Checking week 19: 1/10/26 to 1/16/26
-Current date 2025-08-27 between 1/10/26 and 1/16/26? false
-Checking week 20: 1/17/26 to 1/23/26
-Current date 2025-08-27 between 1/17/26 and 1/23/26? false
-No current week found in date ranges
-First week starts: 9/4/25, Last week ends: 1/23/26
-Current date is before season starts, returning week 1
-Getting lineup for user: C2 week: 1
+Email sent successfully: <fac6fd05-1e15-5646-9722-43bebeea000d@landryfam.com>
+Lineup submitted successfully with email confirmation
 Standings query result: [
   {
     id: 'A1',
@@ -780,7 +658,6 @@ Current date 2025-08-27 between 1/17/26 and 1/23/26? false
 No current week found in date ranges
 First week starts: 9/4/25, Last week ends: 1/23/26
 Current date is before season starts, returning week 1
-Current week determined: 1
 Current date: 2025-08-27
 All weeks in database: [
   { week: 1, start: '9/4/25', end: '9/10/25' },
@@ -847,4 +724,717 @@ Current date 2025-08-27 between 1/17/26 and 1/23/26? false
 No current week found in date ranges
 First week starts: 9/4/25, Last week ends: 1/23/26
 Current date is before season starts, returning week 1
-Getting lineup for user: C2 week: 1
+Current date: 2025-08-27
+All weeks in database: [
+  { week: 1, start: '9/4/25', end: '9/10/25' },
+  { week: 2, start: '9/11/25', end: '9/17/25' },
+  { week: 3, start: '9/18/25', end: '9/24/25' },
+  { week: 4, start: '9/25/25', end: '10/1/25' },
+  { week: 5, start: '10/2/25', end: '10/8/25' },
+  { week: 6, start: '10/9/25', end: '10/15/25' },
+  { week: 7, start: '10/16/25', end: '10/22/25' },
+  { week: 8, start: '10/23/25', end: '10/29/25' },
+  { week: 9, start: '10/30/25', end: '11/5/25' },
+  { week: 10, start: '11/6/25', end: '11/12/25' },
+  { week: 11, start: '11/13/25', end: '11/19/25' },
+  { week: 12, start: '11/20/25', end: '11/26/25' },
+  { week: 13, start: '11/27/25', end: '12/3/25' },
+  { week: 14, start: '12/4/25', end: '12/10/25' },
+  { week: 15, start: '12/11/25', end: '12/17/25' },
+  { week: 16, start: '12/18/25', end: '12/24/25' },
+  { week: 17, start: '12/25/25', end: '12/31/25' },
+  { week: 18, start: '1/3/26', end: '1/9/26' },
+  { week: 19, start: '1/10/26', end: '1/16/26' },
+  { week: 20, start: '1/17/26', end: '1/23/26' }
+]
+Checking week 1: 9/4/25 to 9/10/25
+Current date 2025-08-27 between 9/4/25 and 9/10/25? false
+Checking week 2: 9/11/25 to 9/17/25
+Current date 2025-08-27 between 9/11/25 and 9/17/25? false
+Checking week 3: 9/18/25 to 9/24/25
+Current date 2025-08-27 between 9/18/25 and 9/24/25? false
+Checking week 4: 9/25/25 to 10/1/25
+Current date 2025-08-27 between 9/25/25 and 10/1/25? false
+Checking week 5: 10/2/25 to 10/8/25
+Current date 2025-08-27 between 10/2/25 and 10/8/25? false
+Checking week 6: 10/9/25 to 10/15/25
+Current date 2025-08-27 between 10/9/25 and 10/15/25? false
+Checking week 7: 10/16/25 to 10/22/25
+Current date 2025-08-27 between 10/16/25 and 10/22/25? false
+Checking week 8: 10/23/25 to 10/29/25
+Current date 2025-08-27 between 10/23/25 and 10/29/25? false
+Checking week 9: 10/30/25 to 11/5/25
+Current date 2025-08-27 between 10/30/25 and 11/5/25? false
+Checking week 10: 11/6/25 to 11/12/25
+Current date 2025-08-27 between 11/6/25 and 11/12/25? false
+Checking week 11: 11/13/25 to 11/19/25
+Current date 2025-08-27 between 11/13/25 and 11/19/25? false
+Checking week 12: 11/20/25 to 11/26/25
+Current date 2025-08-27 between 11/20/25 and 11/26/25? false
+Checking week 13: 11/27/25 to 12/3/25
+Current date 2025-08-27 between 11/27/25 and 12/3/25? false
+Checking week 14: 12/4/25 to 12/10/25
+Current date 2025-08-27 between 12/4/25 and 12/10/25? false
+Checking week 15: 12/11/25 to 12/17/25
+Current date 2025-08-27 between 12/11/25 and 12/17/25? false
+Checking week 16: 12/18/25 to 12/24/25
+Current date 2025-08-27 between 12/18/25 and 12/24/25? false
+Checking week 17: 12/25/25 to 12/31/25
+Current date 2025-08-27 between 12/25/25 and 12/31/25? false
+Checking week 18: 1/3/26 to 1/9/26
+Current date 2025-08-27 between 1/3/26 and 1/9/26? false
+Checking week 19: 1/10/26 to 1/16/26
+Current date 2025-08-27 between 1/10/26 and 1/16/26? false
+Checking week 20: 1/17/26 to 1/23/26
+Current date 2025-08-27 between 1/17/26 and 1/23/26? false
+No current week found in date ranges
+First week starts: 9/4/25, Last week ends: 1/23/26
+Current date is before season starts, returning week 1
+Current date: 2025-08-27
+All weeks in database: [
+  { week: 1, start: '9/4/25', end: '9/10/25' },
+  { week: 2, start: '9/11/25', end: '9/17/25' },
+  { week: 3, start: '9/18/25', end: '9/24/25' },
+  { week: 4, start: '9/25/25', end: '10/1/25' },
+  { week: 5, start: '10/2/25', end: '10/8/25' },
+  { week: 6, start: '10/9/25', end: '10/15/25' },
+  { week: 7, start: '10/16/25', end: '10/22/25' },
+  { week: 8, start: '10/23/25', end: '10/29/25' },
+  { week: 9, start: '10/30/25', end: '11/5/25' },
+  { week: 10, start: '11/6/25', end: '11/12/25' },
+  { week: 11, start: '11/13/25', end: '11/19/25' },
+  { week: 12, start: '11/20/25', end: '11/26/25' },
+  { week: 13, start: '11/27/25', end: '12/3/25' },
+  { week: 14, start: '12/4/25', end: '12/10/25' },
+  { week: 15, start: '12/11/25', end: '12/17/25' },
+  { week: 16, start: '12/18/25', end: '12/24/25' },
+  { week: 17, start: '12/25/25', end: '12/31/25' },
+  { week: 18, start: '1/3/26', end: '1/9/26' },
+  { week: 19, start: '1/10/26', end: '1/16/26' },
+  { week: 20, start: '1/17/26', end: '1/23/26' }
+]
+Checking week 1: 9/4/25 to 9/10/25
+Current date 2025-08-27 between 9/4/25 and 9/10/25? false
+Checking week 2: 9/11/25 to 9/17/25
+Current date 2025-08-27 between 9/11/25 and 9/17/25? false
+Checking week 3: 9/18/25 to 9/24/25
+Current date 2025-08-27 between 9/18/25 and 9/24/25? false
+Checking week 4: 9/25/25 to 10/1/25
+Current date 2025-08-27 between 9/25/25 and 10/1/25? false
+Checking week 5: 10/2/25 to 10/8/25
+Current date 2025-08-27 between 10/2/25 and 10/8/25? false
+Checking week 6: 10/9/25 to 10/15/25
+Current date 2025-08-27 between 10/9/25 and 10/15/25? false
+Checking week 7: 10/16/25 to 10/22/25
+Current date 2025-08-27 between 10/16/25 and 10/22/25? false
+Checking week 8: 10/23/25 to 10/29/25
+Current date 2025-08-27 between 10/23/25 and 10/29/25? false
+Checking week 9: 10/30/25 to 11/5/25
+Current date 2025-08-27 between 10/30/25 and 11/5/25? false
+Checking week 10: 11/6/25 to 11/12/25
+Current date 2025-08-27 between 11/6/25 and 11/12/25? false
+Checking week 11: 11/13/25 to 11/19/25
+Current date 2025-08-27 between 11/13/25 and 11/19/25? false
+Checking week 12: 11/20/25 to 11/26/25
+Current date 2025-08-27 between 11/20/25 and 11/26/25? false
+Checking week 13: 11/27/25 to 12/3/25
+Current date 2025-08-27 between 11/27/25 and 12/3/25? false
+Checking week 14: 12/4/25 to 12/10/25
+Current date 2025-08-27 between 12/4/25 and 12/10/25? false
+Checking week 15: 12/11/25 to 12/17/25
+Current date 2025-08-27 between 12/11/25 and 12/17/25? false
+Checking week 16: 12/18/25 to 12/24/25
+Current date 2025-08-27 between 12/18/25 and 12/24/25? false
+Checking week 17: 12/25/25 to 12/31/25
+Current date 2025-08-27 between 12/25/25 and 12/31/25? false
+Checking week 18: 1/3/26 to 1/9/26
+Current date 2025-08-27 between 1/3/26 and 1/9/26? false
+Checking week 19: 1/10/26 to 1/16/26
+Current date 2025-08-27 between 1/10/26 and 1/16/26? false
+Checking week 20: 1/17/26 to 1/23/26
+Current date 2025-08-27 between 1/17/26 and 1/23/26? false
+No current week found in date ranges
+First week starts: 9/4/25, Last week ends: 1/23/26
+Current date is before season starts, returning week 1
+Standings query result: [
+  {
+    id: 'A1',
+    teamName: 'MattTyler',
+    teamField: 'A1',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A2',
+    teamName: 'BigDubs',
+    teamField: 'A2',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A3',
+    teamName: 'Beast Mode',
+    teamField: 'A3',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A4',
+    teamName: 'Cadrocks',
+    teamField: 'A4',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B1',
+    teamName: 'Foggy with a chance of TDs',
+    teamField: 'B1',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B2',
+    teamName: 'BKaneshiro',
+    teamField: 'B2',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B3',
+    teamName: 'mitch-lee',
+    teamField: 'B3',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B4',
+    teamName: 'fantasykevin',
+    teamField: 'B4',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C1',
+    teamName: 'mbush949',
+    teamField: 'C1',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C2',
+    teamName: 'Purdy-er than You Are',
+    teamField: 'C2',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C3',
+    teamName: 'StraightCashHomey',
+    teamField: 'C3',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C4',
+    teamName: 'BamBams',
+    teamField: 'C4',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D1',
+    teamName: 'Tush Pushers',
+    teamField: 'D1',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D2',
+    teamName: 'Old School',
+    teamField: 'D2',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D3',
+    teamName: 'NoCal',
+    teamField: 'D3',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D4',
+    teamName: 'Team Hapa',
+    teamField: 'D4',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  }
+]
+Standings query result: [
+  {
+    id: 'A1',
+    teamName: 'MattTyler',
+    teamField: 'A1',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A2',
+    teamName: 'BigDubs',
+    teamField: 'A2',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A3',
+    teamName: 'Beast Mode',
+    teamField: 'A3',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A4',
+    teamName: 'Cadrocks',
+    teamField: 'A4',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B1',
+    teamName: 'Foggy with a chance of TDs',
+    teamField: 'B1',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B2',
+    teamName: 'BKaneshiro',
+    teamField: 'B2',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B3',
+    teamName: 'mitch-lee',
+    teamField: 'B3',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B4',
+    teamName: 'fantasykevin',
+    teamField: 'B4',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C1',
+    teamName: 'mbush949',
+    teamField: 'C1',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C2',
+    teamName: 'Purdy-er than You Are',
+    teamField: 'C2',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C3',
+    teamName: 'StraightCashHomey',
+    teamField: 'C3',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C4',
+    teamName: 'BamBams',
+    teamField: 'C4',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D1',
+    teamName: 'Tush Pushers',
+    teamField: 'D1',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D2',
+    teamName: 'Old School',
+    teamField: 'D2',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D3',
+    teamName: 'NoCal',
+    teamField: 'D3',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D4',
+    teamName: 'Team Hapa',
+    teamField: 'D4',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  }
+]
+Standings query result: [
+  {
+    id: 'A1',
+    teamName: 'MattTyler',
+    teamField: 'A1',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A2',
+    teamName: 'BigDubs',
+    teamField: 'A2',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A3',
+    teamName: 'Beast Mode',
+    teamField: 'A3',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'A4',
+    teamName: 'Cadrocks',
+    teamField: 'A4',
+    division: 'A',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B1',
+    teamName: 'Foggy with a chance of TDs',
+    teamField: 'B1',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B2',
+    teamName: 'BKaneshiro',
+    teamField: 'B2',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B3',
+    teamName: 'mitch-lee',
+    teamField: 'B3',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'B4',
+    teamName: 'fantasykevin',
+    teamField: 'B4',
+    division: 'B',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C1',
+    teamName: 'mbush949',
+    teamField: 'C1',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C2',
+    teamName: 'Purdy-er than You Are',
+    teamField: 'C2',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C3',
+    teamName: 'StraightCashHomey',
+    teamField: 'C3',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'C4',
+    teamName: 'BamBams',
+    teamField: 'C4',
+    division: 'C',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D1',
+    teamName: 'Tush Pushers',
+    teamField: 'D1',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D2',
+    teamName: 'Old School',
+    teamField: 'D2',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D3',
+    teamName: 'NoCal',
+    teamField: 'D3',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  },
+  {
+    id: 'D4',
+    teamName: 'Team Hapa',
+    teamField: 'D4',
+    division: 'D',
+    wins: 0,
+    losses: 0,
+    ties: 0,
+    pointsFor: 0,
+    pointsAgainst: 0,
+    rank: 0
+  }
+]

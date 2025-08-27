@@ -42,6 +42,18 @@ interface Player {
   owner_ID?: string
 }
 
+interface RosterPlayer {
+  id: string
+  name: string
+  position: string
+  nflTeam: string
+  team: string
+  totalPoints?: number
+  avgPoints?: number
+  byeWeek?: number
+  status?: string
+}
+
 interface DraftPick {
   round: number
   pick: number
@@ -107,6 +119,8 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [showTimeWarning, setShowTimeWarning] = useState(false)
   const [users, setUsers] = useState<User[]>([])
+  const [currentTeamRoster, setCurrentTeamRoster] = useState<RosterPlayer[]>([])
+  const [loadingRoster, setLoadingRoster] = useState(false)
   const { user } = useAuth()
   const { draftPicks: dbDraftPicks, progress, savePick, clearDraft, refreshDraft, isLoading: draftLoading, error: draftError } = useDraft()
   const { players, isLoading: playersLoading, error: playersError, refreshPlayers } = usePlayers()
@@ -126,17 +140,66 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
       
       if (response.ok) {
         const data = await response.json();
-        setUsers(data.data);
+        if (data.success) {
+          setUsers(data.data || []);
+        } else {
+          console.warn('Failed to fetch users:', data.error);
+          setUsers([]);
+        }
+      } else {
+        console.warn('Failed to fetch users: HTTP', response.status, response.statusText);
+        setUsers([]);
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setUsers([]);
+    }
+  };
+
+  // Fetch roster for the currently picking team
+  const fetchCurrentTeamRoster = async (teamId: string) => {
+    try {
+      setLoadingRoster(true);
+      const response = await fetch(`/api/team-roster?teamId=${teamId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCurrentTeamRoster(data.data || []);
+        } else {
+          console.warn('Failed to fetch team roster:', data.error);
+          setCurrentTeamRoster([]);
+        }
+      } else {
+        console.warn('Failed to fetch team roster: HTTP', response.status, response.statusText);
+        setCurrentTeamRoster([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch team roster:', error);
+      setCurrentTeamRoster([]);
+    } finally {
+      setLoadingRoster(false);
     }
   };
 
   // Set available players when players are loaded from database
   useEffect(() => {
     if (players.length > 0) {
-      setAvailablePlayers(players);
+      // Transform players to match the local Player interface
+      const transformedPlayers = players.map(p => ({
+        id: p.id,
+        name: p.name,
+        position: p.position,
+        team: p.team,
+        projectedPoints: p.avgPoints || 0,
+        bye: p.byeWeek || 0,
+        owner_ID: p.owner_ID
+      }));
+      setAvailablePlayers(transformedPlayers);
     }
   }, [players]);
 
@@ -144,6 +207,14 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // Fetch current team roster when the picking team changes
+  useEffect(() => {
+    const currentPickingTeam = getCurrentPickingTeam();
+    if (currentPickingTeam && currentPickingTeam.trim() !== '') {
+      fetchCurrentTeamRoster(currentPickingTeam);
+    }
+  }, [currentRound, currentPick]);
 
   // Helper function to get owner name for a team
   const getOwnerNameForTeam = (teamId: string): string => {
@@ -193,7 +264,15 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                 round,
                 pick,
                 team,
-                player: { ...player, owner_ID: dbPick.team_id },
+                player: {
+                  id: player.id,
+                  name: player.name,
+                  position: player.position,
+                  team: player.team,
+                  projectedPoints: player.avgPoints || 0,
+                  bye: player.byeWeek || 0,
+                  owner_ID: dbPick.team_id
+                },
                 timestamp: new Date(dbPick.timestamp || Date.now())
               })
               
@@ -237,6 +316,12 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
         console.log('Setting draft progress:', progress);
         setCurrentRound(progress.currentRound)
         setCurrentPick(progress.currentPick)
+        
+        // Fetch roster for the current picking team
+        const currentPickingTeam = getDraftOrderForPosition(progress.currentRound, progress.currentPick);
+        if (currentPickingTeam && currentPickingTeam.trim() !== '') {
+          fetchCurrentTeamRoster(currentPickingTeam);
+        }
       }
     }
   }, [dbDraftPicks, progress, players])
@@ -416,15 +501,29 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
 
   const handleClearDraft = async () => {
     if (confirm('Are you sure you want to clear the entire draft? This action cannot be undone.')) {
-      await clearDraft()
-      // Reset local state
-      setDraftPicks([])
-      setCurrentRound(1)
-      setCurrentPick(1)
-      setAvailablePlayers([...players]) // Reset to all players from the database
-      setIsDraftActive(false)
-      setTimeRemaining(150)
-      setSelectedPlayer("")
+      try {
+        await clearDraft()
+        // Reset local state
+        setDraftPicks([])
+        setCurrentRound(1)
+        setCurrentPick(1)
+        // Reset to all players from the database with proper transformation
+        const transformedPlayers = players.map(p => ({
+          id: p.id,
+          name: p.name,
+          position: p.position,
+          team: p.team,
+          projectedPoints: p.avgPoints || 0,
+          bye: p.byeWeek || 0,
+          owner_ID: p.owner_ID
+        }));
+        setAvailablePlayers(transformedPlayers)
+        setIsDraftActive(false)
+        setTimeRemaining(150)
+        setSelectedPlayer("")
+      } catch (error) {
+        console.error('Failed to clear draft:', error);
+      }
     }
   }
 
@@ -643,7 +742,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                           </Button>
                         </>
                       )}
-                      <Button variant="destructive" onClick={handleClearDraft}>
+                      <Button variant="destructive" onClick={() => handleClearDraft().catch(console.error)}>
                         <RotateCcw className="mr-2 h-4 w-4" />
                         Clear Draft
                       </Button>
@@ -671,56 +770,71 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                   </div>
                 )}
 
-                {/* Debug Info (Admin Only) */}
-                {user?.is_admin && (
-                  <Card className="mt-2">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="flex items-center gap-2 text-sm">
-                        <Database className="h-3 w-3" />
-                        Debug Info (Admin Only)
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2 text-xs">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <h4 className="font-semibold mb-1 text-xs">Local State</h4>
+                {/* Current Team Roster */}
+                <Card className="mt-2">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Users className="h-3 w-3" />
+                      {(() => {
+                        const currentPickingTeam = getCurrentPickingTeam();
+                        const ownerName = getOwnerNameForTeam(currentPickingTeam);
+                        return `${ownerName}'s Roster`;
+                      })()}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {loadingRoster ? (
+                      <div className="text-xs text-muted-foreground">Loading roster...</div>
+                    ) : currentTeamRoster.length === 0 ? (
+                      <div className="text-xs text-muted-foreground">No players drafted yet</div>
+                    ) : (
+                      <div className="space-y-2">
+                        {['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(position => {
+                          const positionPlayers = currentTeamRoster.filter(p => p.position === position);
+                          if (positionPlayers.length === 0) return null;
+                          
+                          return (
+                            <div key={position}>
+                              <h4 className="font-semibold text-xs mb-1">{position}</h4>
+                              <div className="space-y-1">
+                                {positionPlayers.map(player => (
+                                  <div key={player.id} className="flex justify-between items-center text-xs">
+                                    <span className="font-medium">{player.name}</span>
+                                    <span className="text-muted-foreground">{player.nflTeam}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
+                    {/* Debug Info for Admin */}
+                    {user?.is_admin && (
+                      <details className="mt-3">
+                        <summary className="text-xs font-semibold cursor-pointer">Debug Info</summary>
+                        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
                           <p>Round: {currentRound}, Pick: {currentPick}</p>
                           <p>Available: {availablePlayers.length}, Drafted: {draftPicks.filter(p => p.player).length}</p>
-                        </div>
-                        <div>
-                          <h4 className="font-semibold mb-1 text-xs">Database State</h4>
                           <p>DB Picks: {dbDraftPicks.length}</p>
                           <p>Progress: {progress ? `${progress.currentRound}.${progress.currentPick}` : 'Loading...'}</p>
-                          <p>Total: {progress?.totalPicks || 0}</p>
+                          <div className="flex gap-1 mt-2">
+                            <Button onClick={refreshPlayers} size="sm" variant="outline" className="h-5 px-1 text-xs">
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button onClick={refreshDraft} size="sm" variant="outline" className="h-5 px-1 text-xs">
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                            <Button onClick={() => handleClearDraft().catch(console.error)} size="sm" variant="destructive" className="h-5 px-1 text-xs">
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      
-                      <div>
-                        <h4 className="font-semibold mb-1 text-xs">Players API Status</h4>
-                        <p>Loading: {playersLoading ? 'Yes' : 'No'}, Error: {playersError || 'None'}, Total: {players.length}</p>
-                        <div className="flex gap-1 mt-1">
-                          <Button 
-                            onClick={refreshPlayers} 
-                            size="sm" 
-                            variant="outline"
-                            className="h-6 px-2 text-xs"
-                          >
-                            <RefreshCw className="h-3 w-3 mr-1" />
-                            Refresh
-                          </Button>
-                          <Button onClick={refreshDraft} size="sm" variant="outline" className="h-6 px-2 text-xs">
-                            <RefreshCw className="h-3 w-3 mr-1" />
-                            Draft
-                          </Button>
-                          <Button onClick={handleClearDraft} size="sm" variant="destructive" className="h-6 px-2 text-xs">
-                            <Trash2 className="h-3 w-3 mr-1" />
-                            Clear
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                      </details>
+                    )}
+                  </CardContent>
+                </Card>
 
                 <div className="overflow-x-auto">
                   <div className="inline-block min-w-full">
@@ -820,7 +934,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                   
                   {user?.is_admin ? (
                     <Button 
-                      onClick={makePick} 
+                      onClick={() => makePick().catch(console.error)} 
                       disabled={!selectedPlayer || !isDraftActive}
                       className="w-full"
                     >
