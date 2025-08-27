@@ -1,0 +1,376 @@
+🏈 Starting PFL Draft Simulation with Correct Roster Requirements...
+
+📊 950 players available for draft
+
+--- ROUND 1 ---
+Pick 1 (R1P1): Team A1 selects Ameer Abdullah (RB)
+Pick 2 (R1P2): Team B1 selects Brittain Brown (RB)
+Pick 3 (R1P3): Team C1 selects Josh Jacobs (RB)
+Pick 4 (R1P4): Team D1 selects Sincere McCormick (RB)
+Pick 5 (R1P5): Team D2 selects Zamir White (RB)
+Pick 6 (R1P6): Team C2 selects Snoop Conner (RB)
+Pick 7 (R1P7): Team B2 selects Travis Etienne Jr. (RB)
+Pick 8 (R1P8): Team A2 selects JaMycal Hasty (RB)
+Pick 9 (R1P9): Team A3 selects James Robinson (RB)
+Pick 10 (R1P10): Team B3 selects Kevin Harris (RB)
+Pick 11 (R1P11): Team C3 selects Rhamondre Stevenson (RB)
+Pick 12 (R1P12): Team D3 selects Pierre Strong Jr. (RB)
+Pick 13 (R1P13): Team D4 selects J.J. Taylor (RB)
+Pick 14 (R1P14): Team C4 selects Saquon Barkley (RB)
+Pick 15 (R1P15): Team B4 selects Matt Breida (RB)
+Pick 16 (R1P16): Team A4 selects Gary Brightwell (RB)
+
+--- ROUND 2 ---
+Pick 17 (R2P1): Team A4 selects Tyler Badie (RB)
+Pick 18 (R2P2): Team B4 selects J.K. Dobbins (RB)
+Pick 19 (R2P3): Team C4 selects Gus Edwards (RB)
+Pick 20 (R2P4): Team D4 selects Justice Hill (RB)
+Pick 21 (R2P5): Team D3 selects Julius Chestnut (RB)
+Pick 22 (R2P6): Team C3 selects Hassan Haskins (RB)
+Pick 23 (R2P7): Team B3 selects Derrick Henry (RB)
+Pick 24 (R2P8): Team A3 selects Jermar Jefferson (RB)
+Pick 25 (R2P9): Team A2 selects Craig Reynolds (RB)
+Pick 26 (R2P10): Team B2 selects D'Andre Swift (RB)
+Pick 27 (R2P11): Team C2 selects Jamaal Williams (RB)
+Pick 28 (R2P12): Team D2 selects Tyler Allgeier (RB)
+Pick 29 (R2P13): Team D1 selects Cordarrelle Patterson (RB)
+Pick 30 (R2P14): Team C1 selects Avery Williams (RB)
+Pick 31 (R2P15): Team B1 selects Nick Chubb (RB)
+Pick 32 (R2P16): Team A1 selects Demetric Felton Jr. (RB)
+
+--- ROUND 3 ---
+Pick 33 (R3P1): Team A1 selects Davante Adams (WR)
+Pick 34 (R3P2): Team B1 selects Mack Hollins (WR)
+Pick 35 (R3P3): Team C1 selects Tyron Johnson (WR)
+Pick 36 (R3P4): Team D1 selects DJ Turner (WR)
+Pick 37 (R3P5): Team D2 selects Kevin Austin Jr. (WR)
+Pick 38 (R3P6): Team C2 selects Tim Jones (WR)
+Pick 39 (R3P7): Team B2 selects Christian Kirk (WR)
+Pick 40 (R3P8): Team A2 selects Kendric Pryor (WR)
+Pick 41 (R3P9): Team A3 selects Seth Williams (WR)
+Pick 42 (R3P10): Team B3 selects Nelson Agholor (WR)
+Pick 43 (R3P11): Team C3 selects Lil'Jordan Humphrey (WR)
+Pick 44 (R3P12): Team D3 selects Jakobi Meyers (WR)
+Pick 45 (R3P13): Team D4 selects Tyquan Thornton (WR)
+Pick 46 (R3P14): Team C4 selects Laquon Treadwell (WR)
+Pick 47 (R3P15): Team B4 selects Kristian Wilkerson (WR)
+Pick 48 (R3P16): Team A4 selects Collin Johnson (WR)
+
+--- ROUND 4 ---
+Pick 49 (R4P1): Team A4 selects Wan'Dale Robinson (WR)
+Pick 50 (R4P2): Team B4 selects David Sills V (WR)
+Pick 51 (R4P3): Team C4 selects Darius Slayton (WR)
+Pick 52 (R4P4): Team D4 selects Kadarius Toney (WR)
+Pick 53 (R4P5): Team D3 selects Rashod Bateman (WR)
+Pick 54 (R4P6): Team C3 selects Devin Duvernay (WR)
+Pick 55 (R4P7): Team B3 selects James Proche II (WR)
+Pick 56 (R4P8): Team A3 selects Demarcus Robinson (WR)
+Pick 57 (R4P9): Team A2 selects Tylan Wallace (WR)
+Pick 58 (R4P10): Team B2 selects Raleigh Webb (WR)
+Pick 59 (R4P11): Team C2 selects Treylon Burks (WR)
+Pick 60 (R4P12): Team D2 selects Dez Fitzpatrick (WR)
+Pick 61 (R4P13): Team D1 selects Mason Kinsey (WR)
+Pick 62 (R4P14): Team C1 selects Racey McMath (WR)
+Pick 63 (R4P15): Team B1 selects Kyle Philips (WR)
+Pick 64 (R4P16): Team A1 selects Nick Westbrook-Ikhine (WR)
+
+--- ROUND 5 ---
+Pick 65 (R5P1): Team A1 selects Derek Carr (QB)
+Pick 66 (R5P2): Team B1 selects Jarrett Stidham (QB)
+Pick 67 (R5P3): Team C1 selects C.J. Beathard (QB)
+Pick 68 (R5P4): Team D1 selects Trevor Lawrence (QB)
+Pick 69 (R5P5): Team D2 selects E.J. Perry (QB)
+Pick 70 (R5P6): Team C2 selects Mac Jones (QB)
+Pick 71 (R5P7): Team B2 selects Bailey Zappe (QB)
+Pick 72 (R5P8): Team A2 selects Daniel Jones (QB)
+Pick 73 (R5P9): Team A3 selects Tyrod Taylor (QB)
+Pick 74 (R5P10): Team B3 selects Anthony Brown (QB)
+Pick 75 (R5P11): Team C3 selects Tyler Huntley (QB)
+Pick 76 (R5P12): Team D3 selects Lamar Jackson (QB)
+Pick 77 (R5P13): Team D4 selects Malik Willis (QB)
+Pick 78 (R5P14): Team C4 selects Logan Woodside (QB)
+Pick 79 (R5P15): Team B4 selects Tim Boyle (QB)
+Pick 80 (R5P16): Team A4 selects Jared Goff (QB)
+
+--- ROUND 6 ---
+Pick 81 (R6P1): Team A4 selects Nate Sudfeld (QB)
+Pick 82 (R6P2): Team B4 selects Marcus Mariota (QB)
+Pick 83 (R6P3): Team C4 selects Desmond Ridder (QB)
+Pick 84 (R6P4): Team D4 selects Jacoby Brissett (QB)
+Pick 85 (R6P5): Team D3 selects Joshua Dobbs (QB)
+Pick 86 (R6P6): Team C3 selects Deshaun Watson (QB)
+Pick 87 (R6P7): Team B3 selects Brandon Allen (QB)
+Pick 88 (R6P8): Team A3 selects Joe Burrow (QB)
+Pick 89 (R6P9): Team A2 selects Trace McSorley (QB)
+Pick 90 (R6P10): Team B2 selects Kyler Murray (QB)
+Pick 91 (R6P11): Team C2 selects Ian Book (QB)
+Pick 92 (R6P12): Team D2 selects Jalen Hurts (QB)
+Pick 93 (R6P13): Team D1 selects Gardner Minshew (QB)
+Pick 94 (R6P14): Team C1 selects Joe Flacco (QB)
+Pick 95 (R6P15): Team B1 selects Mike White (QB)
+Pick 96 (R6P16): Team A1 selects Zach Wilson (QB)
+
+--- ROUND 7 ---
+Pick 97 (R7P1): Team A1 selects Jesper Horsted (TE)
+Pick 98 (R7P2): Team B1 selects Foster Moreau (TE)
+Pick 99 (R7P3): Team C1 selects Evan Engram (TE)
+Pick 100 (R7P4): Team D1 selects Luke Farrell (TE)
+Pick 101 (R7P5): Team D2 selects Scotty Washington (TE)
+Pick 102 (R7P6): Team C2 selects Hunter Henry (TE)
+Pick 103 (R7P7): Team B2 selects Jonnu Smith (TE)
+Pick 104 (R7P8): Team A2 selects Matt Sokol (TE)
+Pick 105 (R7P9): Team A3 selects Daniel Bellinger (TE)
+Pick 106 (R7P10): Team B3 selects Tanner Hudson (TE)
+Pick 107 (R7P11): Team C3 selects Mark Andrews (TE)
+Pick 108 (R7P12): Team D3 selects Charlie Kolar (TE)
+Pick 109 (R7P13): Team D4 selects Isaiah Likely (TE)
+Pick 110 (R7P14): Team C4 selects Josh Oliver (TE)
+Pick 111 (R7P15): Team B4 selects Austin Hooper (TE)
+Pick 112 (R7P16): Team A4 selects Thomas Odukoya (TE)
+
+--- ROUND 8 ---
+Pick 113 (R8P1): Team A4 selects Chigoziem Okonkwo (TE)
+Pick 114 (R8P2): Team B4 selects Kevin Rader (TE)
+Pick 115 (R8P3): Team C4 selects T.J. Hockenson (TE)
+Pick 116 (R8P4): Team D4 selects James Mitchell (TE)
+Pick 117 (R8P5): Team D3 selects Shane Zylstra (TE)
+Pick 118 (R8P6): Team C3 selects Feleipe Franks (TE)
+Pick 119 (R8P7): Team B3 selects Anthony Firkser (TE)
+Pick 120 (R8P8): Team A3 selects John FitzPatrick (TE)
+Pick 121 (R8P9): Team A2 selects Parker Hesse (TE)
+Pick 122 (R8P10): Team B2 selects Kyle Pitts (TE)
+Pick 123 (R8P11): Team C2 selects MyCole Pruitt (TE)
+Pick 124 (R8P12): Team D2 selects Harrison Bryant (TE)
+Pick 125 (R8P13): Team D1 selects Miller Forristall (TE)
+Pick 126 (R8P14): Team C1 selects Zaire Mitchell-Paden (TE)
+Pick 127 (R8P15): Team B1 selects David Njoku (TE)
+Pick 128 (R8P16): Team A1 selects Hayden Hurst (TE)
+
+--- ROUND 9 ---
+Pick 129 (R9P1): Team A1 selects Daniel Carlson (PK)
+Pick 130 (R9P2): Team B1 selects Riley Patterson (PK)
+Pick 131 (R9P3): Team C1 selects Nick Folk (PK)
+Pick 132 (R9P4): Team D1 selects Graham Gano (PK)
+Pick 133 (R9P5): Team D2 selects Justin Tucker (PK)
+Pick 134 (R9P6): Team C2 selects Austin Seibert (PK)
+Pick 135 (R9P7): Team B2 selects Younghoe Koo (PK)
+Pick 136 (R9P8): Team A2 selects Cade York (PK)
+Pick 137 (R9P9): Team A3 selects Evan McPherson (PK)
+Pick 138 (R9P10): Team B3 selects Matt Prater (PK)
+Pick 139 (R9P11): Team C3 selects Jake Elliott (PK)
+Pick 140 (R9P12): Team D3 selects Greg Zuerlein (PK)
+Pick 141 (R9P13): Team D4 selects Ramiz Ahmed (PK)
+Pick 142 (R9P14): Team C4 selects Cairo Santos (PK)
+Pick 143 (R9P15): Team B4 selects Harrison Butker (PK)
+Pick 144 (R9P16): Team A4 selects Joey Slye (PK)
+
+--- ROUND 10 ---
+Pick 145 (R10P1): Team A4 selects Eddy Pineiro (PK)
+Pick 146 (R10P2): Team B4 selects Tyler Bass (PK)
+Pick 147 (R10P3): Team C4 selects Chase McLaughlin (PK)
+Pick 148 (R10P4): Team D4 selects Chris Boswell (PK)
+Pick 149 (R10P5): Team D3 selects Jason Myers (PK)
+Pick 150 (R10P6): Team C3 selects Jason Sanders (PK)
+Pick 151 (R10P7): Team B3 selects Ka'imi Fairbairn (PK)
+Pick 152 (R10P8): Team A3 selects Wil Lutz (PK)
+Pick 153 (R10P9): Team A2 selects Dustin Hopkins (PK)
+Pick 154 (R10P10): Team B2 selects Matt Gay (PK)
+Pick 155 (R10P11): Team C2 selects Greg Joseph (PK)
+Pick 156 (R10P12): Team D2 selects John Parker Romo (PK)
+Pick 157 (R10P13): Team D1 selects Cameron Dicker (PK)
+Pick 158 (R10P14): Team C1 selects Matthew Wright (PK)
+Pick 159 (R10P15): Team B1 selects Brayden Narveson (PK)
+Pick 160 (R10P16): Team A1 selects Harrison Mevis (PK)
+
+--- ROUND 11 ---
+Pick 161 (R11P1): Team A1 selects Washington Commanders (D/ST)
+Pick 162 (R11P2): Team B1 selects Tennessee Titans (D/ST)
+Pick 163 (R11P3): Team C1 selects Tampa Bay Buccaneers (D/ST)
+Pick 164 (R11P4): Team D1 selects Seattle Seahawks (D/ST)
+Pick 165 (R11P5): Team D2 selects San Francisco 49ers (D/ST)
+Pick 166 (R11P6): Team C2 selects Pittsburgh Steelers (D/ST)
+Pick 167 (R11P7): Team B2 selects Philadelphia Eagles (D/ST)
+Pick 168 (R11P8): Team A2 selects New York Jets (D/ST)
+Pick 169 (R11P9): Team A3 selects New York Giants (D/ST)
+Pick 170 (R11P10): Team B3 selects New Orleans Saints (D/ST)
+Pick 171 (R11P11): Team C3 selects New England Patriots (D/ST)
+Pick 172 (R11P12): Team D3 selects Minnesota Vikings (D/ST)
+Pick 173 (R11P13): Team D4 selects Miami Dolphins (D/ST)
+Pick 174 (R11P14): Team C4 selects Los Angeles Rams (D/ST)
+Pick 175 (R11P15): Team B4 selects Los Angeles Chargers (D/ST)
+Pick 176 (R11P16): Team A4 selects Las Vegas Raiders (D/ST)
+
+--- ROUND 12 ---
+Pick 177 (R12P1): Team A4 selects Kansas City Chiefs (D/ST)
+Pick 178 (R12P2): Team B4 selects Jacksonville Jaguars (D/ST)
+Pick 179 (R12P3): Team C4 selects Indianapolis Colts (D/ST)
+Pick 180 (R12P4): Team D4 selects Houston Texans (D/ST)
+Pick 181 (R12P5): Team D3 selects Green Bay Packers (D/ST)
+Pick 182 (R12P6): Team C3 selects Detroit Lions (D/ST)
+Pick 183 (R12P7): Team B3 selects Denver Broncos (D/ST)
+Pick 184 (R12P8): Team A3 selects Dallas Cowboys (D/ST)
+Pick 185 (R12P9): Team A2 selects Cleveland Browns (D/ST)
+Pick 186 (R12P10): Team B2 selects Cincinnati Bengals (D/ST)
+Pick 187 (R12P11): Team C2 selects Chicago Bears (D/ST)
+Pick 188 (R12P12): Team D2 selects Carolina Panthers (D/ST)
+Pick 189 (R12P13): Team D1 selects Buffalo Bills (D/ST)
+Pick 190 (R12P14): Team C1 selects Baltimore Ravens (D/ST)
+Pick 191 (R12P15): Team B1 selects Atlanta Falcons (D/ST)
+Pick 192 (R12P16): Team A1 selects Arizona Cardinals (D/ST)
+
+--- ROUND 13 ---
+Pick 193 (R13P1): Team A1 selects Trey Lance (QB)
+Pick 194 (R13P2): Team B1 selects Brock Purdy (QB)
+Pick 195 (R13P3): Team C1 selects Jordan Love (QB)
+Pick 196 (R13P4): Team D1 selects Aaron Rodgers (QB)
+Pick 197 (R13P5): Team D2 selects Justin Fields (QB)
+Pick 198 (R13P6): Team C2 selects Nathan Peterman (QB)
+Pick 199 (R13P7): Team B2 selects Shane Buechele (QB)
+Pick 200 (R13P8): Team A2 selects Patrick Mahomes (QB)
+Pick 201 (R13P9): Team A3 selects Chris Oladokun (QB)
+Pick 202 (R13P10): Team B3 selects Taylor Heinicke (QB)
+Pick 203 (R13P11): Team C3 selects Sam Howell (QB)
+Pick 204 (R13P12): Team D3 selects Carson Wentz (QB)
+Pick 205 (R13P13): Team D4 selects Matt Corral (QB)
+Pick 206 (R13P14): Team C4 selects Sam Darnold (QB)
+Pick 207 (R13P15): Team B4 selects Baker Mayfield (QB)
+Pick 208 (R13P16): Team A4 selects PJ Walker (QB)
+
+--- ROUND 14 ---
+Pick 209 (R14P1): Team A4 selects Josh Allen (QB)
+Pick 210 (R14P2): Team B4 selects Case Keenum (QB)
+Pick 211 (R14P3): Team C4 selects Sam Ehlinger (QB)
+Pick 212 (R14P4): Team D4 selects Kenny Pickett (QB)
+Pick 213 (R14P5): Team D3 selects Mason Rudolph (QB)
+Pick 214 (R14P6): Team C3 selects Mitch Trubisky (QB)
+Pick 215 (R14P7): Team B3 selects Drew Lock (QB)
+Pick 216 (R14P8): Team A3 selects Geno Smith (QB)
+Pick 217 (R14P9): Team A2 selects Kyle Trask (QB)
+Pick 218 (R14P10): Team B2 selects Tua Tagovailoa (QB)
+Pick 219 (R14P11): Team C2 selects Skylar Thompson (QB)
+Pick 220 (R14P12): Team D2 selects Kyle Allen (QB)
+Pick 221 (R14P13): Team D1 selects Jeff Driskel (QB)
+Pick 222 (R14P14): Team C1 selects Davis Mills (QB)
+Pick 223 (R14P15): Team B1 selects Andy Dalton (QB)
+Pick 224 (R14P16): Team A1 selects Jake Luton (QB)
+
+--- ROUND 15 ---
+Pick 225 (R15P1): Team A1 selects Jameis Winston (QB)
+Pick 226 (R15P2): Team B1 selects Brett Rypien (QB)
+Pick 227 (R15P3): Team C1 selects Russell Wilson (QB)
+Pick 228 (R15P4): Team D1 selects Will Grier (QB)
+Pick 229 (R15P5): Team D2 selects Dak Prescott (QB)
+Pick 230 (R15P6): Team C2 selects Cooper Rush (QB)
+Pick 231 (R15P7): Team B2 selects Justin Herbert (QB)
+Pick 232 (R15P8): Team A2 selects Easton Stick (QB)
+Pick 233 (R15P9): Team A3 selects Matthew Stafford (QB)
+Pick 234 (R15P10): Team B3 selects John Wolford (QB)
+Pick 235 (R15P11): Team C3 selects Kirk Cousins (QB)
+Pick 236 (R15P12): Team D3 selects Nick Mullens (QB)
+Pick 237 (R15P13): Team D4 selects Jake Browning (QB)
+Pick 238 (R15P14): Team C4 selects Josh Johnson (QB)
+Pick 239 (R15P15): Team B4 selects Ben DiNucci (QB)
+Pick 240 (R15P16): Team A4 selects Jake Fromm (QB)
+
+--- ROUND 16 ---
+Pick 241 (R16P1): Team A4 selects Luis Perez (QB)
+Pick 242 (R16P2): Team B4 selects Austin Reed (QB)
+Pick 243 (R16P3): Team C4 selects Tommy DeVito (QB)
+Pick 244 (R16P4): Team D4 selects Andrew Peasley (QB)
+Pick 245 (R16P5): Team D3 selects Drake Maye (QB)
+Pick 246 (R16P6): Team C3 selects Kedon Slovis (QB)
+Pick 247 (R16P7): Team B3 selects Sam Hartman (QB)
+Pick 248 (R16P8): Team A3 selects Hendon Hooker (QB)
+Pick 249 (R16P9): Team A2 selects Joe Milton III (QB)
+Pick 250 (R16P10): Team B2 selects John Paddock (QB)
+Pick 251 (R16P11): Team C2 selects John Rhys Plumlee (QB)
+Pick 252 (R16P12): Team D2 selects Aidan O'Connell (QB)
+Pick 253 (R16P13): Team D1 selects Sean Clifford (QB)
+Pick 254 (R16P14): Team C1 selects Rocky Lombardi (QB)
+Pick 255 (R16P15): Team B1 selects Emory Jones (QB)
+Pick 256 (R16P16): Team A1 selects Jake Haener (QB)
+
+
+🎉 DRAFT COMPLETE! Final Roster Summary:
+============================================================
+Team A1: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team B1: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team C1: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team D1: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team D2: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team C2: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team B2: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team A2: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team A3: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team B3: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team C3: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team D3: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team D4: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team C4: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team B4: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+Team A4: 16 players
+  QB: 6, RB: 2, WR: 2
+  TE: 2, PK: 2, D/ST: 2
+  ✅ All requirements met
+
+📊 694 players remain as free agents

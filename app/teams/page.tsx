@@ -107,15 +107,23 @@ export default function TeamsPage() {
     setLoadingTeamData(true);
 
     try {
+      // Get auth token for API requests
+      const token = localStorage.getItem('auth_token');
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
       // Fetch team roster
-      const rosterResponse = await fetch(`/api/team-roster?teamId=${team.id}`);
+      const rosterResponse = await fetch(`/api/team-roster?teamId=${team.id}`, {
+        headers
+      });
       if (rosterResponse.ok) {
         const rosterData = await rosterResponse.json();
         setTeamRoster(rosterData.data || []);
       }
 
       // Fetch weekly results
-      const resultsResponse = await fetch(`/api/team-weekly-results?teamId=${team.id}`);
+      const resultsResponse = await fetch(`/api/team-weekly-results?teamId=${team.id}`, {
+        headers
+      });
       if (resultsResponse.ok) {
         const resultsData = await resultsResponse.json();
         setWeeklyResults(resultsData.data?.weeklyResults || []);

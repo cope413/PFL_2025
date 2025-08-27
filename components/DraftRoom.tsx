@@ -99,7 +99,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<string>("")
   const [isDraftActive, setIsDraftActive] = useState(false)
-  const [timeRemaining, setTimeRemaining] = useState(90) // 90 seconds per pick
+  const [timeRemaining, setTimeRemaining] = useState(150) // 150 seconds per pick
   const [searchTerm, setSearchTerm] = useState("")
   const [positionFilter, setPositionFilter] = useState("ALL")
   const [selectedTeamRoster, setSelectedTeamRoster] = useState<TeamRoster | null>(null)
@@ -337,7 +337,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
       }
 
       // Reset timer
-      setTimeRemaining(90)
+      setTimeRemaining(150)
       
       console.log('Pick saved successfully');
     } catch (error) {
@@ -359,7 +359,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
       setCurrentRound(progress.currentRound)
       setCurrentPick(progress.currentPick)
     }
-    setTimeRemaining(90)
+    setTimeRemaining(150)
   }
 
   const pauseDraft = () => {
@@ -411,7 +411,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
       setCurrentPick(lastPick.pick - 1)
     }
 
-    setTimeRemaining(90)
+    setTimeRemaining(150)
   }
 
   const handleClearDraft = async () => {
@@ -423,7 +423,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
       setCurrentPick(1)
       setAvailablePlayers([...players]) // Reset to all players from the database
       setIsDraftActive(false)
-      setTimeRemaining(90)
+      setTimeRemaining(150)
       setSelectedPlayer("")
     }
   }

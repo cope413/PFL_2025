@@ -34,23 +34,23 @@ import {
 import { useAuth } from "@/hooks/useAuth"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { useStandings } from "@/hooks/useStandings"
+import { usePlayers } from "@/hooks/usePlayers"
 
-// Type for public dashboard data
-interface PublicDashboardData {
-  topPlayers: Array<{
-    id: string;
-    name: string;
-    position: string;
-    team: string;
-    fantasyPoints: number;
-    projectedPoints: number;
-  }>;
+// Type for top players display
+interface TopPlayer {
+  id: string;
+  name: string;
+  position: string;
+  team: string;
+  fantasyPoints: number;
+  projectedPoints: number;
 }
 
 export default function Home() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const { standings, loading: standingsLoading, error: standingsError } = useStandings();
+  const { players, isLoading: playersLoading, error: playersError } = usePlayers();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Function to get top teams for home page display
@@ -95,35 +95,26 @@ export default function Home() {
     });
   };
 
-  // Mock data for top players (keeping this for now)
-  const publicData: PublicDashboardData = {
-    topPlayers: [
-      {
-        id: 'p1',
-        name: 'Patrick Mahomes',
-        position: 'QB',
-        team: 'KC',
-        fantasyPoints: 28.5,
-        projectedPoints: 24.2
-      },
-      {
-        id: 'p2',
-        name: 'Christian McCaffrey',
-        position: 'RB',
-        team: 'SF',
-        fantasyPoints: 32.1,
-        projectedPoints: 26.8
-      },
-      {
-        id: 'p3',
-        name: 'Tyreek Hill',
-        position: 'WR',
-        team: 'MIA',
-        fantasyPoints: 29.8,
-        projectedPoints: 22.4
-      }
-    ]
+  // Get top performing players from real data
+  const getTopPlayers = () => {
+    if (!players || players.length === 0) return [];
+    
+    // Sort players by total points (descending) and take top 3
+    return players
+      .filter(player => player.totalPoints && player.totalPoints > 0) // Only players with points
+      .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
+      .slice(0, 3)
+      .map(player => ({
+        id: player.id,
+        name: player.name,
+        position: player.position,
+        team: player.team,
+        fantasyPoints: player.totalPoints || 0,
+        projectedPoints: player.avgPoints || 0
+      }));
   };
+
+  const topPlayers = getTopPlayers();
 
   if (authLoading) {
     return (
@@ -389,32 +380,49 @@ export default function Home() {
                   <BarChart3 className="h-5 w-5" />
                   Top Performers
                 </CardTitle>
-                <CardDescription>Highest scoring players this week</CardDescription>
+                <CardDescription>Highest scoring players this season</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {publicData.topPlayers.map((player) => (
-                    <div key={player.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={`/players/${player.id}.jpg`} alt={player.name} />
-                          <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{player.name}</p>
+                  {playersLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                        <span>Loading top performers...</span>
+                      </div>
+                    </div>
+                  ) : playersError ? (
+                    <div className="text-center py-8 text-red-600">
+                      <p>Error loading players: {playersError}</p>
+                    </div>
+                  ) : topPlayers.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No player data available</p>
+                    </div>
+                  ) : (
+                    topPlayers.map((player) => (
+                      <div key={player.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={`/players/${player.id}.jpg`} alt={player.name} />
+                            <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{player.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {player.position} • {player.team}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium">{player.fantasyPoints.toFixed(1)} pts</p>
                           <p className="text-sm text-muted-foreground">
-                            {player.position} • {player.team}
+                            Avg: {player.projectedPoints.toFixed(1)}
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-medium">{player.fantasyPoints} pts</p>
-                        <p className="text-sm text-muted-foreground">
-                          Proj: {player.projectedPoints}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

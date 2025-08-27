@@ -27,6 +27,9 @@ import {
   LogOut,
   Menu,
   X,
+  Send,
+  CheckCircle,
+  Loader2,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/useAuth"
@@ -80,6 +83,8 @@ export default function TeamDashboard() {
   const [selectedWeek, setSelectedWeek] = useState<string>("")
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const [hasSavedLineup, setHasSavedLineup] = useState(false)
+  const [hasSubmittedLineup, setHasSubmittedLineup] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { toast } = useToast()
 
@@ -110,6 +115,8 @@ export default function TeamDashboard() {
   useEffect(() => {
     if (players.length > 0 && selectedWeek && initialLoadComplete) {
       loadLineup()
+      // Reset submission state when week changes
+      setHasSubmittedLineup(false)
     }
   }, [selectedWeek, initialLoadComplete]) // Only load lineup after initial load is complete
 
@@ -439,6 +446,8 @@ export default function TeamDashboard() {
       
       if (result.success) {
         setHasUnsavedChanges(false)
+        setHasSavedLineup(true)
+        setHasSubmittedLineup(false) // Reset submission state when lineup is saved
         // Show success message
         console.log('Lineup saved successfully')
         toast({
@@ -462,6 +471,93 @@ export default function TeamDashboard() {
         description: err instanceof Error ? err.message : 'Failed to save lineup',
         variant: "destructive",
       })
+    }
+  }
+
+  const submitLineup = async () => {
+    try {
+      setIsSubmitting(true)
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        setError('No authentication token found')
+        return
+      }
+
+      // Get the saved lineup from the database rather than rebuilding it
+      const lineupResponse = await fetch(`/api/lineups?week=${selectedWeek}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      })
+
+      if (!lineupResponse.ok) {
+        throw new Error('Failed to get saved lineup')
+      }
+
+      const lineupResult = await lineupResponse.json()
+      
+      if (!lineupResult.success || !lineupResult.data) {
+        throw new Error('No saved lineup found')
+      }
+
+      const lineup = {
+        QB: lineupResult.data.QB || '',
+        RB_1: lineupResult.data.RB_1 || '',
+        WR_1: lineupResult.data.WR_1 || '',
+        FLEX_1: lineupResult.data.FLEX_1 || '',
+        FLEX_2: lineupResult.data.FLEX_2 || '',
+        TE: lineupResult.data.TE || '',
+        K: lineupResult.data.K || '',
+        DEF: lineupResult.data.DEF || ''
+      }
+
+      console.log('Submitting lineup:', lineup)
+
+      const response = await fetch('/api/lineups/submit', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          week: selectedWeek,
+          lineup: lineup
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to submit lineup: ${response.statusText}`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success) {
+        setHasSubmittedLineup(true)
+        // Show success message
+        console.log('Lineup submitted successfully')
+        toast({
+          title: "Lineup Submitted!",
+          description: `Your Week ${selectedWeek} lineup has been submitted and a confirmation email has been sent.`,
+          variant: "default",
+        })
+      } else {
+        setError(result.error || 'Failed to submit lineup')
+        toast({
+          title: "Submit Failed",
+          description: result.error || 'Failed to submit lineup',
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      console.error('Error submitting lineup:', err)
+      setError(err instanceof Error ? err.message : 'Failed to submit lineup')
+      toast({
+        title: "Submit Failed",
+        description: err instanceof Error ? err.message : 'Failed to submit lineup',
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -766,6 +862,27 @@ export default function TeamDashboard() {
                                 <Save className="mr-2 h-4 w-4" />
                                 Save
                               </Button>
+                              {hasSavedLineup && !hasSubmittedLineup && (
+                                <Button size="sm" onClick={submitLineup} disabled={isSubmitting} variant="default">
+                                  {isSubmitting ? (
+                                    <>
+                                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                      Submitting...
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Send className="mr-2 h-4 w-4" />
+                                      Submit
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                              {hasSubmittedLineup && (
+                                <Badge variant="secondary" className="ml-2">
+                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                  Submitted
+                                </Badge>
+                              )}
                             </div>
                           </div>
                         </CardHeader>

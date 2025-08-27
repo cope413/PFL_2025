@@ -127,6 +127,74 @@ export const emailTemplates = {
     `
   }),
 
+  lineupSubmission: (username: string, teamName: string, week: number, lineup: any, submissionTime: string) => ({
+    subject: `PFL Week ${week} Lineup Submitted - ${teamName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #059669; text-align: center;">✅ Lineup Successfully Submitted!</h1>
+        <p>Hello ${username},</p>
+        <p>Your lineup for Week ${week} has been successfully submitted!</p>
+        
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #059669;">
+          <h3 style="margin-top: 0; color: #059669;">Submission Details</h3>
+          <p><strong>Team:</strong> ${teamName}</p>
+          <p><strong>Week:</strong> ${week}</p>
+          <p><strong>Submitted:</strong> ${new Date(submissionTime).toLocaleString()}</p>
+        </div>
+
+        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Your Starting Lineup</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Position</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Player</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">QB</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.QB || 'Empty'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">RB</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.RB_1 || 'Empty'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">WR</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.WR_1 || 'Empty'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">TE</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.TE || 'Empty'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">FLEX</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.FLEX_1 || 'Empty'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">FLEX</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.FLEX_2 || 'Empty'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">K</td>
+              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.K || 'Empty'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px;">D/ST</td>
+              <td style="padding: 8px;">${lineup.DEF || 'Empty'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <p style="margin: 0; color: #dc2626; font-weight: bold;">⚠️ Important Reminder</p>
+          <p style="margin: 5px 0 0 0; color: #374151;">Make sure to check for any last-minute player updates before game time. You can still make changes to your lineup until kickoff.</p>
+        </div>
+
+        <p>Good luck with your Week ${week} matchup!</p>
+        <p style="color: #6b7280; font-size: 14px;">- The PFL Team</p>
+      </div>
+    `
+  }),
+
   test: (username: string) => ({
     subject: 'PFL Test Email - Notification System Working',
     html: `
@@ -185,6 +253,7 @@ export type NotificationType =
   | 'matchupReminder'
   | 'injuryAlert'
   | 'passwordReset'
+  | 'lineupSubmission'
   | 'test';
 
 // Notification service
@@ -221,6 +290,11 @@ export class NotificationService {
 
   static async sendTestEmail(email: string, username: string): Promise<boolean> {
     const template = emailTemplates.test(username);
+    return sendEmail(email, template);
+  }
+
+  static async sendLineupSubmission(email: string, username: string, teamName: string, week: number, lineup: any, submissionTime: string): Promise<boolean> {
+    const template = emailTemplates.lineupSubmission(username, teamName, week, lineup, submissionTime);
     return sendEmail(email, template);
   }
 } 

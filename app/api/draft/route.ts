@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { saveDraftPick, getDraftPicks, getDraftProgress, clearDraft, initializeDraftSlots } from '@/lib/database';
+import { saveDraftPick, getDraftPicks, getDraftProgress, clearDraft, initializeDraftSlots, updatePlayerOwnership } from '@/lib/database';
 
 export async function GET() {
   try {
@@ -54,6 +54,22 @@ export async function POST(request: NextRequest) {
       case 'initialize':
         await initializeDraftSlots();
         return NextResponse.json({ success: true, message: 'Draft slots initialized' });
+
+      case 'assignPlayer':
+        const { player_id: playerId, team_id: teamId } = data;
+        
+        // Validate required fields
+        if (!playerId || !teamId) {
+          return NextResponse.json(
+            { success: false, error: 'Missing player_id or team_id' },
+            { status: 400 }
+          );
+        }
+        
+        // Update player ownership in the Players table
+        await updatePlayerOwnership(playerId, teamId);
+        
+        return NextResponse.json({ success: true, message: 'Player assigned successfully' });
 
       default:
         return NextResponse.json(

@@ -245,7 +245,7 @@ export default function DraftPage() {
                     <TabsTrigger value="sleepers">Sleepers</TabsTrigger>
                     <TabsTrigger value="strategy">Strategy</TabsTrigger>
                   </TabsList>
-                  <TabsContent value="rankings">
+                  <TabsContent value="rankings">image.png
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-medium">Draft Rankings</h3>

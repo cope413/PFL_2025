@@ -5,9 +5,11 @@ interface Player {
   name: string;
   position: string;
   team: string;
-  projectedPoints: number;
-  bye: number;
+  totalPoints: number;
+  avgPoints: number;
+  byeWeek: number;
   owner_ID?: string;
+  status: string;
 }
 
 interface UsePlayersReturn {

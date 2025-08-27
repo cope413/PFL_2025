@@ -771,6 +771,14 @@ export async function getDraftProgress() {
   };
 }
 
+// Update player ownership (for draft assignments)
+export async function updatePlayerOwnership(playerId: string, teamId: string) {
+  return await db.execute({
+    sql: "UPDATE Players SET owner_ID = ? WHERE player_ID = ?",
+    args: [teamId, playerId]
+  });
+}
+
 export async function initializeDraftSlots() {
   try {
     // Check if draft slots already exist

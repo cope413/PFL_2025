@@ -1,0 +1,594 @@
+PFL Draft Simulation Script
+===========================
+✅ Development server is running
+🏈 Starting PFL Draft Simulation...
+
+Clearing existing draft...
+Draft cleared successfully
+Fetching available players...
+Found 694 available players
+
+🎯 Beginning 16-round draft with 694 players available...
+
+
+--- ROUND 1 ---
+✓ Round 1, Pick 1: A1 selects Austin Ekeler (RB, Washington Commanders) - 0.0 pts
+✓ Round 1, Pick 2: B1 selects Joshua Kelley (RB, New York Giants) - 0.0 pts
+✓ Round 1, Pick 3: C1 selects Isaiah Spiller (RB, Los Angeles Chargers) - 0.0 pts
+✓ Round 1, Pick 4: D1 selects Zander Horvath (RB, Miami Dolphins) - 0.0 pts
+✓ Round 1, Pick 5: D2 selects Cam Akers (RB, Houston Texans) - 0.0 pts
+✓ Round 1, Pick 6: C2 selects Jake Funk (RB, Detroit Lions) - 0.0 pts
+✓ Round 1, Pick 7: B2 selects Kyren Williams (RB, Los Angeles Rams) - 0.0 pts
+✓ Round 1, Pick 8: A2 selects Ty Chandler (RB, Minnesota Vikings) - 0.0 pts
+✓ Round 1, Pick 9: A3 selects Alexander Mattison (RB, Las Vegas Raiders) - 0.0 pts
+✓ Round 1, Pick 10: B3 selects Kene Nwangwu (RB, Minnesota Vikings) - 0.0 pts
+✓ Round 1, Pick 11: C3 selects Nate McCrary (RB, Green Bay Packers) - 0.0 pts
+✓ Round 1, Pick 12: D3 selects La'Mical Perine (RB, Pittsburgh Steelers) - 0.0 pts
+✓ Round 1, Pick 13: D4 selects Spencer Brown (RB, Atlanta Falcons) - 0.0 pts
+✓ Round 1, Pick 14: C4 selects Anthony McFarland Jr. (RB, Miami Dolphins) - 0.0 pts
+✓ Round 1, Pick 15: B4 selects Aaron Shampklin (RB, Pittsburgh Steelers) - 0.0 pts
+✓ Round 1, Pick 16: A4 selects Evan Hull (RB, Indianapolis Colts) - 0.0 pts
+
+--- ROUND 2 ---
+✓ Round 2, Pick 1: A4 selects Aidan Robbins (RB, Cleveland Browns) - 0.0 pts
+✓ Round 2, Pick 2: B4 selects Chase Brown (RB, Cincinnati Bengals) - 0.0 pts
+✓ Round 2, Pick 3: C4 selects Trey Benson (RB, Arizona Cardinals) - 0.0 pts
+✓ Round 2, Pick 4: D4 selects British Brooks (RB, Houston Texans) - 0.0 pts
+✓ Round 2, Pick 5: D3 selects Terrell Jennings (RB, New England Patriots) - 0.0 pts
+✓ Round 2, Pick 6: C3 selects Ray Davis (RB, Buffalo Bills) - 0.0 pts
+✓ Round 2, Pick 7: B3 selects Lew Nichols III (RB, Philadelphia Eagles) - 0.0 pts
+✓ Round 2, Pick 8: A3 selects Israel Abanikanda (RB, New York Jets) - 0.0 pts
+✓ Round 2, Pick 9: A2 selects Jabari Small (RB, Tennessee Titans) - 0.0 pts
+✓ Round 2, Pick 10: B2 selects Jaylen Wright (RB, Miami Dolphins) - 0.0 pts
+✓ Round 2, Pick 11: C2 selects Carson Steele (RB, Kansas City Chiefs) - 0.0 pts
+✓ Round 2, Pick 12: D2 selects Kobe Lewis (RB, Seattle Seahawks) - 0.0 pts
+✓ Round 2, Pick 13: D1 selects Tyrone Tracy (RB, New York Giants) - 0.0 pts
+✓ Round 2, Pick 14: C1 selects DeWayne McBride (RB, Minnesota Vikings) - 0.0 pts
+✓ Round 2, Pick 15: B1 selects Nathaniel Peat (RB, Dallas Cowboys) - 0.0 pts
+✓ Round 2, Pick 16: A1 selects Cody Schrader (RB, San Francisco 49ers) - 0.0 pts
+
+--- ROUND 3 ---
+✓ Round 3, Pick 1: A1 selects Nsimba Webster (WR, Chicago Bears) - 0.0 pts
+✓ Round 3, Pick 2: B1 selects Daurice Fountain (WR, Detroit Lions) - 0.0 pts
+✓ Round 3, Pick 3: C1 selects Mecole Hardman (WR, Kansas City Chiefs) - 0.0 pts
+✓ Round 3, Pick 4: D1 selects Skyy Moore (WR, Kansas City Chiefs) - 0.0 pts
+✓ Round 3, Pick 5: D2 selects Justyn Ross (WR, Kansas City Chiefs) - 0.0 pts
+✓ Round 3, Pick 6: C2 selects JuJu Smith-Schuster (WR, Kansas City Chiefs) - 0.0 pts
+✓ Round 3, Pick 7: B2 selects Marquez Valdes-Scantling (WR, Buffalo Bills) - 0.0 pts
+✓ Round 3, Pick 8: A2 selects Justin Watson (WR, Kansas City Chiefs) - 0.0 pts
+✓ Round 3, Pick 9: A3 selects Dyami Brown (WR, Washington Commanders) - 0.0 pts
+✓ Round 3, Pick 10: B3 selects Jahan Dotson (WR, Philadelphia Eagles) - 0.0 pts
+✓ Round 3, Pick 11: C3 selects Kyric McGowan (WR, Miami Dolphins) - 0.0 pts
+✓ Round 3, Pick 12: D3 selects Terry McLaurin (WR, Washington Commanders) - 0.0 pts
+✓ Round 3, Pick 13: D4 selects Dax Milne (WR, Las Vegas Raiders) - 0.0 pts
+✓ Round 3, Pick 14: C4 selects Curtis Samuel (WR, Buffalo Bills) - 0.0 pts
+✓ Round 3, Pick 15: B4 selects Terrace Marshall Jr. (WR, Carolina Panthers) - 0.0 pts
+✓ Round 3, Pick 16: A4 selects DJ Moore (WR, Chicago Bears) - 0.0 pts
+
+--- ROUND 4 ---
+✓ Round 4, Pick 1: A4 selects Laviska Shenault Jr. (WR, Seattle Seahawks) - 0.0 pts
+✓ Round 4, Pick 2: B4 selects Jamison Crowder (WR, Washington Commanders) - 0.0 pts
+✓ Round 4, Pick 3: C4 selects Gabriel Davis (WR, Jacksonville Jaguars) - 0.0 pts
+✓ Round 4, Pick 4: D4 selects Stefon Diggs (WR, Houston Texans) - 0.0 pts
+✓ Round 4, Pick 5: D3 selects Isaiah Hodgins (WR, New York Giants) - 0.0 pts
+✓ Round 4, Pick 6: C3 selects Isaiah McKenzie (WR, New York Giants) - 0.0 pts
+✓ Round 4, Pick 7: B3 selects Khalil Shakir (WR, Buffalo Bills) - 0.0 pts
+✓ Round 4, Pick 8: A3 selects Parris Campbell (WR, Philadelphia Eagles) - 0.0 pts
+✓ Round 4, Pick 9: A2 selects Ashton Dulin (WR, Indianapolis Colts) - 0.0 pts
+✓ Round 4, Pick 10: B2 selects Ethan Fernea (WR, Indianapolis Colts) - 0.0 pts
+✓ Round 4, Pick 11: C2 selects Alec Pierce (WR, Indianapolis Colts) - 0.0 pts
+✓ Round 4, Pick 12: D2 selects Michael Pittman Jr. (WR, Indianapolis Colts) - 0.0 pts
+✓ Round 4, Pick 13: D1 selects Mike Strachan (WR, Carolina Panthers) - 0.0 pts
+✓ Round 4, Pick 14: C1 selects Calvin Austin III (WR, Pittsburgh Steelers) - 0.0 pts
+✓ Round 4, Pick 15: B1 selects Miles Boykin (WR, New York Giants) - 0.0 pts
+✓ Round 4, Pick 16: A1 selects Diontae Johnson (WR, Carolina Panthers) - 0.0 pts
+
+--- ROUND 5 ---
+✓ Round 5, Pick 1: A1 selects Derek Carr (QB, New Orleans Saints) - 0.0 pts
+✓ Round 5, Pick 2: B1 selects Jarrett Stidham (QB, Denver Broncos) - 0.0 pts
+✓ Round 5, Pick 3: C1 selects C.J. Beathard (QB, Jacksonville Jaguars) - 0.0 pts
+✓ Round 5, Pick 4: D1 selects Trevor Lawrence (QB, Jacksonville Jaguars) - 0.0 pts
+✓ Round 5, Pick 5: D2 selects E.J. Perry (QB, Jacksonville Jaguars) - 0.0 pts
+✓ Round 5, Pick 6: C2 selects Mac Jones (QB, Jacksonville Jaguars) - 0.0 pts
+✓ Round 5, Pick 7: B2 selects Bailey Zappe (QB, New England Patriots) - 0.0 pts
+✓ Round 5, Pick 8: A2 selects Daniel Jones (QB, New York Giants) - 0.0 pts
+✓ Round 5, Pick 9: A3 selects Tyrod Taylor (QB, New York Jets) - 0.0 pts
+✓ Round 5, Pick 10: B3 selects Anthony Brown (QB, Buffalo Bills) - 0.0 pts
+✓ Round 5, Pick 11: C3 selects Tyler Huntley (QB, Cleveland Browns) - 0.0 pts
+✓ Round 5, Pick 12: D3 selects Lamar Jackson (QB, Baltimore Ravens) - 0.0 pts
+✓ Round 5, Pick 13: D4 selects Malik Willis (QB, Green Bay Packers) - 0.0 pts
+✓ Round 5, Pick 14: C4 selects Logan Woodside (QB, Cincinnati Bengals) - 0.0 pts
+✓ Round 5, Pick 15: B4 selects Tim Boyle (QB, Houston Texans) - 0.0 pts
+✓ Round 5, Pick 16: A4 selects Jared Goff (QB, Detroit Lions) - 0.0 pts
+
+--- ROUND 6 ---
+✓ Round 6, Pick 1: A4 selects Nate Sudfeld (QB, Detroit Lions) - 0.0 pts
+✓ Round 6, Pick 2: B4 selects Marcus Mariota (QB, Washington Commanders) - 0.0 pts
+✓ Round 6, Pick 3: C4 selects Desmond Ridder (QB, Arizona Cardinals) - 0.0 pts
+✓ Round 6, Pick 4: D4 selects Jacoby Brissett (QB, New England Patriots) - 0.0 pts
+✓ Round 6, Pick 5: D3 selects Joshua Dobbs (QB, San Francisco 49ers) - 0.0 pts
+✓ Round 6, Pick 6: C3 selects Deshaun Watson (QB, Cleveland Browns) - 0.0 pts
+✓ Round 6, Pick 7: B3 selects Brandon Allen (QB, San Francisco 49ers) - 0.0 pts
+✓ Round 6, Pick 8: A3 selects Joe Burrow (QB, Cincinnati Bengals) - 0.0 pts
+✓ Round 6, Pick 9: A2 selects Trace McSorley (QB, Washington Commanders) - 0.0 pts
+✓ Round 6, Pick 10: B2 selects Kyler Murray (QB, Arizona Cardinals) - 0.0 pts
+✓ Round 6, Pick 11: C2 selects Ian Book (QB, Kansas City Chiefs) - 0.0 pts
+✓ Round 6, Pick 12: D2 selects Jalen Hurts (QB, Philadelphia Eagles) - 0.0 pts
+✓ Round 6, Pick 13: D1 selects Gardner Minshew (QB, Las Vegas Raiders) - 0.0 pts
+✓ Round 6, Pick 14: C1 selects Joe Flacco (QB, Indianapolis Colts) - 0.0 pts
+✓ Round 6, Pick 15: B1 selects Mike White (QB, Miami Dolphins) - 0.0 pts
+✓ Round 6, Pick 16: A1 selects Zach Wilson (QB, Denver Broncos) - 0.0 pts
+
+--- ROUND 7 ---
+✓ Round 7, Pick 1: A1 selects Jesper Horsted (TE, Carolina Panthers) - 0.0 pts
+✓ Round 7, Pick 2: B1 selects Foster Moreau (TE, New Orleans Saints) - 0.0 pts
+✓ Round 7, Pick 3: C1 selects Evan Engram (TE, Jacksonville Jaguars) - 0.0 pts
+✓ Round 7, Pick 4: D1 selects Luke Farrell (TE, Jacksonville Jaguars) - 0.0 pts
+✓ Round 7, Pick 5: D2 selects Scotty Washington (TE, Baltimore Ravens) - 0.0 pts
+✓ Round 7, Pick 6: C2 selects Hunter Henry (TE, New England Patriots) - 0.0 pts
+✓ Round 7, Pick 7: B2 selects Jonnu Smith (TE, Miami Dolphins) - 0.0 pts
+✓ Round 7, Pick 8: A2 selects Matt Sokol (TE, Pittsburgh Steelers) - 0.0 pts
+✓ Round 7, Pick 9: A3 selects Daniel Bellinger (TE, New York Giants) - 0.0 pts
+✓ Round 7, Pick 10: B3 selects Tanner Hudson (TE, Cincinnati Bengals) - 0.0 pts
+✓ Round 7, Pick 11: C3 selects Mark Andrews (TE, Baltimore Ravens) - 0.0 pts
+✓ Round 7, Pick 12: D3 selects Charlie Kolar (TE, Baltimore Ravens) - 0.0 pts
+✓ Round 7, Pick 13: D4 selects Isaiah Likely (TE, Baltimore Ravens) - 0.0 pts
+✓ Round 7, Pick 14: C4 selects Josh Oliver (TE, Minnesota Vikings) - 0.0 pts
+✓ Round 7, Pick 15: B4 selects Austin Hooper (TE, New England Patriots) - 0.0 pts
+✓ Round 7, Pick 16: A4 selects Thomas Odukoya (TE, Tennessee Titans) - 0.0 pts
+
+--- ROUND 8 ---
+✓ Round 8, Pick 1: A4 selects Chigoziem Okonkwo (TE, Tennessee Titans) - 0.0 pts
+✓ Round 8, Pick 2: B4 selects Kevin Rader (TE, New Orleans Saints) - 0.0 pts
+✓ Round 8, Pick 3: C4 selects T.J. Hockenson (TE, Minnesota Vikings) - 0.0 pts
+✓ Round 8, Pick 4: D4 selects James Mitchell (TE, Detroit Lions) - 0.0 pts
+✓ Round 8, Pick 5: D3 selects Shane Zylstra (TE, Detroit Lions) - 0.0 pts
+✓ Round 8, Pick 6: C3 selects Feleipe Franks (TE, Carolina Panthers) - 0.0 pts
+✓ Round 8, Pick 7: B3 selects Anthony Firkser (TE, New York Jets) - 0.0 pts
+✓ Round 8, Pick 8: A3 selects John FitzPatrick (TE, Atlanta Falcons) - 0.0 pts
+✓ Round 8, Pick 9: A2 selects Parker Hesse (TE, Detroit Lions) - 0.0 pts
+✓ Round 8, Pick 10: B2 selects Kyle Pitts (TE, Atlanta Falcons) - 0.0 pts
+✓ Round 8, Pick 11: C2 selects MyCole Pruitt (TE, Pittsburgh Steelers) - 0.0 pts
+✓ Round 8, Pick 12: D2 selects Harrison Bryant (TE, Las Vegas Raiders) - 0.0 pts
+✓ Round 8, Pick 13: D1 selects Miller Forristall (TE, Los Angeles Rams) - 0.0 pts
+✓ Round 8, Pick 14: C1 selects Zaire Mitchell-Paden (TE, Cleveland Browns) - 0.0 pts
+✓ Round 8, Pick 15: B1 selects David Njoku (TE, Cleveland Browns) - 0.0 pts
+✓ Round 8, Pick 16: A1 selects Hayden Hurst (TE, Los Angeles Chargers) - 0.0 pts
+
+--- ROUND 9 ---
+✓ Round 9, Pick 1: A1 selects Trey Lance (QB, Dallas Cowboys) - 0.0 pts
+✓ Round 9, Pick 2: B1 selects Brock Purdy (QB, San Francisco 49ers) - 0.0 pts
+✓ Round 9, Pick 3: C1 selects Jordan Love (QB, Green Bay Packers) - 0.0 pts
+✓ Round 9, Pick 4: D1 selects Aaron Rodgers (QB, New York Jets) - 0.0 pts
+✓ Round 9, Pick 5: D2 selects Justin Fields (QB, Pittsburgh Steelers) - 0.0 pts
+✓ Round 9, Pick 6: C2 selects Nathan Peterman (QB, Las Vegas Raiders) - 0.0 pts
+✓ Round 9, Pick 7: B2 selects Shane Buechele (QB, Buffalo Bills) - 0.0 pts
+✓ Round 9, Pick 8: A2 selects Patrick Mahomes (QB, Kansas City Chiefs) - 0.0 pts
+✓ Round 9, Pick 9: A3 selects Chris Oladokun (QB, Kansas City Chiefs) - 0.0 pts
+✓ Round 9, Pick 10: B3 selects Taylor Heinicke (QB, Atlanta Falcons) - 0.0 pts
+✓ Round 9, Pick 11: C3 selects Sam Howell (QB, Seattle Seahawks) - 0.0 pts
+✓ Round 9, Pick 12: D3 selects Carson Wentz (QB, Kansas City Chiefs) - 0.0 pts
+✓ Round 9, Pick 13: D4 selects Matt Corral (QB, Minnesota Vikings) - 0.0 pts
+✓ Round 9, Pick 14: C4 selects Sam Darnold (QB, Minnesota Vikings) - 0.0 pts
+✓ Round 9, Pick 15: B4 selects Baker Mayfield (QB, Tampa Bay Buccaneers) - 0.0 pts
+✓ Round 9, Pick 16: A4 selects PJ Walker (QB, Seattle Seahawks) - 0.0 pts
+
+--- ROUND 10 ---
+✓ Round 10, Pick 1: A4 selects Josh Allen (QB, Buffalo Bills) - 0.0 pts
+✓ Round 10, Pick 2: B4 selects Case Keenum (QB, Houston Texans) - 0.0 pts
+✓ Round 10, Pick 3: C4 selects Sam Ehlinger (QB, Indianapolis Colts) - 0.0 pts
+✓ Round 10, Pick 4: D4 selects Kenny Pickett (QB, Philadelphia Eagles) - 0.0 pts
+✓ Round 10, Pick 5: D3 selects Mason Rudolph (QB, Tennessee Titans) - 0.0 pts
+✓ Round 10, Pick 6: C3 selects Mitch Trubisky (QB, Buffalo Bills) - 0.0 pts
+✓ Round 10, Pick 7: B3 selects Drew Lock (QB, New York Giants) - 0.0 pts
+✓ Round 10, Pick 8: A3 selects Geno Smith (QB, Seattle Seahawks) - 0.0 pts
+✓ Round 10, Pick 9: A2 selects Kyle Trask (QB, Tampa Bay Buccaneers) - 0.0 pts
+✓ Round 10, Pick 10: B2 selects Tua Tagovailoa (QB, Miami Dolphins) - 0.0 pts
+✓ Round 10, Pick 11: C2 selects Skylar Thompson (QB, Miami Dolphins) - 0.0 pts
+✓ Round 10, Pick 12: D2 selects Kyle Allen (QB, Pittsburgh Steelers) - 0.0 pts
+✓ Round 10, Pick 13: D1 selects Jeff Driskel (QB, Washington Commanders) - 0.0 pts
+✓ Round 10, Pick 14: C1 selects Davis Mills (QB, Houston Texans) - 0.0 pts
+✓ Round 10, Pick 15: B1 selects Andy Dalton (QB, Carolina Panthers) - 0.0 pts
+✓ Round 10, Pick 16: A1 selects Jake Luton (QB, Carolina Panthers) - 0.0 pts
+
+--- ROUND 11 ---
+✓ Round 11, Pick 1: A1 selects Jameis Winston (QB, Cleveland Browns) - 0.0 pts
+✓ Round 11, Pick 2: B1 selects Brett Rypien (QB, Chicago Bears) - 0.0 pts
+✓ Round 11, Pick 3: C1 selects Russell Wilson (QB, Pittsburgh Steelers) - 0.0 pts
+✓ Round 11, Pick 4: D1 selects Will Grier (QB, Philadelphia Eagles) - 0.0 pts
+✓ Round 11, Pick 5: D2 selects Dak Prescott (QB, Dallas Cowboys) - 0.0 pts
+✓ Round 11, Pick 6: C2 selects Cooper Rush (QB, Dallas Cowboys) - 0.0 pts
+✓ Round 11, Pick 7: B2 selects Justin Herbert (QB, Los Angeles Chargers) - 0.0 pts
+✓ Round 11, Pick 8: A2 selects Easton Stick (QB, Los Angeles Chargers) - 0.0 pts
+✓ Round 11, Pick 9: A3 selects Matthew Stafford (QB, Los Angeles Rams) - 0.0 pts
+✓ Round 11, Pick 10: B3 selects John Wolford (QB, Tampa Bay Buccaneers) - 0.0 pts
+✓ Round 11, Pick 11: C3 selects Kirk Cousins (QB, Atlanta Falcons) - 0.0 pts
+✓ Round 11, Pick 12: D3 selects Nick Mullens (QB, Minnesota Vikings) - 0.0 pts
+✓ Round 11, Pick 13: D4 selects Jake Browning (QB, Cincinnati Bengals) - 0.0 pts
+✓ Round 11, Pick 14: C4 selects Josh Johnson (QB, Baltimore Ravens) - 0.0 pts
+✓ Round 11, Pick 15: B4 selects Ben DiNucci (QB, Buffalo Bills) - 0.0 pts
+✓ Round 11, Pick 16: A4 selects Jake Fromm (QB, Detroit Lions) - 0.0 pts
+
+--- ROUND 12 ---
+✓ Round 12, Pick 1: A4 selects Luis Perez (QB, Los Angeles Chargers) - 0.0 pts
+✓ Round 12, Pick 2: B4 selects Austin Reed (QB, Chicago Bears) - 0.0 pts
+✓ Round 12, Pick 3: C4 selects Tommy DeVito (QB, New York Giants) - 0.0 pts
+✓ Round 12, Pick 4: D4 selects Andrew Peasley (QB, New York Jets) - 0.0 pts
+✓ Round 12, Pick 5: D3 selects Drake Maye (QB, New England Patriots) - 0.0 pts
+✓ Round 12, Pick 6: C3 selects Kedon Slovis (QB, Indianapolis Colts) - 0.0 pts
+✓ Round 12, Pick 7: B3 selects Sam Hartman (QB, Washington Commanders) - 0.0 pts
+✓ Round 12, Pick 8: A3 selects Hendon Hooker (QB, Detroit Lions) - 0.0 pts
+✓ Round 12, Pick 9: A2 selects Joe Milton III (QB, New England Patriots) - 0.0 pts
+✓ Round 12, Pick 10: B2 selects John Paddock (QB, Atlanta Falcons) - 0.0 pts
+✓ Round 12, Pick 11: C2 selects John Rhys Plumlee (QB, Pittsburgh Steelers) - 0.0 pts
+✓ Round 12, Pick 12: D2 selects Aidan O'Connell (QB, Las Vegas Raiders) - 0.0 pts
+✓ Round 12, Pick 13: D1 selects Sean Clifford (QB, Green Bay Packers) - 0.0 pts
+✓ Round 12, Pick 14: C1 selects Rocky Lombardi (QB, Cincinnati Bengals) - 0.0 pts
+✓ Round 12, Pick 15: B1 selects Emory Jones (QB, Baltimore Ravens) - 0.0 pts
+✓ Round 12, Pick 16: A1 selects Jake Haener (QB, New Orleans Saints) - 0.0 pts
+
+--- ROUND 13 ---
+✓ Round 13, Pick 1: A1 selects Will Reichard (PK, Minnesota Vikings) - 0.0 pts
+✓ Round 13, Pick 2: B1 selects Blake Grupe (PK, New Orleans Saints) - 0.0 pts
+✓ Round 13, Pick 3: C1 selects Jake Moody (PK, San Francisco 49ers) - 0.0 pts
+✓ Round 13, Pick 4: D1 selects Jake Bates (PK, Detroit Lions) - 0.0 pts
+✓ Round 13, Pick 5: D2 selects Cam Little (PK, Jacksonville Jaguars) - 0.0 pts
+✓ Round 13, Pick 6: C2 selects Spencer Shrader (PK, Indianapolis Colts) - 0.0 pts
+✓ Round 13, Pick 7: B2 selects Chad Ryland (PK, Arizona Cardinals) - 0.0 pts
+✓ Round 13, Pick 8: A2 selects Jude McAtamney (PK, New York Giants) - 0.0 pts
+✓ Round 13, Pick 9: A3 selects Anders Carlson (PK, Green Bay Packers) - 0.0 pts
+✓ Round 13, Pick 10: B3 selects Joshua Karty (PK, Los Angeles Rams) - 0.0 pts
+✓ Round 13, Pick 11: C3 selects Lucas Havrisik (PK, Cleveland Browns) - 0.0 pts
+✓ Round 13, Pick 12: D3 selects Brandon Aubrey (PK, Dallas Cowboys) - 0.0 pts
+✓ Round 13, Pick 13: D4 selects Charlie Smyth (PK, New Orleans Saints) - 0.0 pts
+✓ Round 13, Pick 14: C4 selects Mohamed Ibrahim (RB, Minnesota Vikings) - 0.0 pts
+✓ Round 13, Pick 15: B4 selects Xazavian Valladay (RB, New York Jets) - 0.0 pts
+✓ Round 13, Pick 16: A4 selects Jordan Mims (RB, New Orleans Saints) - 0.0 pts
+
+--- ROUND 14 ---
+✓ Round 14, Pick 1: A4 selects Kairee Robinson (RB, Seattle Seahawks) - 0.0 pts
+✓ Round 14, Pick 2: B4 selects Elijah Collins (RB, Cincinnati Bengals) - 0.0 pts
+✓ Round 14, Pick 3: C4 selects Blake Watson (RB, Denver Broncos) - 0.0 pts
+✓ Round 14, Pick 4: D4 selects Emani Bailey (RB, Kansas City Chiefs) - 0.0 pts
+✓ Round 14, Pick 5: D3 selects Emari Demercado (RB, Arizona Cardinals) - 0.0 pts
+✓ Round 14, Pick 6: C3 selects Jahmyr Gibbs (RB, Detroit Lions) - 0.0 pts
+✓ Round 14, Pick 7: B3 selects Jase McClellan (RB, Atlanta Falcons) - 0.0 pts
+✓ Round 14, Pick 8: A3 selects Audric Estime (RB, Denver Broncos) - 0.0 pts
+✓ Round 14, Pick 9: A2 selects Daijun Edwards (RB, Pittsburgh Steelers) - 0.0 pts
+✓ Round 14, Pick 10: B2 selects Kenny McIntosh (RB, Seattle Seahawks) - 0.0 pts
+✓ Round 14, Pick 11: C2 selects Kendall Milton (RB, Philadelphia Eagles) - 0.0 pts
+✓ Round 14, Pick 12: D2 selects Bucky Irving (RB, Tampa Bay Buccaneers) - 0.0 pts
+✓ Round 14, Pick 13: D1 selects De'Von Achane (RB, Miami Dolphins) - 0.0 pts
+✓ Round 14, Pick 14: C1 selects Lorenzo Lingard (RB, New York Giants) - 0.0 pts
+✓ Round 14, Pick 15: B1 selects Sione Vaki (RB, Detroit Lions) - 0.0 pts
+✓ Round 14, Pick 16: A1 selects Blake Corum (RB, Los Angeles Rams) - 0.0 pts
+
+--- ROUND 15 ---
+✓ Round 15, Pick 1: A1 selects Eric Gray (RB, New York Giants) - 0.0 pts
+✓ Round 15, Pick 2: B1 selects Trent Pennix (RB, Indianapolis Colts) - 0.0 pts
+✓ Round 15, Pick 3: C1 selects Austin Jones (RB, Washington Commanders) - 0.0 pts
+✓ Round 15, Pick 4: D1 selects Braelon Allen (RB, New York Jets) - 0.0 pts
+✓ Round 15, Pick 5: D2 selects Isaac Guerendo (RB, San Francisco 49ers) - 0.0 pts
+✓ Round 15, Pick 6: C2 selects Ramon Jefferson (RB, Tampa Bay Buccaneers) - 0.0 pts
+✓ Round 15, Pick 7: B2 selects Chris Rodriguez Jr. (RB, Washington Commanders) - 0.0 pts
+✓ Round 15, Pick 8: A2 selects Zach Evans (RB, Los Angeles Rams) - 0.0 pts
+✓ Round 15, Pick 9: A3 selects Kimani Vidal (RB, Los Angeles Chargers) - 0.0 pts
+✓ Round 15, Pick 10: B3 selects Christopher Brooks (RB, Miami Dolphins) - 0.0 pts
+✓ Round 15, Pick 11: C3 selects Isaiah Davis (RB, New York Jets) - 0.0 pts
+✓ Round 15, Pick 12: D3 selects Zach Charbonnet (RB, Seattle Seahawks) - 0.0 pts
+✓ Round 15, Pick 13: D4 selects Michael Wiley (RB, Washington Commanders) - 0.0 pts
+✓ Round 15, Pick 14: C4 selects DJ Williams (RB, Tampa Bay Buccaneers) - 0.0 pts
+✓ Round 15, Pick 15: B4 selects Rasheen Ali (RB, Baltimore Ravens) - 0.0 pts
+✓ Round 15, Pick 16: A4 selects Deneric Prince (RB, Kansas City Chiefs) - 0.0 pts
+
+--- ROUND 16 ---
+✓ Round 16, Pick 1: A4 selects Tank Bigsby (RB, Jacksonville Jaguars) - 0.0 pts
+✓ Round 16, Pick 2: B4 selects Deuce Vaughn (RB, Dallas Cowboys) - 0.0 pts
+✓ Round 16, Pick 3: C4 selects Frank Gore Jr. (RB, Buffalo Bills) - 0.0 pts
+✓ Round 16, Pick 4: D4 selects Tyjae Spears (RB, Tennessee Titans) - 0.0 pts
+✓ Round 16, Pick 5: D3 selects Ellis Merriweather (RB, Green Bay Packers) - 0.0 pts
+✓ Round 16, Pick 6: C3 selects Jacob Kibodi (RB, New Orleans Saints) - 0.0 pts
+✓ Round 16, Pick 7: B3 selects Carlos Washington Jr. (RB, Atlanta Falcons) - 0.0 pts
+✓ Round 16, Pick 8: A3 selects Dillon Johnson (RB, Carolina Panthers) - 0.0 pts
+✓ Round 16, Pick 9: A2 selects MarShawn Lloyd (RB, Green Bay Packers) - 0.0 pts
+✓ Round 16, Pick 10: B2 selects Dante Miller (RB, New York Giants) - 0.0 pts
+✓ Round 16, Pick 11: C2 selects SaRodorick Thompson (RB, Los Angeles Rams) - 0.0 pts
+✓ Round 16, Pick 12: D2 selects Roschon Johnson (RB, Chicago Bears) - 0.0 pts
+✓ Round 16, Pick 13: D1 selects Bijan Robinson (RB, Atlanta Falcons) - 0.0 pts
+✓ Round 16, Pick 14: C1 selects Sean Tucker (RB, Tampa Bay Buccaneers) - 0.0 pts
+✓ Round 16, Pick 15: B1 selects Jawhar Jordan (RB, Houston Texans) - 0.0 pts
+✓ Round 16, Pick 16: A1 selects Zavier Scott (RB, Indianapolis Colts) - 0.0 pts
+
+🎉 Draft simulation completed successfully!
+
+📊 Final Team Rosters:
+
+A1 (0.0 total points):
+  1. Austin Ekeler (RB, Washington Commanders) - 0.0 pts
+  2. Cody Schrader (RB, San Francisco 49ers) - 0.0 pts
+  3. Nsimba Webster (WR, Chicago Bears) - 0.0 pts
+  4. Diontae Johnson (WR, Carolina Panthers) - 0.0 pts
+  5. Derek Carr (QB, New Orleans Saints) - 0.0 pts
+  6. Zach Wilson (QB, Denver Broncos) - 0.0 pts
+  7. Jesper Horsted (TE, Carolina Panthers) - 0.0 pts
+  8. Hayden Hurst (TE, Los Angeles Chargers) - 0.0 pts
+  9. Trey Lance (QB, Dallas Cowboys) - 0.0 pts
+  10. Jake Luton (QB, Carolina Panthers) - 0.0 pts
+  11. Jameis Winston (QB, Cleveland Browns) - 0.0 pts
+  12. Jake Haener (QB, New Orleans Saints) - 0.0 pts
+  13. Will Reichard (PK, Minnesota Vikings) - 0.0 pts
+  14. Blake Corum (RB, Los Angeles Rams) - 0.0 pts
+  15. Eric Gray (RB, New York Giants) - 0.0 pts
+  16. Zavier Scott (RB, Indianapolis Colts) - 0.0 pts
+
+B1 (0.0 total points):
+  1. Joshua Kelley (RB, New York Giants) - 0.0 pts
+  2. Nathaniel Peat (RB, Dallas Cowboys) - 0.0 pts
+  3. Daurice Fountain (WR, Detroit Lions) - 0.0 pts
+  4. Miles Boykin (WR, New York Giants) - 0.0 pts
+  5. Jarrett Stidham (QB, Denver Broncos) - 0.0 pts
+  6. Mike White (QB, Miami Dolphins) - 0.0 pts
+  7. Foster Moreau (TE, New Orleans Saints) - 0.0 pts
+  8. David Njoku (TE, Cleveland Browns) - 0.0 pts
+  9. Brock Purdy (QB, San Francisco 49ers) - 0.0 pts
+  10. Andy Dalton (QB, Carolina Panthers) - 0.0 pts
+  11. Brett Rypien (QB, Chicago Bears) - 0.0 pts
+  12. Emory Jones (QB, Baltimore Ravens) - 0.0 pts
+  13. Blake Grupe (PK, New Orleans Saints) - 0.0 pts
+  14. Sione Vaki (RB, Detroit Lions) - 0.0 pts
+  15. Trent Pennix (RB, Indianapolis Colts) - 0.0 pts
+  16. Jawhar Jordan (RB, Houston Texans) - 0.0 pts
+
+C1 (0.0 total points):
+  1. Isaiah Spiller (RB, Los Angeles Chargers) - 0.0 pts
+  2. DeWayne McBride (RB, Minnesota Vikings) - 0.0 pts
+  3. Mecole Hardman (WR, Kansas City Chiefs) - 0.0 pts
+  4. Calvin Austin III (WR, Pittsburgh Steelers) - 0.0 pts
+  5. C.J. Beathard (QB, Jacksonville Jaguars) - 0.0 pts
+  6. Joe Flacco (QB, Indianapolis Colts) - 0.0 pts
+  7. Evan Engram (TE, Jacksonville Jaguars) - 0.0 pts
+  8. Zaire Mitchell-Paden (TE, Cleveland Browns) - 0.0 pts
+  9. Jordan Love (QB, Green Bay Packers) - 0.0 pts
+  10. Davis Mills (QB, Houston Texans) - 0.0 pts
+  11. Russell Wilson (QB, Pittsburgh Steelers) - 0.0 pts
+  12. Rocky Lombardi (QB, Cincinnati Bengals) - 0.0 pts
+  13. Jake Moody (PK, San Francisco 49ers) - 0.0 pts
+  14. Lorenzo Lingard (RB, New York Giants) - 0.0 pts
+  15. Austin Jones (RB, Washington Commanders) - 0.0 pts
+  16. Sean Tucker (RB, Tampa Bay Buccaneers) - 0.0 pts
+
+D1 (0.0 total points):
+  1. Zander Horvath (RB, Miami Dolphins) - 0.0 pts
+  2. Tyrone Tracy (RB, New York Giants) - 0.0 pts
+  3. Skyy Moore (WR, Kansas City Chiefs) - 0.0 pts
+  4. Mike Strachan (WR, Carolina Panthers) - 0.0 pts
+  5. Trevor Lawrence (QB, Jacksonville Jaguars) - 0.0 pts
+  6. Gardner Minshew (QB, Las Vegas Raiders) - 0.0 pts
+  7. Luke Farrell (TE, Jacksonville Jaguars) - 0.0 pts
+  8. Miller Forristall (TE, Los Angeles Rams) - 0.0 pts
+  9. Aaron Rodgers (QB, New York Jets) - 0.0 pts
+  10. Jeff Driskel (QB, Washington Commanders) - 0.0 pts
+  11. Will Grier (QB, Philadelphia Eagles) - 0.0 pts
+  12. Sean Clifford (QB, Green Bay Packers) - 0.0 pts
+  13. Jake Bates (PK, Detroit Lions) - 0.0 pts
+  14. De'Von Achane (RB, Miami Dolphins) - 0.0 pts
+  15. Braelon Allen (RB, New York Jets) - 0.0 pts
+  16. Bijan Robinson (RB, Atlanta Falcons) - 0.0 pts
+
+D2 (0.0 total points):
+  1. Cam Akers (RB, Houston Texans) - 0.0 pts
+  2. Kobe Lewis (RB, Seattle Seahawks) - 0.0 pts
+  3. Justyn Ross (WR, Kansas City Chiefs) - 0.0 pts
+  4. Michael Pittman Jr. (WR, Indianapolis Colts) - 0.0 pts
+  5. E.J. Perry (QB, Jacksonville Jaguars) - 0.0 pts
+  6. Jalen Hurts (QB, Philadelphia Eagles) - 0.0 pts
+  7. Scotty Washington (TE, Baltimore Ravens) - 0.0 pts
+  8. Harrison Bryant (TE, Las Vegas Raiders) - 0.0 pts
+  9. Justin Fields (QB, Pittsburgh Steelers) - 0.0 pts
+  10. Kyle Allen (QB, Pittsburgh Steelers) - 0.0 pts
+  11. Dak Prescott (QB, Dallas Cowboys) - 0.0 pts
+  12. Aidan O'Connell (QB, Las Vegas Raiders) - 0.0 pts
+  13. Cam Little (PK, Jacksonville Jaguars) - 0.0 pts
+  14. Bucky Irving (RB, Tampa Bay Buccaneers) - 0.0 pts
+  15. Isaac Guerendo (RB, San Francisco 49ers) - 0.0 pts
+  16. Roschon Johnson (RB, Chicago Bears) - 0.0 pts
+
+C2 (0.0 total points):
+  1. Jake Funk (RB, Detroit Lions) - 0.0 pts
+  2. Carson Steele (RB, Kansas City Chiefs) - 0.0 pts
+  3. JuJu Smith-Schuster (WR, Kansas City Chiefs) - 0.0 pts
+  4. Alec Pierce (WR, Indianapolis Colts) - 0.0 pts
+  5. Mac Jones (QB, Jacksonville Jaguars) - 0.0 pts
+  6. Ian Book (QB, Kansas City Chiefs) - 0.0 pts
+  7. Hunter Henry (TE, New England Patriots) - 0.0 pts
+  8. MyCole Pruitt (TE, Pittsburgh Steelers) - 0.0 pts
+  9. Nathan Peterman (QB, Las Vegas Raiders) - 0.0 pts
+  10. Skylar Thompson (QB, Miami Dolphins) - 0.0 pts
+  11. Cooper Rush (QB, Dallas Cowboys) - 0.0 pts
+  12. John Rhys Plumlee (QB, Pittsburgh Steelers) - 0.0 pts
+  13. Spencer Shrader (PK, Indianapolis Colts) - 0.0 pts
+  14. Kendall Milton (RB, Philadelphia Eagles) - 0.0 pts
+  15. Ramon Jefferson (RB, Tampa Bay Buccaneers) - 0.0 pts
+  16. SaRodorick Thompson (RB, Los Angeles Rams) - 0.0 pts
+
+B2 (0.0 total points):
+  1. Kyren Williams (RB, Los Angeles Rams) - 0.0 pts
+  2. Jaylen Wright (RB, Miami Dolphins) - 0.0 pts
+  3. Marquez Valdes-Scantling (WR, Buffalo Bills) - 0.0 pts
+  4. Ethan Fernea (WR, Indianapolis Colts) - 0.0 pts
+  5. Bailey Zappe (QB, New England Patriots) - 0.0 pts
+  6. Kyler Murray (QB, Arizona Cardinals) - 0.0 pts
+  7. Jonnu Smith (TE, Miami Dolphins) - 0.0 pts
+  8. Kyle Pitts (TE, Atlanta Falcons) - 0.0 pts
+  9. Shane Buechele (QB, Buffalo Bills) - 0.0 pts
+  10. Tua Tagovailoa (QB, Miami Dolphins) - 0.0 pts
+  11. Justin Herbert (QB, Los Angeles Chargers) - 0.0 pts
+  12. John Paddock (QB, Atlanta Falcons) - 0.0 pts
+  13. Chad Ryland (PK, Arizona Cardinals) - 0.0 pts
+  14. Kenny McIntosh (RB, Seattle Seahawks) - 0.0 pts
+  15. Chris Rodriguez Jr. (RB, Washington Commanders) - 0.0 pts
+  16. Dante Miller (RB, New York Giants) - 0.0 pts
+
+A2 (0.0 total points):
+  1. Ty Chandler (RB, Minnesota Vikings) - 0.0 pts
+  2. Jabari Small (RB, Tennessee Titans) - 0.0 pts
+  3. Justin Watson (WR, Kansas City Chiefs) - 0.0 pts
+  4. Ashton Dulin (WR, Indianapolis Colts) - 0.0 pts
+  5. Daniel Jones (QB, New York Giants) - 0.0 pts
+  6. Trace McSorley (QB, Washington Commanders) - 0.0 pts
+  7. Matt Sokol (TE, Pittsburgh Steelers) - 0.0 pts
+  8. Parker Hesse (TE, Detroit Lions) - 0.0 pts
+  9. Patrick Mahomes (QB, Kansas City Chiefs) - 0.0 pts
+  10. Kyle Trask (QB, Tampa Bay Buccaneers) - 0.0 pts
+  11. Easton Stick (QB, Los Angeles Chargers) - 0.0 pts
+  12. Joe Milton III (QB, New England Patriots) - 0.0 pts
+  13. Jude McAtamney (PK, New York Giants) - 0.0 pts
+  14. Daijun Edwards (RB, Pittsburgh Steelers) - 0.0 pts
+  15. Zach Evans (RB, Los Angeles Rams) - 0.0 pts
+  16. MarShawn Lloyd (RB, Green Bay Packers) - 0.0 pts
+
+A3 (0.0 total points):
+  1. Alexander Mattison (RB, Las Vegas Raiders) - 0.0 pts
+  2. Israel Abanikanda (RB, New York Jets) - 0.0 pts
+  3. Dyami Brown (WR, Washington Commanders) - 0.0 pts
+  4. Parris Campbell (WR, Philadelphia Eagles) - 0.0 pts
+  5. Tyrod Taylor (QB, New York Jets) - 0.0 pts
+  6. Joe Burrow (QB, Cincinnati Bengals) - 0.0 pts
+  7. Daniel Bellinger (TE, New York Giants) - 0.0 pts
+  8. John FitzPatrick (TE, Atlanta Falcons) - 0.0 pts
+  9. Chris Oladokun (QB, Kansas City Chiefs) - 0.0 pts
+  10. Geno Smith (QB, Seattle Seahawks) - 0.0 pts
+  11. Matthew Stafford (QB, Los Angeles Rams) - 0.0 pts
+  12. Hendon Hooker (QB, Detroit Lions) - 0.0 pts
+  13. Anders Carlson (PK, Green Bay Packers) - 0.0 pts
+  14. Audric Estime (RB, Denver Broncos) - 0.0 pts
+  15. Kimani Vidal (RB, Los Angeles Chargers) - 0.0 pts
+  16. Dillon Johnson (RB, Carolina Panthers) - 0.0 pts
+
+B3 (0.0 total points):
+  1. Kene Nwangwu (RB, Minnesota Vikings) - 0.0 pts
+  2. Lew Nichols III (RB, Philadelphia Eagles) - 0.0 pts
+  3. Jahan Dotson (WR, Philadelphia Eagles) - 0.0 pts
+  4. Khalil Shakir (WR, Buffalo Bills) - 0.0 pts
+  5. Anthony Brown (QB, Buffalo Bills) - 0.0 pts
+  6. Brandon Allen (QB, San Francisco 49ers) - 0.0 pts
+  7. Tanner Hudson (TE, Cincinnati Bengals) - 0.0 pts
+  8. Anthony Firkser (TE, New York Jets) - 0.0 pts
+  9. Taylor Heinicke (QB, Atlanta Falcons) - 0.0 pts
+  10. Drew Lock (QB, New York Giants) - 0.0 pts
+  11. John Wolford (QB, Tampa Bay Buccaneers) - 0.0 pts
+  12. Sam Hartman (QB, Washington Commanders) - 0.0 pts
+  13. Joshua Karty (PK, Los Angeles Rams) - 0.0 pts
+  14. Jase McClellan (RB, Atlanta Falcons) - 0.0 pts
+  15. Christopher Brooks (RB, Miami Dolphins) - 0.0 pts
+  16. Carlos Washington Jr. (RB, Atlanta Falcons) - 0.0 pts
+
+C3 (0.0 total points):
+  1. Nate McCrary (RB, Green Bay Packers) - 0.0 pts
+  2. Ray Davis (RB, Buffalo Bills) - 0.0 pts
+  3. Kyric McGowan (WR, Miami Dolphins) - 0.0 pts
+  4. Isaiah McKenzie (WR, New York Giants) - 0.0 pts
+  5. Tyler Huntley (QB, Cleveland Browns) - 0.0 pts
+  6. Deshaun Watson (QB, Cleveland Browns) - 0.0 pts
+  7. Mark Andrews (TE, Baltimore Ravens) - 0.0 pts
+  8. Feleipe Franks (TE, Carolina Panthers) - 0.0 pts
+  9. Sam Howell (QB, Seattle Seahawks) - 0.0 pts
+  10. Mitch Trubisky (QB, Buffalo Bills) - 0.0 pts
+  11. Kirk Cousins (QB, Atlanta Falcons) - 0.0 pts
+  12. Kedon Slovis (QB, Indianapolis Colts) - 0.0 pts
+  13. Lucas Havrisik (PK, Cleveland Browns) - 0.0 pts
+  14. Jahmyr Gibbs (RB, Detroit Lions) - 0.0 pts
+  15. Isaiah Davis (RB, New York Jets) - 0.0 pts
+  16. Jacob Kibodi (RB, New Orleans Saints) - 0.0 pts
+
+D3 (0.0 total points):
+  1. La'Mical Perine (RB, Pittsburgh Steelers) - 0.0 pts
+  2. Terrell Jennings (RB, New England Patriots) - 0.0 pts
+  3. Terry McLaurin (WR, Washington Commanders) - 0.0 pts
+  4. Isaiah Hodgins (WR, New York Giants) - 0.0 pts
+  5. Lamar Jackson (QB, Baltimore Ravens) - 0.0 pts
+  6. Joshua Dobbs (QB, San Francisco 49ers) - 0.0 pts
+  7. Charlie Kolar (TE, Baltimore Ravens) - 0.0 pts
+  8. Shane Zylstra (TE, Detroit Lions) - 0.0 pts
+  9. Carson Wentz (QB, Kansas City Chiefs) - 0.0 pts
+  10. Mason Rudolph (QB, Tennessee Titans) - 0.0 pts
+  11. Nick Mullens (QB, Minnesota Vikings) - 0.0 pts
+  12. Drake Maye (QB, New England Patriots) - 0.0 pts
+  13. Brandon Aubrey (PK, Dallas Cowboys) - 0.0 pts
+  14. Emari Demercado (RB, Arizona Cardinals) - 0.0 pts
+  15. Zach Charbonnet (RB, Seattle Seahawks) - 0.0 pts
+  16. Ellis Merriweather (RB, Green Bay Packers) - 0.0 pts
+
+D4 (0.0 total points):
+  1. Spencer Brown (RB, Atlanta Falcons) - 0.0 pts
+  2. British Brooks (RB, Houston Texans) - 0.0 pts
+  3. Dax Milne (WR, Las Vegas Raiders) - 0.0 pts
+  4. Stefon Diggs (WR, Houston Texans) - 0.0 pts
+  5. Malik Willis (QB, Green Bay Packers) - 0.0 pts
+  6. Jacoby Brissett (QB, New England Patriots) - 0.0 pts
+  7. Isaiah Likely (TE, Baltimore Ravens) - 0.0 pts
+  8. James Mitchell (TE, Detroit Lions) - 0.0 pts
+  9. Matt Corral (QB, Minnesota Vikings) - 0.0 pts
+  10. Kenny Pickett (QB, Philadelphia Eagles) - 0.0 pts
+  11. Jake Browning (QB, Cincinnati Bengals) - 0.0 pts
+  12. Andrew Peasley (QB, New York Jets) - 0.0 pts
+  13. Charlie Smyth (PK, New Orleans Saints) - 0.0 pts
+  14. Emani Bailey (RB, Kansas City Chiefs) - 0.0 pts
+  15. Michael Wiley (RB, Washington Commanders) - 0.0 pts
+  16. Tyjae Spears (RB, Tennessee Titans) - 0.0 pts
+
+C4 (0.0 total points):
+  1. Anthony McFarland Jr. (RB, Miami Dolphins) - 0.0 pts
+  2. Trey Benson (RB, Arizona Cardinals) - 0.0 pts
+  3. Curtis Samuel (WR, Buffalo Bills) - 0.0 pts
+  4. Gabriel Davis (WR, Jacksonville Jaguars) - 0.0 pts
+  5. Logan Woodside (QB, Cincinnati Bengals) - 0.0 pts
+  6. Desmond Ridder (QB, Arizona Cardinals) - 0.0 pts
+  7. Josh Oliver (TE, Minnesota Vikings) - 0.0 pts
+  8. T.J. Hockenson (TE, Minnesota Vikings) - 0.0 pts
+  9. Sam Darnold (QB, Minnesota Vikings) - 0.0 pts
+  10. Sam Ehlinger (QB, Indianapolis Colts) - 0.0 pts
+  11. Josh Johnson (QB, Baltimore Ravens) - 0.0 pts
+  12. Tommy DeVito (QB, New York Giants) - 0.0 pts
+  13. Mohamed Ibrahim (RB, Minnesota Vikings) - 0.0 pts
+  14. Blake Watson (RB, Denver Broncos) - 0.0 pts
+  15. DJ Williams (RB, Tampa Bay Buccaneers) - 0.0 pts
+  16. Frank Gore Jr. (RB, Buffalo Bills) - 0.0 pts
+
+B4 (0.0 total points):
+  1. Aaron Shampklin (RB, Pittsburgh Steelers) - 0.0 pts
+  2. Chase Brown (RB, Cincinnati Bengals) - 0.0 pts
+  3. Terrace Marshall Jr. (WR, Carolina Panthers) - 0.0 pts
+  4. Jamison Crowder (WR, Washington Commanders) - 0.0 pts
+  5. Tim Boyle (QB, Houston Texans) - 0.0 pts
+  6. Marcus Mariota (QB, Washington Commanders) - 0.0 pts
+  7. Austin Hooper (TE, New England Patriots) - 0.0 pts
+  8. Kevin Rader (TE, New Orleans Saints) - 0.0 pts
+  9. Baker Mayfield (QB, Tampa Bay Buccaneers) - 0.0 pts
+  10. Case Keenum (QB, Houston Texans) - 0.0 pts
+  11. Ben DiNucci (QB, Buffalo Bills) - 0.0 pts
+  12. Austin Reed (QB, Chicago Bears) - 0.0 pts
+  13. Xazavian Valladay (RB, New York Jets) - 0.0 pts
+  14. Elijah Collins (RB, Cincinnati Bengals) - 0.0 pts
+  15. Rasheen Ali (RB, Baltimore Ravens) - 0.0 pts
+  16. Deuce Vaughn (RB, Dallas Cowboys) - 0.0 pts
+
+A4 (0.0 total points):
+  1. Evan Hull (RB, Indianapolis Colts) - 0.0 pts
+  2. Aidan Robbins (RB, Cleveland Browns) - 0.0 pts
+  3. DJ Moore (WR, Chicago Bears) - 0.0 pts
+  4. Laviska Shenault Jr. (WR, Seattle Seahawks) - 0.0 pts
+  5. Jared Goff (QB, Detroit Lions) - 0.0 pts
+  6. Nate Sudfeld (QB, Detroit Lions) - 0.0 pts
+  7. Thomas Odukoya (TE, Tennessee Titans) - 0.0 pts
+  8. Chigoziem Okonkwo (TE, Tennessee Titans) - 0.0 pts
+  9. PJ Walker (QB, Seattle Seahawks) - 0.0 pts
+  10. Josh Allen (QB, Buffalo Bills) - 0.0 pts
+  11. Jake Fromm (QB, Detroit Lions) - 0.0 pts
+  12. Luis Perez (QB, Los Angeles Chargers) - 0.0 pts
+  13. Jordan Mims (RB, New Orleans Saints) - 0.0 pts
+  14. Kairee Robinson (RB, Seattle Seahawks) - 0.0 pts
+  15. Deneric Prince (RB, Kansas City Chiefs) - 0.0 pts
+  16. Tank Bigsby (RB, Jacksonville Jaguars) - 0.0 pts
+
+✅ Draft simulation completed! You can now view the results in the draft room.
