@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { getTeamRoster } from '@/lib/database';
+import { getTeamRoster, getDraftedTeamRoster } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
     // Get team ID from query parameters (optional - if not provided, use user's team)
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get('teamId') || authUser.team;
+    const isDraftContext = searchParams.get('draft') === 'true';
 
     if (!teamId) {
       return NextResponse.json({
@@ -24,8 +25,10 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get players for the specified team with their average points
-    const players = await getTeamRoster(teamId);
+    // Get players for the specified team - use drafted roster if in draft context
+    const players = isDraftContext 
+      ? await getDraftedTeamRoster(teamId)
+      : await getTeamRoster(teamId);
 
     // Transform the data to match the expected format
     const transformedPlayers = players.map((player: any) => {

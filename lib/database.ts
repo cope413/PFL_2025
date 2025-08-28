@@ -556,6 +556,44 @@ export async function getTeamRoster(teamId: string) {
   });
 }
 
+export async function getDraftedTeamRoster(teamId: string) {
+  return await getResults({
+    sql: `
+      SELECT
+        p.player_ID as id,
+        p.player_name as name,
+        p.position,
+        p.team_name as nflTeam,
+        d.team_id as team,
+        p.team_id,
+        COALESCE(n.bye, 0) as byeWeek,
+        COALESCE(pts.week_1, 0) as week_1,
+        COALESCE(pts.week_2, 0) as week_2,
+        COALESCE(pts.week_3, 0) as week_3,
+        COALESCE(pts.week_4, 0) as week_4,
+        COALESCE(pts.week_5, 0) as week_5,
+        COALESCE(pts.week_6, 0) as week_6,
+        COALESCE(pts.week_7, 0) as week_7,
+        COALESCE(pts.week_8, 0) as week_8,
+        COALESCE(pts.week_9, 0) as week_9,
+        COALESCE(pts.week_10, 0) as week_10,
+        COALESCE(pts.week_11, 0) as week_11,
+        COALESCE(pts.week_12, 0) as week_12,
+        COALESCE(pts.week_13, 0) as week_13,
+        COALESCE(pts.week_14, 0) as week_14,
+        d.round,
+        d.pick
+      FROM Draft d
+      INNER JOIN Players p ON CAST(d.player_id AS INTEGER) = p.player_ID
+      LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
+      LEFT JOIN Points pts ON p.player_ID = pts.player_ID
+      WHERE d.team_id = ? AND d.player_id IS NOT NULL AND d.player_id != ''
+      ORDER BY d.round, d.pick
+    `,
+    args: [teamId]
+  });
+}
+
 // Admin-specific database functions
 export async function getAllUsers() {
   return await getResults({

@@ -119,8 +119,6 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   const [isMaximized, setIsMaximized] = useState(false)
   const [showTimeWarning, setShowTimeWarning] = useState(false)
   const [users, setUsers] = useState<User[]>([])
-  const [currentTeamRoster, setCurrentTeamRoster] = useState<RosterPlayer[]>([])
-  const [loadingRoster, setLoadingRoster] = useState(false)
   const { user } = useAuth()
   const { draftPicks: dbDraftPicks, progress, savePick, clearDraft, refreshDraft, isLoading: draftLoading, error: draftError } = useDraft()
   const { players, isLoading: playersLoading, error: playersError, refreshPlayers } = usePlayers()
@@ -156,35 +154,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     }
   };
 
-  // Fetch roster for the currently picking team
-  const fetchCurrentTeamRoster = async (teamId: string) => {
-    try {
-      setLoadingRoster(true);
-      const response = await fetch(`/api/team-roster?teamId=${teamId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          setCurrentTeamRoster(data.data || []);
-        } else {
-          console.warn('Failed to fetch team roster:', data.error);
-          setCurrentTeamRoster([]);
-        }
-      } else {
-        console.warn('Failed to fetch team roster: HTTP', response.status, response.statusText);
-        setCurrentTeamRoster([]);
-      }
-    } catch (error) {
-      console.error('Failed to fetch team roster:', error);
-      setCurrentTeamRoster([]);
-    } finally {
-      setLoadingRoster(false);
-    }
-  };
+  // Roster is now displayed directly from draft picks data
 
   // Set available players when players are loaded from database
   useEffect(() => {
@@ -208,13 +178,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     fetchUsers();
   }, []);
 
-  // Fetch current team roster when the picking team changes
-  useEffect(() => {
-    const currentPickingTeam = getCurrentPickingTeam();
-    if (currentPickingTeam && currentPickingTeam.trim() !== '') {
-      fetchCurrentTeamRoster(currentPickingTeam);
-    }
-  }, [currentRound, currentPick]);
+  // No longer need to fetch roster since we use local draft picks data
 
   // Helper function to get owner name for a team
   const getOwnerNameForTeam = (teamId: string): string => {
@@ -317,11 +281,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
         setCurrentRound(progress.currentRound)
         setCurrentPick(progress.currentPick)
         
-        // Fetch roster for the current picking team
-        const currentPickingTeam = getDraftOrderForPosition(progress.currentRound, progress.currentPick);
-        if (currentPickingTeam && currentPickingTeam.trim() !== '') {
-          fetchCurrentTeamRoster(currentPickingTeam);
-        }
+        // Roster is now displayed from local draft picks data
       }
     }
   }, [dbDraftPicks, progress, players])
@@ -530,7 +490,8 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   const showTeamRoster = (teamId: string) => {
     const teamPlayers = draftPicks
       .filter(pick => pick.team === teamId && pick.player)
-      .map(pick => pick.player!)
+      .map(pick => pick.player)
+      .filter((player): player is NonNullable<typeof player> => player !== null)
       .sort((a, b) => a.name.localeCompare(b.name))
 
     const teamRoster: TeamRoster = {
@@ -783,32 +744,41 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {loadingRoster ? (
-                      <div className="text-xs text-muted-foreground">Loading roster...</div>
-                    ) : currentTeamRoster.length === 0 ? (
-                      <div className="text-xs text-muted-foreground">No players drafted yet</div>
-                    ) : (
-                      <div className="space-y-2">
-                        {['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(position => {
-                          const positionPlayers = currentTeamRoster.filter(p => p.position === position);
-                          if (positionPlayers.length === 0) return null;
-                          
-                          return (
-                            <div key={position}>
-                              <h4 className="font-semibold text-xs mb-1">{position}</h4>
-                              <div className="space-y-1">
-                                {positionPlayers.map(player => (
-                                  <div key={player.id} className="flex justify-between items-center text-xs">
-                                    <span className="font-medium">{player.name}</span>
-                                    <span className="text-muted-foreground">{player.nflTeam}</span>
-                                  </div>
-                                ))}
+                    {(() => {
+                      const currentPickingTeam = getCurrentPickingTeam();
+                      const teamDraftPicks = draftPicks.filter(pick => 
+                        pick.team === currentPickingTeam && pick.player !== null
+                      );
+                      
+                      if (teamDraftPicks.length === 0) {
+                        return <div className="text-xs text-muted-foreground">No players drafted yet</div>;
+                      }
+                      
+                      return (
+                        <div className="space-y-2">
+                          {['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(position => {
+                            const positionPlayers = teamDraftPicks.filter(pick => 
+                              pick.player && pick.player.position === position
+                            );
+                            if (positionPlayers.length === 0) return null;
+                            
+                            return (
+                              <div key={position}>
+                                <h4 className="font-semibold text-xs mb-1">{position}</h4>
+                                <div className="space-y-1">
+                                  {positionPlayers.map(pick => (
+                                    <div key={pick.player?.id || pick.round + '-' + pick.pick} className="flex justify-between items-center text-xs">
+                                      <span className="font-medium">{pick.player?.name || 'Unknown'}</span>
+                                      <span className="text-muted-foreground">{pick.player?.team || 'Unknown'}</span>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     
                     {/* Debug Info for Admin */}
                     {user?.is_admin && (
