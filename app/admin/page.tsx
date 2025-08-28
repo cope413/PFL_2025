@@ -38,7 +38,8 @@ import {
   Menu,
   X,
   Calendar,
-  TrendingUp
+  TrendingUp,
+  Plus
 } from 'lucide-react';
 
 interface User {
@@ -123,6 +124,29 @@ export default function AdminDashboard() {
     week14: 0
   });
   const [isPlayerEditDialogOpen, setIsPlayerEditDialogOpen] = useState(false);
+  const [isCreatePlayerDialogOpen, setIsCreatePlayerDialogOpen] = useState(false);
+  const [createPlayerForm, setCreatePlayerForm] = useState({
+    name: '',
+    position: '',
+    team: '',
+    nflTeam: '',
+    ownerId: '',
+    week1: 0,
+    week2: 0,
+    week3: 0,
+    week4: 0,
+    week5: 0,
+    week6: 0,
+    week7: 0,
+    week8: 0,
+    week9: 0,
+    week10: 0,
+    week11: 0,
+    week12: 0,
+    week13: 0,
+    week14: 0
+  });
+  const [creatingPlayer, setCreatingPlayer] = useState(false);
   const [weekStatus, setWeekStatus] = useState<any[]>([]);
   const [currentWeek, setCurrentWeek] = useState(1);
   const [loadingWeekStatus, setLoadingWeekStatus] = useState(false);
@@ -413,6 +437,123 @@ export default function AdminDashboard() {
       });
     } finally {
       setFinalizingWeek(null);
+    }
+  };
+
+  const openCreatePlayerDialog = () => {
+    setCreatePlayerForm({
+      name: '',
+      position: '',
+      team: '',
+      nflTeam: '',
+      ownerId: '',
+      week1: 0,
+      week2: 0,
+      week3: 0,
+      week4: 0,
+      week5: 0,
+      week6: 0,
+      week7: 0,
+      week8: 0,
+      week9: 0,
+      week10: 0,
+      week11: 0,
+      week12: 0,
+      week13: 0,
+      week14: 0
+    });
+    setIsCreatePlayerDialogOpen(true);
+  };
+
+  const closeCreatePlayerDialog = () => {
+    setIsCreatePlayerDialogOpen(false);
+    setCreatePlayerForm({
+      name: '',
+      position: '',
+      team: '',
+      nflTeam: '',
+      ownerId: '',
+      week1: 0,
+      week2: 0,
+      week3: 0,
+      week4: 0,
+      week5: 0,
+      week6: 0,
+      week7: 0,
+      week8: 0,
+      week9: 0,
+      week10: 0,
+      week11: 0,
+      week12: 0,
+      week13: 0,
+      week14: 0
+    });
+  };
+
+  const createPlayer = async () => {
+    if (!createPlayerForm.name || !createPlayerForm.position) {
+      toast({
+        title: "Validation Error",
+        description: "Player name and position are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreatingPlayer(true);
+    try {
+      const response = await fetch('/api/admin/players', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          name: createPlayerForm.name,
+          position: createPlayerForm.position,
+          team: createPlayerForm.team,
+          nflTeam: createPlayerForm.nflTeam,
+          ownerId: createPlayerForm.ownerId,
+          weeklyStats: {
+            week1: createPlayerForm.week1,
+            week2: createPlayerForm.week2,
+            week3: createPlayerForm.week3,
+            week4: createPlayerForm.week4,
+            week5: createPlayerForm.week5,
+            week6: createPlayerForm.week6,
+            week7: createPlayerForm.week7,
+            week8: createPlayerForm.week8,
+            week9: createPlayerForm.week9,
+            week10: createPlayerForm.week10,
+            week11: createPlayerForm.week11,
+            week12: createPlayerForm.week12,
+            week13: createPlayerForm.week13,
+            week14: createPlayerForm.week14
+          }
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        toast({
+          title: "Success",
+          description: result.message || "Player created successfully",
+        });
+        closeCreatePlayerDialog();
+        fetchPlayers(); // Refresh the list
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Player creation failed:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create player",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingPlayer(false);
     }
   };
 
@@ -1085,10 +1226,18 @@ export default function AdminDashboard() {
         <TabsContent value="players" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Player Management</CardTitle>
-              <CardDescription>
-                Manage player information, team assignments, and weekly statistics.
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Player Management</CardTitle>
+                  <CardDescription>
+                    Manage player information, team assignments, and weekly statistics.
+                  </CardDescription>
+                </div>
+                <Button onClick={openCreatePlayerDialog} className="ml-4">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Player
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {loadingPlayers ? (
@@ -1350,6 +1499,132 @@ export default function AdminDashboard() {
             </Button>
             <Button onClick={updatePlayerInfo}>
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Player Dialog */}
+      <Dialog open={isCreatePlayerDialogOpen} onOpenChange={setIsCreatePlayerDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Player</DialogTitle>
+            <DialogDescription>
+              Add a new player to the database. Fill in the required information and click create when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new-player-name" className="text-right">
+                  Name *
+                </Label>
+                <Input
+                  id="new-player-name"
+                  value={createPlayerForm.name}
+                  onChange={(e) => setCreatePlayerForm({ ...createPlayerForm, name: e.target.value })}
+                  className="col-span-3"
+                  placeholder="e.g., Patrick Mahomes"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new-player-position" className="text-right">
+                  Position *
+                </Label>
+                <Input
+                  id="new-player-position"
+                  value={createPlayerForm.position}
+                  onChange={(e) => setCreatePlayerForm({ ...createPlayerForm, position: e.target.value })}
+                  className="col-span-3"
+                  placeholder="e.g., QB, RB, WR, TE, K, DEF"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new-player-team" className="text-right">
+                  PFL Team
+                </Label>
+                <Input
+                  id="new-player-team"
+                  value={createPlayerForm.team}
+                  onChange={(e) => setCreatePlayerForm({ ...createPlayerForm, team: e.target.value })}
+                  className="col-span-3"
+                  placeholder="e.g., A1, B2, C3 (leave empty for free agent)"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new-player-nfl-team" className="text-right">
+                  NFL Team
+                </Label>
+                <Input
+                  id="new-player-nfl-team"
+                  value={createPlayerForm.nflTeam}
+                  onChange={(e) => setCreatePlayerForm({ ...createPlayerForm, nflTeam: e.target.value })}
+                  className="col-span-3"
+                  placeholder="e.g., Chiefs, Raiders, Patriots"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="new-player-owner" className="text-right">
+                  Owner ID
+                </Label>
+                <Input
+                  id="new-player-owner"
+                  value={createPlayerForm.ownerId}
+                  onChange={(e) => setCreatePlayerForm({ ...createPlayerForm, ownerId: e.target.value })}
+                  className="col-span-3"
+                  placeholder="e.g., A1, B2, C3 (leave empty for free agent)"
+                />
+              </div>
+            </div>
+            
+            <div className="border-t pt-4">
+              <h3 className="text-lg font-semibold mb-4">Weekly Statistics (Optional)</h3>
+              <div className="grid grid-cols-7 gap-2">
+                {[1, 2, 3, 4, 5, 6, 7].map((week) => (
+                  <div key={week} className="space-y-2">
+                    <Label htmlFor={`new-week${week}`} className="text-sm">Week {week}</Label>
+                    <Input
+                      id={`new-week${week}`}
+                      type="number"
+                      step="0.1"
+                      value={createPlayerForm[`week${week}` as keyof typeof createPlayerForm] as number}
+                      onChange={(e) => setCreatePlayerForm({ 
+                        ...createPlayerForm, 
+                        [`week${week}`]: parseFloat(e.target.value) || 0 
+                      })}
+                      className="text-center"
+                      placeholder="0.0"
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-2 mt-4">
+                {[8, 9, 10, 11, 12, 13, 14].map((week) => (
+                  <div key={week} className="space-y-2">
+                    <Label htmlFor={`new-week${week}`} className="text-sm">Week {week}</Label>
+                    <Input
+                      id={`new-week${week}`}
+                      type="number"
+                      step="0.1"
+                      value={createPlayerForm[`week${week}` as keyof typeof createPlayerForm] as number}
+                      onChange={(e) => setCreatePlayerForm({ 
+                        ...createPlayerForm, 
+                        [`week${week}`]: parseFloat(e.target.value) || 0 
+                      })}
+                      className="text-center"
+                      placeholder="0.0"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeCreatePlayerDialog}>
+              Cancel
+            </Button>
+            <Button onClick={createPlayer} disabled={creatingPlayer}>
+              {creatingPlayer ? 'Creating...' : 'Create Player'}
             </Button>
           </DialogFooter>
         </DialogContent>

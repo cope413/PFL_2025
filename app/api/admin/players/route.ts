@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin';
-import { getAllPlayersWithStats, updatePlayerWithStats } from '@/lib/database';
+import { getAllPlayersWithStats, updatePlayerWithStats, createPlayer } from '@/lib/database';
 
 // GET /api/admin/players - Get all players with stats
 export async function GET(request: NextRequest) {
@@ -15,6 +15,46 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Admin players GET error:', error);
+    return NextResponse.json(
+      { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: error instanceof Error && error.message.includes('Admin privileges') ? 403 : 500 }
+    );
+  }
+}
+
+// POST /api/admin/players - Create new player
+export async function POST(request: NextRequest) {
+  try {
+    const adminUser = requireAdmin(request);
+    const body = await request.json();
+    console.log('Admin players POST request:', body);
+    
+    const { 
+      name, 
+      position, 
+      team, 
+      nflTeam, 
+      ownerId, 
+      weeklyStats 
+    } = body;
+    
+    if (!name || !position) {
+      return NextResponse.json(
+        { success: false, error: 'Player name and position are required' },
+        { status: 400 }
+      );
+    }
+    
+    await createPlayer(name, position, team, nflTeam, ownerId, weeklyStats);
+    
+    console.log('Player creation successful for:', name);
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Player created successfully'
+    });
+  } catch (error) {
+    console.error('Admin players POST error:', error);
     return NextResponse.json(
       { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
       { status: error instanceof Error && error.message.includes('Admin privileges') ? 403 : 500 }
