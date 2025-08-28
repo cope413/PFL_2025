@@ -36,7 +36,9 @@ import {
   Edit,
   LogOut,
   Menu,
-  X
+  X,
+  Calendar,
+  TrendingUp
 } from 'lucide-react';
 
 interface User {
@@ -121,6 +123,10 @@ export default function AdminDashboard() {
     week14: 0
   });
   const [isPlayerEditDialogOpen, setIsPlayerEditDialogOpen] = useState(false);
+  const [weekStatus, setWeekStatus] = useState<any[]>([]);
+  const [currentWeek, setCurrentWeek] = useState(1);
+  const [loadingWeekStatus, setLoadingWeekStatus] = useState(false);
+  const [finalizingWeek, setFinalizingWeek] = useState<number | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -142,6 +148,7 @@ export default function AdminDashboard() {
       fetchUsers();
       fetchStats();
       fetchPlayers();
+      fetchWeekStatus();
     }
   }, [user, loading, router, toast]);
 
@@ -341,6 +348,71 @@ export default function AdminDashboard() {
       });
     } finally {
       setLoadingPlayers(false);
+    }
+  };
+
+  const fetchWeekStatus = async () => {
+    setLoadingWeekStatus(true);
+    try {
+      const response = await fetch('/api/admin/week-status', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setWeekStatus(data.data.weekStatus);
+        setCurrentWeek(data.data.currentWeek);
+      } else {
+        throw new Error('Failed to fetch week status');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch week status",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingWeekStatus(false);
+    }
+  };
+
+  const finalizeWeek = async (week: number) => {
+    if (!confirm(`Are you sure you want to finalize Week ${week}? This will:\n\n• Calculate final scores for all teams\n• Update league standings\n• Mark the week as complete\n\nThis action cannot be undone.`)) {
+      return;
+    }
+
+    setFinalizingWeek(week);
+    try {
+      const response = await fetch('/api/admin/finalize-week', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({ week })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Success",
+          description: data.message || `Week ${week} has been finalized successfully.`,
+        });
+        fetchWeekStatus(); // Refresh week status
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to finalize week",
+        variant: "destructive",
+      });
+    } finally {
+      setFinalizingWeek(null);
     }
   };
 
@@ -638,6 +710,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="players">Player Management</TabsTrigger>
+          <TabsTrigger value="weekly">Weekly Management</TabsTrigger>
           <TabsTrigger value="stats">System Statistics</TabsTrigger>
         </TabsList>
 
@@ -778,6 +851,180 @@ export default function AdminDashboard() {
                     ))}
                   </TableBody>
                 </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="weekly" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Weekly Management</CardTitle>
+              <CardDescription>
+                Finalize weekly scores, update standings, and manage week progression.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingWeekStatus ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="text-lg">Loading week status...</div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Current Week</CardTitle>
+                        <Activity className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">Week {currentWeek}</div>
+                        <p className="text-xs text-muted-foreground">
+                          Active week
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Completed Weeks</CardTitle>
+                        <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {weekStatus.filter(w => w.isFinalized).length}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Weeks finalized
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Remaining Weeks</CardTitle>
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {14 - weekStatus.filter(w => w.isFinalized).length}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Weeks remaining
+                        </p>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Season Progress</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {Math.round((weekStatus.filter(w => w.isFinalized).length / 14) * 100)}%
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Season complete
+                        </p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Week Status</h3>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {weekStatus.map((week) => (
+                        <Card key={week.week} className={week.isCurrentWeek ? 'ring-2 ring-primary' : ''}>
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-lg">
+                                Week {week.week}
+                                {week.isCurrentWeek && (
+                                  <Badge variant="default" className="ml-2">
+                                    Current
+                                  </Badge>
+                                )}
+                              </CardTitle>
+                              {week.isFinalized && (
+                                <Badge variant="secondary">
+                                  <UserCheck className="h-3 w-3 mr-1" />
+                                  Finalized
+                                </Badge>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {week.isFinalized ? (
+                              <div className="space-y-2">
+                                <div className="text-sm text-muted-foreground">
+                                  Finalized: {new Date(week.finalizedAt).toLocaleDateString()}
+                                </div>
+                                {week.scores.length > 0 && (
+                                  <div className="space-y-1">
+                                    <div className="text-xs font-medium text-muted-foreground">Scores:</div>
+                                    {week.scores.slice(0, 3).map((score: any, index: number) => (
+                                      <div key={index} className="text-xs">
+                                        {week.teamNames[score.teamId] || score.teamId}: {score.score.toFixed(1)}
+                                      </div>
+                                    ))}
+                                    {week.scores.length > 3 && (
+                                      <div className="text-xs text-muted-foreground">
+                                        +{week.scores.length - 3} more teams
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                <div className="text-sm text-muted-foreground">
+                                  Not finalized
+                                </div>
+                                {week.week <= currentWeek && (
+                                  <Button
+                                    onClick={() => finalizeWeek(week.week)}
+                                    disabled={finalizingWeek === week.week}
+                                    size="sm"
+                                    className="w-full"
+                                  >
+                                    {finalizingWeek === week.week ? (
+                                      <>Finalizing...</>
+                                    ) : (
+                                      <>Finalize Week {week.week}</>
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-semibold mb-4">Important Notes</h3>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span>Finalizing a week will calculate scores based on player statistics and update league standings.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span>This action cannot be undone once completed.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span>Only weeks that are current or past can be finalized.</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <span>Make sure all player statistics are entered before finalizing a week.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </CardContent>
           </Card>
