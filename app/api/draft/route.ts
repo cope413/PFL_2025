@@ -71,6 +71,29 @@ export async function POST(request: NextRequest) {
         
         return NextResponse.json({ success: true, message: 'Player assigned successfully' });
 
+      case 'undoPick':
+        const { round: undoRound, pick: undoPick } = data;
+        
+        // Validate required fields
+        if (!undoRound || !undoPick) {
+          return NextResponse.json(
+            { success: false, error: 'Missing round or pick for undo operation' },
+            { status: 400 }
+          );
+        }
+        
+        // Clear the specific pick by setting it to empty values
+        await saveDraftPick(undoRound, undoPick, '', '', '', '', '');
+        
+        // Update player ownership back to free agent (empty owner_ID)
+        const pickToUndo = await getDraftPicks();
+        const pickData = pickToUndo.find(p => p.round === undoRound && p.pick === undoPick);
+        if (pickData && pickData.player_id) {
+          await updatePlayerOwnership(pickData.player_id, '');
+        }
+        
+        return NextResponse.json({ success: true, message: 'Pick undone successfully' });
+
       default:
         return NextResponse.json(
           { success: false, error: 'Invalid action' },

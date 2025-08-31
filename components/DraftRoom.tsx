@@ -120,7 +120,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
   const [showTimeWarning, setShowTimeWarning] = useState(false)
   const [users, setUsers] = useState<User[]>([])
   const { user } = useAuth()
-  const { draftPicks: dbDraftPicks, progress, savePick, clearDraft, refreshDraft, isLoading: draftLoading, error: draftError } = useDraft()
+  const { draftPicks: dbDraftPicks, progress, savePick, undoPick, clearDraft, refreshDraft, isLoading: draftLoading, error: draftError } = useDraft()
   const { players, isLoading: playersLoading, error: playersError, refreshPlayers } = usePlayers()
 
   const getCurrentPickingTeam = (): string => {
@@ -412,7 +412,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     setShowTimeWarning(false)
   }
 
-  const undoLastPick = () => {
+  const undoLastPick = async () => {
     if (draftPicks.length === 0) return
 
     const lastPickIndex = draftPicks.findLastIndex(p => p.player !== null)
@@ -421,42 +421,43 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
     const lastPick = draftPicks[lastPickIndex]
     if (!lastPick.player) return
 
-    // Add player back to available list (without owner_ID)
-    const playerWithoutOwner = { ...lastPick.player }
-    delete playerWithoutOwner.owner_ID
-    setAvailablePlayers(prev => [playerWithoutOwner, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
+    try {
+      // Use the new undoPick function to properly handle the database operation
+      await undoPick(lastPick.round, lastPick.pick)
+      
+      // The database will be refreshed automatically, but we need to update local state
+      // Add player back to available list (without owner_ID)
+      const playerWithoutOwner = { ...lastPick.player }
+      delete playerWithoutOwner.owner_ID
+      setAvailablePlayers(prev => [playerWithoutOwner, ...prev].sort((a, b) => a.name.localeCompare(b.name)))
 
-    // Remove player from pick
-    const updatedPicks = [...draftPicks]
-    updatedPicks[lastPickIndex].player = null
-    setDraftPicks(updatedPicks)
+      // Remove player from pick
+      const updatedPicks = [...draftPicks]
+      updatedPicks[lastPickIndex].player = null
+      setDraftPicks(updatedPicks)
 
-    // Update database - save the undone pick as null
-    savePick({
-      round: lastPick.round,
-      pick: lastPick.pick,
-      team_id: lastPick.team,
-      player_id: '',
-      player_name: '',
-      position: '',
-      team: ''
-    })
-
-    // Go back to previous pick
-    if (lastPick.pick === 1) {
-      if (lastPick.round > 1) {
-        setCurrentRound(lastPick.round - 1)
-        setCurrentPick(16)
+      // Go back to previous pick
+      if (lastPick.pick === 1) {
+        if (lastPick.round > 1) {
+          setCurrentRound(lastPick.round - 1)
+          setCurrentPick(16)
+        } else {
+          setCurrentRound(1)
+          setCurrentPick(1)
+        }
       } else {
-        setCurrentRound(1)
-        setCurrentPick(1)
+        setCurrentRound(lastPick.round)
+        setCurrentPick(lastPick.pick - 1)
       }
-    } else {
-      setCurrentRound(lastPick.round)
-      setCurrentPick(lastPick.pick - 1)
-    }
 
-    setTimeRemaining(150)
+      setTimeRemaining(150)
+      
+      console.log('Pick undone successfully');
+    } catch (error) {
+      console.error('Error undoing pick:', error);
+      // Show error to user
+      alert('Failed to undo pick. Please try again.');
+    }
   }
 
   const handleClearDraft = async () => {
@@ -697,7 +698,7 @@ export default function DraftRoom({ onClose }: DraftRoomProps) {
                             <Pause className="mr-2 h-4 w-4" />
                             Pause
                           </Button>
-                          <Button variant="outline" onClick={undoLastPick}>
+                          <Button variant="outline" onClick={() => undoLastPick().catch(console.error)}>
                             <Undo2 className="mr-2 h-4 w-4" />
                             Undo
                           </Button>

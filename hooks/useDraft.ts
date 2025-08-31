@@ -25,6 +25,7 @@ interface UseDraftReturn {
   isLoading: boolean;
   error: string | null;
   savePick: (pick: Omit<DraftPick, 'id' | 'timestamp'>) => Promise<void>;
+  undoPick: (round: number, pick: number) => Promise<void>;
   clearDraft: () => Promise<void>;
   refreshDraft: () => Promise<void>;
 }
@@ -90,6 +91,36 @@ export function useDraft(): UseDraftReturn {
     }
   }, [fetchDraftData]);
 
+  const undoPick = useCallback(async (round: number, pick: number) => {
+    try {
+      setError(null);
+      
+      const response = await fetch('/api/draft', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'undoPick',
+          round,
+          pick
+        }),
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        // Refresh draft data after undoing
+        await fetchDraftData();
+      } else {
+        setError(result.error || 'Failed to undo pick');
+      }
+    } catch (err) {
+      setError('Failed to undo pick');
+      console.error('Error undoing pick:', err);
+    }
+  }, [fetchDraftData]);
+
   const clearDraft = useCallback(async () => {
     try {
       setError(null);
@@ -133,6 +164,7 @@ export function useDraft(): UseDraftReturn {
     isLoading,
     error,
     savePick,
+    undoPick,
     clearDraft,
     refreshDraft,
   };
