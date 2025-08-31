@@ -1,0 +1,248 @@
+[
+  {
+    "rank": 19,
+    "name": "CJ Stroud",
+    "team": "HOU",
+    "bye": 6
+  },
+  {
+    "rank": 20,
+    "name": "JJ McCarthy",
+    "team": "MIN",
+    "bye": 6
+  },
+  {
+    "rank": 23,
+    "name": "Michael Penix",
+    "team": "ATL",
+    "bye": 5
+  },
+  {
+    "rank": 26,
+    "name": "Cam Ward",
+    "team": "TEN",
+    "bye": 10
+  },
+  {
+    "rank": 42,
+    "name": "Jimmy Garoppolo",
+    "team": "LAR",
+    "bye": 8
+  },
+  {
+    "rank": 44,
+    "name": "Joe Milton",
+    "team": "DAL",
+    "bye": 10
+  },
+  {
+    "rank": 7,
+    "name": "De'Von Achane",
+    "team": "MIA",
+    "bye": 12
+  },
+  {
+    "rank": 14,
+    "name": "Kenneth Walker",
+    "team": "SEA",
+    "bye": 8
+  },
+  {
+    "rank": 19,
+    "name": "Chubba Hubbard",
+    "team": "CAR",
+    "bye": 14
+  },
+  {
+    "rank": 30,
+    "name": "Travis Etienne",
+    "team": "JAC",
+    "bye": 8
+  },
+  {
+    "rank": 35,
+    "name": "JK Dobbins",
+    "team": "DEN",
+    "bye": 12
+  },
+  {
+    "rank": 38,
+    "name": "Cam Skattebo",
+    "team": "NYG",
+    "bye": 14
+  },
+  {
+    "rank": 39,
+    "name": "Jacory Croskey-Merritt",
+    "team": "WAS",
+    "bye": 12
+  },
+  {
+    "rank": 41,
+    "name": "Quinshon Judkins",
+    "team": "CLE",
+    "bye": 9
+  },
+  {
+    "rank": 48,
+    "name": "Brian Robinson",
+    "team": "SF",
+    "bye": 14
+  },
+  {
+    "rank": 70,
+    "name": "Woody Marks",
+    "team": "HOU",
+    "bye": 6
+  },
+  {
+    "rank": 71,
+    "name": "Chris Rodriguez",
+    "team": "WAS",
+    "bye": 12
+  },
+  {
+    "rank": 88,
+    "name": "Jordan James",
+    "team": "SF",
+    "bye": 14
+  },
+  {
+    "rank": 94,
+    "name": "Chris Brooks",
+    "team": "GB",
+    "bye": 5
+  },
+  {
+    "rank": 8,
+    "name": "Brian Thomas",
+    "team": "JAC",
+    "bye": 8
+  },
+  {
+    "rank": 10,
+    "name": "AJ Brown",
+    "team": "PHI",
+    "bye": 9
+  },
+  {
+    "rank": 13,
+    "name": "Jaxon Smith-Njigba",
+    "team": "SEA",
+    "bye": 8
+  },
+  {
+    "rank": 18,
+    "name": "Marvin Harrison",
+    "team": "ARI",
+    "bye": 8
+  },
+  {
+    "rank": 24,
+    "name": "Tez McMillan",
+    "team": "CAR",
+    "bye": 14
+  },
+  {
+    "rank": 48,
+    "name": "Michael Pittman",
+    "team": "IND",
+    "bye": 11
+  },
+  {
+    "rank": 56,
+    "name": "Luther Burden",
+    "team": "CHI",
+    "bye": 5
+  },
+  {
+    "rank": 81,
+    "name": "Calvin Austin",
+    "team": "PIT",
+    "bye": 5
+  },
+  {
+    "rank": 83,
+    "name": "Dontayvian Wicks",
+    "team": "GB",
+    "bye": 5
+  },
+  {
+    "rank": 92,
+    "name": "Donte Thornton",
+    "team": "LV",
+    "bye": 8
+  },
+  {
+    "rank": 5,
+    "name": "TJ Hockenson",
+    "team": "MIN",
+    "bye": 6
+  },
+  {
+    "rank": 33,
+    "name": "Harold Fannin",
+    "team": "CLE",
+    "bye": 9
+  },
+  {
+    "rank": 35,
+    "name": "Darren Waller",
+    "team": "MIA",
+    "bye": 12
+  },
+  {
+    "rank": 40,
+    "name": "Orande Gadsden",
+    "team": "LAC",
+    "bye": 12
+  },
+  {
+    "rank": 28,
+    "name": "Adres Borregales",
+    "team": "NE",
+    "bye": 14
+  },
+  {
+    "rank": 38,
+    "name": "Parker Romo",
+    "team": "NE",
+    "bye": 14
+  },
+  {
+    "rank": 2,
+    "name": "Philidelphia Eagles",
+    "team": "PHI",
+    "bye": 9
+  },
+  {
+    "rank": 3,
+    "name": "Pittsburg Steelers",
+    "team": "PIT",
+    "bye": 5
+  },
+  {
+    "rank": 7,
+    "name": "Buffallo Bills",
+    "team": "BUF",
+    "bye": 7
+  },
+  {
+    "rank": 9,
+    "name": "Detriot Lions",
+    "team": "DET",
+    "bye": 8
+  },
+  {
+    "rank": 17,
+    "name": "Tampa Bay Bucanneers",
+    "team": "TB",
+    "bye": 9
+  },
+  {
+    "rank": 23,
+    "name": "Washington",
+    "team": "WAS",
+    "bye": 12
+  }
+]
