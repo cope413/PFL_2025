@@ -48,12 +48,12 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-export function useMatchupDetails(week?: number) {
+export function useMatchupDetails(week?: number, teamIds?: { team1Id: string; team2Id: string } | null) {
   const [matchupDetails, setMatchupDetails] = useState<MatchupDetails | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchMatchupDetails = async (weekNumber: number) => {
+  const fetchMatchupDetails = async (weekNumber: number, teamIds?: { team1Id: string; team2Id: string } | null) => {
     try {
       setLoading(true);
       setError(null);
@@ -65,7 +65,10 @@ export function useMatchupDetails(week?: number) {
         return;
       }
 
-      const url = `/api/matchup-details?week=${weekNumber}`;
+      let url = `/api/matchup-details?week=${weekNumber}`;
+      if (teamIds) {
+        url += `&team1Id=${teamIds.team1Id}&team2Id=${teamIds.team2Id}`;
+      }
       console.log('Fetching matchup details from:', url);
 
       const response = await fetch(url, {
@@ -94,9 +97,9 @@ export function useMatchupDetails(week?: number) {
 
   useEffect(() => {
     if (week) {
-      fetchMatchupDetails(week);
+      fetchMatchupDetails(week, teamIds);
     }
-  }, [week]);
+  }, [week, teamIds]);
 
   return { 
     matchupDetails, 

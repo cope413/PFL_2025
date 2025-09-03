@@ -32,6 +32,8 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useCurrentWeek } from "@/hooks/useCurrentWeek"
+import { useMatchupDetails } from "@/hooks/useMatchupDetails"
+import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
 import { useStandings } from "@/hooks/useStandings"
 import { useMatchups } from "@/hooks/useMatchups"
 
@@ -42,11 +44,21 @@ export default function LeaguesPage() {
   const { standings, loading: standingsLoading, error: standingsError } = useStandings();
   const { matchups, loading, error } = useMatchups(undefined, 'l1'); // No week specified, will use current week
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [selectedWeekForDetails, setSelectedWeekForDetails] = useState<number | null>(null);
+  const [isMatchupModalOpen, setIsMatchupModalOpen] = useState(false);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<{ team1Id: string; team2Id: string } | null>(null);
+  const { matchupDetails, loading: matchupDetailsLoading, error: matchupDetailsError, fetchMatchupDetails } = useMatchupDetails(selectedWeekForDetails || undefined, selectedTeamIds);
 
   // Remove authentication requirement for public access
 
   const handleOpenPDF = () => {
     window.open('/scoring.pdf', '_blank');
+  };
+
+  const handleMatchupClick = (week: number, team1Id: string, team2Id: string) => {
+    setSelectedWeekForDetails(week);
+    setIsMatchupModalOpen(true);
+    setSelectedTeamIds({ team1Id, team2Id });
   };
 
   // Get current week from matchups data
@@ -327,6 +339,7 @@ export default function LeaguesPage() {
                       <div className="rounded-lg border p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="font-medium">Week {currentWeekFromMatchups} Matchups</div>
+                          <div className="text-xs text-muted-foreground">Click any matchup to view lineups</div>
                         </div>
                         {loading ? (
                           <div className="flex items-center justify-center py-8">
@@ -346,7 +359,12 @@ export default function LeaguesPage() {
                         ) : (
                           <div className="space-y-4">
                             {matchups.map((matchup) => (
-                              <div key={matchup.id} className="grid grid-cols-3 items-center gap-4">
+                              <div 
+                                key={matchup.id} 
+                                className="border border-border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => handleMatchupClick(matchup.week, matchup.team1_id, matchup.team2_id)}
+                              >
+                                <div className="grid grid-cols-3 items-center gap-4">
                                 <div className="flex items-center gap-2 justify-end">
                                   <div className="text-right">
                                     <div className="font-medium">{matchup.team1_name}</div>
@@ -371,6 +389,7 @@ export default function LeaguesPage() {
                                       {matchup.team2_score > 0 ? `${matchup.team2_score.toFixed(1)} pts` : 'Projected: ' + matchup.team2_projected.toFixed(1)}
                                     </div>
                                   </div>
+                                </div>
                                 </div>
                               </div>
                             ))}
@@ -411,6 +430,15 @@ export default function LeaguesPage() {
           </p>
         </div>
       </footer>
+
+      {/* Matchup Details Modal */}
+      <MatchupDetailsModal
+        isOpen={isMatchupModalOpen}
+        onClose={() => setIsMatchupModalOpen(false)}
+        matchupDetails={matchupDetails}
+        loading={matchupDetailsLoading}
+        error={matchupDetailsError}
+      />
     </div>
   );
 }

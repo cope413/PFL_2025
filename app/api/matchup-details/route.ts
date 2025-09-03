@@ -36,6 +36,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const weekStr = searchParams.get('week');
+    const team1Id = searchParams.get('team1Id');
+    const team2Id = searchParams.get('team2Id');
 
     if (!weekStr) {
       return NextResponse.json({
@@ -44,54 +46,67 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('Getting matchup details for user:', userData.team, 'week:', weekStr);
-
     const week = parseInt(weekStr);
     const teamNameMap = await getTeamNameMap();
     const currentWeek = await getCurrentWeek();
 
-    // Get the real opponent from WeeklyMatchups table
-    let opponent = null;
-    try {
-      const matchupsData = await getResults({
-        sql: 'SELECT * FROM WeeklyMatchups WHERE Week = ?',
-        args: [week]
-      });
+    // Determine which teams to show matchup for
+    let team1, team2;
+    
+    if (team1Id && team2Id) {
+      // Show specific matchup between two teams
+      team1 = team1Id;
+      team2 = team2Id;
+      console.log('Getting matchup details for specific teams:', team1, 'vs', team2, 'week:', week);
+    } else {
+      // Show user's matchup (original behavior)
+      team1 = userData.team;
+      console.log('Getting matchup details for user:', userData.team, 'week:', weekStr);
 
-      if (matchupsData && matchupsData.length > 0) {
-        const weekRow = matchupsData[0];
-        
-        // Find which team slot this user's team is in and get their opponent
-        for (let i = 1; i <= 16; i++) {
-          if (weekRow[`Team_${i}`] === userData.team) {
-            if (i % 2 === 1) {
-              // Odd number, opponent is the next team
-              opponent = weekRow[`Team_${i + 1}`];
-            } else {
-              // Even number, opponent is the previous team
-              opponent = weekRow[`Team_${i - 1}`];
+      // Get the real opponent from WeeklyMatchups table
+      let opponent = null;
+      try {
+        const matchupsData = await getResults({
+          sql: 'SELECT * FROM WeeklyMatchups WHERE Week = ?',
+          args: [week]
+        });
+
+        if (matchupsData && matchupsData.length > 0) {
+          const weekRow = matchupsData[0];
+          
+          // Find which team slot this user's team is in and get their opponent
+          for (let i = 1; i <= 16; i++) {
+            if (weekRow[`Team_${i}`] === userData.team) {
+              if (i % 2 === 1) {
+                // Odd number, opponent is the next team
+                opponent = weekRow[`Team_${i + 1}`];
+              } else {
+                // Even number, opponent is the previous team
+                opponent = weekRow[`Team_${i - 1}`];
+              }
+              break;
             }
-            break;
           }
         }
+      } catch (error) {
+        console.error('Error fetching matchup data:', error);
       }
-    } catch (error) {
-      console.error('Error fetching matchup data:', error);
+
+      // Fallback to mock opponent if no real matchup found
+      if (!opponent) {
+        const opponents = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'];
+        opponent = opponents[(week - 1) % opponents.length];
+      }
+      
+      team2 = opponent;
     }
 
-    // Fallback to mock opponent if no real matchup found
-    if (!opponent) {
-      const opponents = ['A1', 'A2', 'A3', 'A4', 'B1', 'B2', 'B3', 'B4'];
-      opponent = opponents[(week - 1) % opponents.length];
-    }
+    const team1Name = teamNameMap.get(team1) || team1;
+    const team2Name = teamNameMap.get(team2) || team2;
 
-    const opponentName = teamNameMap.get(opponent) || opponent;
-
-    // Get user's lineup for this week
-    const userLineup = await getLineup(userData.team, week);
-    
-    // Get opponent's lineup for this week
-    const opponentLineup = await getLineup(opponent, week);
+    // Get lineups for both teams
+    const team1Lineup = await getLineup(team1, week);
+    const team2Lineup = await getLineup(team2, week);
 
     // Generate real player scores from database
     const generatePlayerScores = async (teamId: string, lineup: any): Promise<PlayerScore[]> => {
@@ -221,32 +236,32 @@ export async function GET(request: NextRequest) {
       return players;
     };
 
-    const userPlayers = await generatePlayerScores(userData.team, userLineup || {});
-    const opponentPlayers = await generatePlayerScores(opponent, opponentLineup || {});
+    const team1Players = await generatePlayerScores(team1, team1Lineup || {});
+    const team2Players = await generatePlayerScores(team2, team2Lineup || {});
 
-    const userTotalScore = userPlayers.reduce((sum, p) => sum + p.points, 0);
-    const opponentTotalScore = opponentPlayers.reduce((sum, p) => sum + p.points, 0);
+    const team1TotalScore = team1Players.reduce((sum, p) => sum + p.points, 0);
+    const team2TotalScore = team2Players.reduce((sum, p) => sum + p.points, 0);
 
-    // Determine result
+    // Determine result (from team1's perspective)
     let result: 'W' | 'L' | 'T' = 'L';
-    if (userTotalScore > opponentTotalScore) result = 'W';
-    else if (userTotalScore === opponentTotalScore) result = 'T';
+    if (team1TotalScore > team2TotalScore) result = 'W';
+    else if (team1TotalScore === team2TotalScore) result = 'T';
 
     const matchupDetails: MatchupDetails = {
       week,
       team1: {
-        teamId: userData.team,
-        teamName: teamNameMap.get(userData.team) || userData.team,
-        totalScore: userTotalScore,
-        projectedScore: userPlayers.reduce((sum, p) => sum + p.projectedPoints, 0),
-        players: userPlayers
+        teamId: team1,
+        teamName: team1Name,
+        totalScore: team1TotalScore,
+        projectedScore: team1Players.reduce((sum, p) => sum + p.projectedPoints, 0),
+        players: team1Players
       },
       team2: {
-        teamId: opponent,
-        teamName: opponentName,
-        totalScore: opponentTotalScore,
-        projectedScore: opponentPlayers.reduce((sum, p) => sum + p.projectedPoints, 0),
-        players: opponentPlayers
+        teamId: team2,
+        teamName: team2Name,
+        totalScore: team2TotalScore,
+        projectedScore: team2Players.reduce((sum, p) => sum + p.projectedPoints, 0),
+        players: team2Players
       },
       result,
       isComplete: week < currentWeek

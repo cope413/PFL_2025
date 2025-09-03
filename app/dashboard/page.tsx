@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,6 +25,8 @@ import {
 import { useDashboard } from "@/hooks/useApi"
 import { useAuth } from "@/hooks/useAuth"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { useMatchupDetails } from "@/hooks/useMatchupDetails"
+import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
 
 // Type for dashboard data
 interface DashboardData {
@@ -77,6 +80,17 @@ export default function DashboardPage() {
   const { user, loading: authLoading, logout } = useAuth();
   const { data: dashboardData, loading, error } = useDashboard<DashboardData>();
   const router = useRouter();
+  const [selectedWeekForDetails, setSelectedWeekForDetails] = useState<number | null>(null);
+  const [isMatchupModalOpen, setIsMatchupModalOpen] = useState(false);
+  const [selectedTeamIds, setSelectedTeamIds] = useState<{ team1Id: string; team2Id: string } | null>(null);
+  const { matchupDetails, loading: matchupDetailsLoading, error: matchupDetailsError, fetchMatchupDetails } = useMatchupDetails(selectedWeekForDetails || undefined, selectedTeamIds);
+
+  const handleMatchupClick = (week: number, team1Id: string, team2Id: string) => {
+    setSelectedWeekForDetails(week);
+    setIsMatchupModalOpen(true);
+    // Store team IDs for the API call
+    setSelectedTeamIds({ team1Id, team2Id });
+  };
 
   // Redirect to auth page if not logged in
   if (!authLoading && !user) {
@@ -450,12 +464,16 @@ export default function DashboardPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Week {dashboardData.currentWeek} Matchups</CardTitle>
-                  <CardDescription>All matchups for the current week</CardDescription>
+                  <CardDescription>All matchups for the current week • Click any matchup to view lineups</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     {dashboardData.matchups?.map((matchup, i) => (
-                      <div key={matchup.id} className="border-b pb-4 last:border-0 last:pb-0">
+                      <div 
+                        key={matchup.id} 
+                        className="border border-border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleMatchupClick(matchup.week, matchup.team1_id, matchup.team2_id)}
+                      >
                         <div className="flex items-center justify-between mb-2">
                           <div className="text-sm font-medium text-muted-foreground">
                             {matchup.team1_id === dashboardData.userTeam.id || matchup.team2_id === dashboardData.userTeam.id ? "Your Matchup" : `Matchup ${i + 1}`}
@@ -623,6 +641,15 @@ export default function DashboardPage() {
           </p>
         </div>
       </footer>
+
+      {/* Matchup Details Modal */}
+      <MatchupDetailsModal
+        isOpen={isMatchupModalOpen}
+        onClose={() => setIsMatchupModalOpen(false)}
+        matchupDetails={matchupDetails}
+        loading={matchupDetailsLoading}
+        error={matchupDetailsError}
+      />
     </div>
   );
 } 
