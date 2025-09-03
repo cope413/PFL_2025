@@ -172,6 +172,9 @@ export default function TeamsPage() {
             <Link href="/leagues" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Standings
             </Link>
+            <Link href="/scoreboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Scoreboard
+            </Link>
             <Link href="/players" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Players
             </Link>
@@ -246,6 +249,13 @@ export default function TeamsPage() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Standings
+              </Link>
+              <Link
+                href="/scoreboard"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Scoreboard
               </Link>
               <Link
                 href="/players"

@@ -448,34 +448,35 @@ export default function TeamDashboard() {
 
   const lineupValidation = validateLineup()
 
-  const lineupIssues: Array<string | { text: string; bold: boolean }> = []
+  const criticalIssues: Array<string | { text: string; bold: boolean }> = []
+  const warningIssues: Array<string | { text: string; bold: boolean }> = []
   
   // Only check for incomplete lineup if there IS a saved lineup
   if (hasSavedLineup && !lineupValidation.isValid) {
     const missing = lineupValidation.missing
-    if (missing.QB) lineupIssues.push("Missing Quarterback")
-    if (missing.RB) lineupIssues.push("Missing Running Back")
-    if (missing.WR) lineupIssues.push("Missing Wide Receiver")
-    if (missing.TE) lineupIssues.push("Missing Tight End")
-    if (missing.K) lineupIssues.push("Missing Kicker")
-    if (missing.DEF) lineupIssues.push("Missing Defense")
-    if (missing.FLEX) lineupIssues.push("Need at least 3 RB/WR players total")
+    if (missing.QB) criticalIssues.push("Missing Quarterback")
+    if (missing.RB) criticalIssues.push("Missing Running Back")
+    if (missing.WR) criticalIssues.push("Missing Wide Receiver")
+    if (missing.TE) criticalIssues.push("Missing Tight End")
+    if (missing.K) criticalIssues.push("Missing Kicker")
+    if (missing.DEF) criticalIssues.push("Missing Defense")
+    if (missing.FLEX) criticalIssues.push("Need at least 3 RB/WR players total")
   }
   
   if (starters.filter((p) => p.status === "out").length > 0) {
-    lineupIssues.push("You have players marked as 'Out' in your starting lineup")
+    criticalIssues.push("You have players marked as 'Out' in your starting lineup")
   }
   if (starters.filter((p) => p.status === "bye").length > 0) {
-    lineupIssues.push("You have players on bye week in your starting lineup")
+    criticalIssues.push("You have players on bye week in your starting lineup")
   }
   if (starters.filter((p) => p.status === "questionable").length > 0) {
-    lineupIssues.push("You have players listed as Questionable in your starting lineup")
+    warningIssues.push("You have players listed as Questionable in your starting lineup")
   }
   
   // Check for players on bye during the selected week
   const playersOnBye = starters.filter((p) => p.byeWeek && p.byeWeek === parseInt(selectedWeek))
   if (playersOnBye.length > 0) {
-    lineupIssues.push({ text: `Lineup Contains ${playersOnBye.length} player${playersOnBye.length > 1 ? 's' : ''} on bye`, bold: true })
+    criticalIssues.push({ text: `Lineup Contains ${playersOnBye.length} player${playersOnBye.length > 1 ? 's' : ''} on bye`, bold: true })
   }
 
   const saveLineup = async () => {
@@ -740,6 +741,9 @@ export default function TeamDashboard() {
             >
               Standings
             </Link>
+            <Link href="/scoreboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Scoreboard
+            </Link>
             <Link
               href="/players"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
@@ -811,6 +815,13 @@ export default function TeamDashboard() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Standings
+              </Link>
+              <Link
+                href="/scoreboard"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Scoreboard
               </Link>
               <Link
                 href="/players"
@@ -918,12 +929,29 @@ export default function TeamDashboard() {
               </TabsList>
 
               <TabsContent value="lineup" className="space-y-6">
-                {hasSavedLineup && lineupIssues.length > 0 && (
+                {hasSavedLineup && criticalIssues.length > 0 && (
                   <Alert className="mt-6 bg-red-50 border-red-200 text-red-800">
                     <AlertTriangle className="h-4 w-4 text-red-600" />
                     <AlertDescription>
                       <div className="space-y-1">
-                        {lineupIssues.map((issue, index) => (
+                        {criticalIssues.map((issue: string | { text: string; bold: boolean }, index: number) => (
+                          <div key={index}>
+                            • {typeof issue === 'string' ? issue : (
+                              <span className={issue.bold ? 'font-bold' : ''}>{issue.text}</span>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                {hasSavedLineup && warningIssues.length > 0 && (
+                  <Alert className="mt-6 bg-yellow-50 border-yellow-200 text-yellow-800">
+                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        {warningIssues.map((issue: string | { text: string; bold: boolean }, index: number) => (
                           <div key={index}>
                             • {typeof issue === 'string' ? issue : (
                               <span className={issue.bold ? 'font-bold' : ''}>{issue.text}</span>

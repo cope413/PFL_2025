@@ -145,6 +145,9 @@ export default function Home() {
             >
               Standings
             </Link>
+            <Link href="/scoreboard" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Scoreboard
+            </Link>
             <Link
               href="/players"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
@@ -238,6 +241,13 @@ export default function Home() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Standings
+              </Link>
+              <Link
+                href="/scoreboard"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Scoreboard
               </Link>
               <Link
                 href="/players"
