@@ -70,6 +70,8 @@ class InjurySyncService {
       'injured': 'out',
       'ir': 'out',
       'pup': 'out',
+      'nfi': 'out',
+      'i.l.': 'out',
       'suspended': 'out',
       'covid': 'out',
       'personal': 'out',
