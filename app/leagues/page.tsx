@@ -316,9 +316,12 @@ export default function LeaguesPage() {
                                   <div key={team.id} className={`grid grid-cols-8 p-3 text-sm border-b last:border-0 ${index === 0 ? "bg-muted/30" : ""}`}>
                                     <div className="col-span-3 flex items-center gap-2">
                                       <div className="font-medium">{index + 1}.</div>
-                                      <div className="font-medium">
+                                      <Link 
+                                        href={`/teams/${team.id}`}
+                                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition-colors"
+                                      >
                                         {team.teamName || team.id} ({team.teamField})
-                                      </div>
+                                      </Link>
                                     </div>
                                     <div className="text-center">{team.wins}</div>
                                     <div className="text-center">{team.losses}</div>

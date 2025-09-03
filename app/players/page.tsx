@@ -310,7 +310,7 @@ export default function PlayersPage() {
                         <SelectItem value="WR">WR</SelectItem>
                         <SelectItem value="TE">TE</SelectItem>
                         <SelectItem value="PK">K</SelectItem>
-                        <SelectItem value="D/ST">DEF</SelectItem>
+                        <SelectItem value="D/ST">D/ST teams</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select value={selectedTeam} onValueChange={setSelectedTeam}>
@@ -452,7 +452,7 @@ export default function PlayersPage() {
                                   variant={player.owner_ID === '99' ? 'outline' : 'default'} 
                                   className="text-xs"
                                 >
-                                  {player.owner_ID === '99' ? 'Free Agent' : 'Rostered'}
+                                  {player.owner_ID === '99' ? 'Free Agent' : player.owner_ID}
                                 </Badge>
                               </TableCell>
                               <TableCell>
