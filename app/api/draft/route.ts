@@ -42,7 +42,12 @@ export async function POST(request: NextRequest) {
           );
         }
         
+        // Save the draft pick
         await saveDraftPick(round, pick, team_id, player_id, player_name, position, team);
+        
+        // Update player ownership in the Players table
+        await updatePlayerOwnership(player_id, team_id);
+        
         return NextResponse.json({ success: true, message: 'Pick saved successfully' });
 
       case 'clearDraft':
@@ -82,14 +87,16 @@ export async function POST(request: NextRequest) {
           );
         }
         
+        // Get the pick data before clearing it
+        const pickToUndo = await getDraftPicks();
+        const pickData = pickToUndo.find(p => p.round === undoRound && p.pick === undoPick);
+        
         // Clear the specific pick by setting it to empty values
         await saveDraftPick(undoRound, undoPick, '', '', '', '', '');
         
-        // Update player ownership back to free agent (empty owner_ID)
-        const pickToUndo = await getDraftPicks();
-        const pickData = pickToUndo.find(p => p.round === undoRound && p.pick === undoPick);
+        // Update player ownership back to free agent (99) if there was a player
         if (pickData && pickData.player_id) {
-          await updatePlayerOwnership(pickData.player_id, '');
+          await updatePlayerOwnership(pickData.player_id, '99');
         }
         
         return NextResponse.json({ success: true, message: 'Pick undone successfully' });

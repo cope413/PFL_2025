@@ -53,6 +53,15 @@ interface Player {
   recentPerformance: number[]
   teamId?: number
   ownerId?: string
+  opponentInfo?: {
+    opponent: string
+    isHomeTeam: boolean
+    gameTime: string
+    venue: string
+    status: string
+    displayText: string
+    kickoffTime: string
+  } | null
 }
 
 // We'll use real data from the API instead of mock data
@@ -62,7 +71,7 @@ const lineupSlots = [
   { position: "RB", count: 1, label: "Running Back" },
   { position: "WR", count: 1, label: "Wide Receiver" },
   { position: "TE", count: 1, label: "Tight End" },
-  { position: "FLEX", count: 3, label: "Flex (RB/WR)" },
+  { position: "FLEX", count: 2, label: "Flex (RB/WR)" },
   { position: "PK", count: 1, label: "Kicker" },
   { position: "D/ST", count: 1, label: "Defense" },
 ]
@@ -113,12 +122,29 @@ export default function TeamDashboard() {
   }, [currentWeek, currentWeekLoading])
 
   useEffect(() => {
-    if (players.length > 0 && selectedWeek && initialLoadComplete) {
-      loadLineup()
+    console.log('useEffect triggered - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete)
+    if (selectedWeek && initialLoadComplete && players.length === 0) {
+      console.log('Calling fetchTeamRoster - no players loaded yet')
+      // Only fetch team roster if we don't have players yet
+      fetchTeamRoster()
       // Reset submission state when week changes
       setHasSubmittedLineup(false)
+    } else if (selectedWeek && initialLoadComplete) {
+      console.log('Players already loaded, skipping fetchTeamRoster')
+      // Reset submission state when week changes
+      setHasSubmittedLineup(false)
+    } else {
+      console.log('Not calling lineup functions - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete)
     }
   }, [selectedWeek, initialLoadComplete]) // Only load lineup after initial load is complete
+
+  // Separate useEffect for loading lineup after roster is fetched
+  useEffect(() => {
+    if (selectedWeek && initialLoadComplete && players.length > 0) {
+      console.log('Calling loadLineup after roster is loaded')
+      loadLineup()
+    }
+  }, [selectedWeek, initialLoadComplete, players.length])
 
   const fetchTeamRoster = async () => {
     try {
@@ -134,7 +160,7 @@ export default function TeamDashboard() {
 
       console.log('Fetching team roster with token:', token)
 
-      const response = await fetch('/api/team-roster', {
+      const response = await fetch(`/api/team-roster?week=${selectedWeek || currentWeek}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -170,6 +196,7 @@ export default function TeamDashboard() {
     try {
       const token = localStorage.getItem('auth_token')
       if (!token) {
+        console.log('No auth token found for lineup loading')
         return
       }
 
@@ -182,21 +209,30 @@ export default function TeamDashboard() {
         }
       })
 
+      console.log('Lineup response status:', response.status)
+      console.log('Lineup response ok:', response.ok)
+
       if (!response.ok) {
-        console.log('No lineup found for week:', selectedWeek)
+        console.log('Lineup response not ok for week:', selectedWeek)
+        const errorText = await response.text()
+        console.log('Lineup error response:', errorText)
         return
       }
 
       const result = await response.json()
+      console.log('Lineup API result:', result)
       
       if (result.success && result.data) {
         console.log('Loaded lineup:', result.data)
         
         // Update players to reflect the loaded lineup
         const lineup = result.data
-        setPlayers(prevPlayers => 
-          prevPlayers.map(player => ({
-            ...player,
+        setPlayers(prevPlayers => {
+          console.log('Before lineup update - Tetairoa McMillan status:', 
+            prevPlayers.find(p => p.name === 'Tetairoa McMillan')?.status)
+          
+          const updatedPlayers = prevPlayers.map(player => ({
+            ...player, // Preserve all existing player data including injury status
             isStarter: 
               player.id === lineup.QB ||
               player.id === lineup.RB_1 ||
@@ -207,7 +243,12 @@ export default function TeamDashboard() {
               player.id === lineup.K ||
               player.id === lineup.DEF
           }))
-        )
+          
+          console.log('After lineup update - Tetairoa McMillan status:', 
+            updatedPlayers.find(p => p.name === 'Tetairoa McMillan')?.status)
+          
+          return updatedPlayers
+        })
         setHasUnsavedChanges(false) // Reset unsaved changes when loading
         setHasSavedLineup(true) // Mark that we have a saved lineup
       } else {
@@ -292,7 +333,7 @@ export default function TeamDashboard() {
         RB: currentStarters.filter((p) => p.position === "RB").length,
         WR: currentStarters.filter((p) => p.position === "WR").length,
         TE: currentStarters.filter((p) => p.position === "TE").length,
-        K: currentStarters.filter((p) => p.position === "PK").length,
+        K: currentStarters.filter((p) => p.position === "PK").length, // Note: PK in frontend, K in database
         DEF: currentStarters.filter((p) => p.position === "D/ST").length,
       }
 
@@ -316,8 +357,8 @@ export default function TeamDashboard() {
           canAdd = true // Can add to primary RB slot
         } else if (player.position === "WR" && positionCounts.WR < 1) {
           canAdd = true // Can add to primary WR slot
-        } else if (totalRBWR < 5) {
-          canAdd = true // Can add to flex (1 RB + 1 WR + 3 Flex = 5 total)
+        } else if (totalRBWR < 4) {
+          canAdd = true // Can add to flex (1 RB + 1 WR + 2 Flex = 4 total)
         }
       }
 
@@ -342,7 +383,8 @@ export default function TeamDashboard() {
       const flexRB = rbPlayers.slice(1) // All RBs except the first one
       const flexWR = wrPlayers.slice(1) // All WRs except the first one
       
-      return [...flexRB, ...flexWR]
+      // Combine and sort by projected points
+      return [...flexRB, ...flexWR].sort((a, b) => b.projectedPoints - a.projectedPoints)
     }
     
     if (position === "RB") {
@@ -359,10 +401,10 @@ export default function TeamDashboard() {
   }
 
   const isFlexPlayer = (player: Player) => {
+    // A player is considered a flex player if they are RB/WR and not the primary RB or WR
     const rbPlayers = starters.filter((p) => p.position === "RB")
     const wrPlayers = starters.filter((p) => p.position === "WR")
     
-    // Check if this player is not the first RB or first WR (i.e., is in flex)
     if (player.position === "RB") {
       const playerIndex = rbPlayers.findIndex((p) => p.id === player.id)
       return playerIndex > 0 // Not the first RB (index 0)
@@ -376,7 +418,50 @@ export default function TeamDashboard() {
 
   const totalProjectedPoints = starters.reduce((sum, player) => sum + player.projectedPoints, 0)
 
+  // Validate lineup completeness
+  const validateLineup = () => {
+    const positionCounts = {
+      QB: starters.filter((p) => p.position === "QB").length,
+      RB: starters.filter((p) => p.position === "RB").length,
+      WR: starters.filter((p) => p.position === "WR").length,
+      TE: starters.filter((p) => p.position === "TE").length,
+      K: starters.filter((p) => p.position === "PK").length,
+      DEF: starters.filter((p) => p.position === "D/ST").length,
+    }
+    
+    const totalRBWR = starters.filter((p) => p.position === "RB" || p.position === "WR").length
+    
+    return {
+      isValid: positionCounts.QB === 1 && positionCounts.TE === 1 && positionCounts.K === 1 && 
+               positionCounts.DEF === 1 && totalRBWR >= 3 && totalRBWR <= 4,
+      missing: {
+        QB: positionCounts.QB === 0,
+        RB: positionCounts.RB === 0,
+        WR: positionCounts.WR === 0,
+        TE: positionCounts.TE === 0,
+        K: positionCounts.K === 0,
+        DEF: positionCounts.DEF === 0,
+        FLEX: totalRBWR < 3
+      }
+    }
+  }
+
+  const lineupValidation = validateLineup()
+
   const lineupIssues: Array<string | { text: string; bold: boolean }> = []
+  
+  // Check for incomplete lineup
+  if (!lineupValidation.isValid) {
+    const missing = lineupValidation.missing
+    if (missing.QB) lineupIssues.push("Missing Quarterback")
+    if (missing.RB) lineupIssues.push("Missing Running Back")
+    if (missing.WR) lineupIssues.push("Missing Wide Receiver")
+    if (missing.TE) lineupIssues.push("Missing Tight End")
+    if (missing.K) lineupIssues.push("Missing Kicker")
+    if (missing.DEF) lineupIssues.push("Missing Defense")
+    if (missing.FLEX) lineupIssues.push("Need at least 3 RB/WR players total")
+  }
+  
   if (starters.filter((p) => p.status === "out").length > 0) {
     lineupIssues.push("You have players marked as 'Out' in your starting lineup")
   }
@@ -384,7 +469,7 @@ export default function TeamDashboard() {
     lineupIssues.push("You have players on bye week in your starting lineup")
   }
   if (starters.filter((p) => p.status === "questionable").length > 0) {
-    lineupIssues.push("You have questionable players in your starting lineup")
+    lineupIssues.push("You have players listed as Questionable in your starting lineup")
   }
   
   // Check for players on bye during the selected week
@@ -401,6 +486,17 @@ export default function TeamDashboard() {
         return
       }
 
+      // Validate lineup before saving
+      if (!lineupValidation.isValid) {
+        setError('Lineup is incomplete. Please fill all required positions.')
+        toast({
+          title: "Incomplete Lineup",
+          description: "Please fill all required positions before saving.",
+          variant: "destructive",
+        })
+        return
+      }
+
       // Get the current starters and organize them by position
       const starters = players.filter(p => p.isStarter)
       
@@ -412,19 +508,51 @@ export default function TeamDashboard() {
       const pkPlayers = starters.filter(p => p.position === 'PK')
       const defPlayers = starters.filter(p => p.position === 'D/ST')
 
-      // Create the lineup object
+      // Create the lineup object with proper FLEX logic
+      // We need to determine which RB/WR players go to which positions
+      const allRBWRPlayers = [...rbPlayers, ...wrPlayers].sort((a, b) => b.projectedPoints - a.projectedPoints)
+      
+      // Assign the 4 best RB/WR players to positions in order of projected points
+      let rb1 = ''
+      let wr1 = ''
+      let flex1 = ''
+      let flex2 = ''
+      
+      // First, try to fill RB_1 and WR_1 with the best available players of each position
+      const bestRB = rbPlayers.sort((a, b) => b.projectedPoints - a.projectedPoints)[0]
+      const bestWR = wrPlayers.sort((a, b) => b.projectedPoints - a.projectedPoints)[0]
+      
+      if (bestRB) rb1 = bestRB.id
+      if (bestWR) wr1 = bestWR.id
+      
+      // Now assign the remaining best players to flex positions
+      const usedPlayers = [rb1, wr1].filter(id => id !== '')
+      const availableForFlex = allRBWRPlayers.filter(p => !usedPlayers.includes(p.id))
+      
+      if (availableForFlex.length > 0) {
+        flex1 = availableForFlex[0].id
+      }
+      if (availableForFlex.length > 1) {
+        flex2 = availableForFlex[1].id
+      }
+      
       const lineup = {
         QB: qbPlayers[0]?.id || '',
-        RB_1: rbPlayers[0]?.id || '',
-        WR_1: wrPlayers[0]?.id || '',
-        FLEX_1: rbPlayers[1]?.id || wrPlayers[1]?.id || '',
-        FLEX_2: rbPlayers[2]?.id || wrPlayers[2]?.id || '',
+        RB_1: rb1,
+        WR_1: wr1,
+        FLEX_1: flex1,
+        FLEX_2: flex2,
         TE: tePlayers[0]?.id || '',
-        K: pkPlayers[0]?.id || '',
+        K: pkPlayers[0]?.id || '', // Note: PK in frontend maps to K in database
         DEF: defPlayers[0]?.id || ''
       }
 
       console.log('Saving lineup:', lineup)
+      console.log('Debug - RB players:', rbPlayers.map(p => ({ id: p.id, name: p.name, points: p.projectedPoints })))
+      console.log('Debug - WR players:', wrPlayers.map(p => ({ id: p.id, name: p.name, points: p.projectedPoints })))
+      console.log('Debug - All RB/WR sorted:', allRBWRPlayers.map(p => ({ id: p.id, name: p.name, position: p.position, points: p.projectedPoints })))
+      console.log('Debug - Used players:', usedPlayers)
+      console.log('Debug - Available for flex:', availableForFlex.map(p => ({ id: p.id, name: p.name, position: p.position, points: p.projectedPoints })))
 
       const response = await fetch('/api/lineups', {
         method: 'POST',
@@ -572,16 +700,7 @@ export default function TeamDashboard() {
     setHasUnsavedChanges(true)
   }
 
-  const optimizeLineup = () => {
-    // Simple optimization: start highest projected players
-    const sortedPlayers = [...players].sort((a, b) => b.projectedPoints - a.projectedPoints)
-    const newPlayers = sortedPlayers.map((player, index) => ({
-      ...player,
-      isStarter: index < 9, // Start top 9 players (1 QB, 1 RB, 1 WR, 1 TE, 3 Flex, 1 K, 1 DEF)
-    }))
-    setPlayers(newPlayers)
-    setHasUnsavedChanges(true)
-  }
+
 
   const getResultColor = (result: 'W' | 'L' | 'T') => {
     switch (result) {
@@ -850,10 +969,6 @@ export default function TeamDashboard() {
                               <CardDescription>Projected Points: {totalProjectedPoints.toFixed(1)} • Week {selectedWeek}</CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" onClick={optimizeLineup}>
-                                <Zap className="mr-2 h-4 w-4" />
-                                Optimize
-                              </Button>
                               <Button variant="outline" size="sm" onClick={clearLineup}>
                                 <RotateCcw className="mr-2 h-4 w-4" />
                                 Clear
@@ -924,6 +1039,15 @@ export default function TeamDashboard() {
                                                   <Clock className="inline h-3 w-3 mr-1" />
                                                   Bye: {player.byeWeek}
                                                 </span>
+                                              )}
+                                              {player.opponentInfo && (
+                                                <div className="mt-1 text-xs">
+                                                  <span className="font-medium">{player.opponentInfo.displayText}</span>
+                                                  <span className="ml-2 text-muted-foreground">
+                                                    <Clock className="inline h-3 w-3 mr-1" />
+                                                    {player.opponentInfo.kickoffTime}
+                                                  </span>
+                                                </div>
                                               )}
                                             </div>
                                           </div>
@@ -1002,6 +1126,15 @@ export default function TeamDashboard() {
                                             <Clock className="inline h-3 w-3 mr-1" />
                                             Bye: {player.byeWeek}
                                           </span>
+                                        )}
+                                        {player.opponentInfo && (
+                                          <div className="mt-1">
+                                            <span className="font-medium">{player.opponentInfo.displayText}</span>
+                                            <span className="ml-2">
+                                              <Clock className="inline h-3 w-3 mr-1" />
+                                              {player.opponentInfo.kickoffTime}
+                                            </span>
+                                          </div>
                                         )}
                                       </div>
                                     </div>

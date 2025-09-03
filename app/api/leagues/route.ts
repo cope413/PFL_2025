@@ -20,7 +20,7 @@ export async function GET(request: Request) {
           RB: 1,
           WR: 1,
           TE: 1,
-          FLEX: 3,
+          FLEX: 2,
           K: 1,
           DEF: 1
         },

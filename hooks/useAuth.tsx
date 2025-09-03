@@ -35,7 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = await apiService.getCurrentUser();
         setUser(currentUser as User);
       } catch (error) {
-        // User is not authenticated
+        // User is not authenticated - clear any invalid token
+        console.log('Authentication check failed, clearing token:', error);
+        apiService.clearToken();
         setUser(null);
       } finally {
         setLoading(false);

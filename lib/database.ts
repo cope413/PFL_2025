@@ -283,6 +283,50 @@ export async function createPlayer(
   return result;
 }
 
+// Admin function to create player with stats - matches API call signature
+export async function createPlayerWithStats(
+  name: string,
+  position: string,
+  team: string,
+  nflTeam: string,
+  ownerId: string,
+  weeklyStats: { [key: string]: number }
+) {
+  // Generate a unique player ID
+  const playerId = generateId('P');
+  
+  // Insert player basic info with correct column names
+  await db.execute({
+    sql: "INSERT INTO Players (player_ID, player_name, position, team_name, owner_ID) VALUES (?, ?, ?, ?, ?)",
+    args: [playerId, name, position, nflTeam, ownerId]
+  });
+  
+  // Insert initial weekly stats in the Points table
+  await db.execute({
+    sql: `INSERT INTO Points (player_ID, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12, week_13, week_14) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [
+      playerId,
+      weeklyStats.week1 || 0,
+      weeklyStats.week2 || 0,
+      weeklyStats.week3 || 0,
+      weeklyStats.week4 || 0,
+      weeklyStats.week5 || 0,
+      weeklyStats.week6 || 0,
+      weeklyStats.week7 || 0,
+      weeklyStats.week8 || 0,
+      weeklyStats.week9 || 0,
+      weeklyStats.week10 || 0,
+      weeklyStats.week11 || 0,
+      weeklyStats.week12 || 0,
+      weeklyStats.week13 || 0,
+      weeklyStats.week14 || 0
+    ]
+  });
+  
+  return playerId;
+}
+
 export async function updatePlayer(
   name: string,
   position: string,
@@ -531,6 +575,7 @@ export async function getTeamRoster(teamId: string) {
         p.team_name as nflTeam,
         p.owner_ID as team,
         p.team_id,
+        COALESCE(p.injury_status, 'healthy') as injury_status,
         COALESCE(n.bye, 0) as byeWeek,
         COALESCE(pts.week_1, 0) as week_1,
         COALESCE(pts.week_2, 0) as week_2,
@@ -566,6 +611,7 @@ export async function getDraftedTeamRoster(teamId: string) {
         p.team_name as nflTeam,
         d.team_id as team,
         p.team_id,
+        COALESCE(p.injury_status, 'healthy') as injury_status,
         COALESCE(n.bye, 0) as byeWeek,
         COALESCE(pts.week_1, 0) as week_1,
         COALESCE(pts.week_2, 0) as week_2,
@@ -777,8 +823,14 @@ export async function getLastDraftPick() {
 }
 
 export async function clearDraft() {
-  return await db.execute({
+  // Clear all draft picks
+  await db.execute({
     sql: "DELETE FROM Draft"
+  });
+  
+  // Reset all player ownership back to free agents (99)
+  await db.execute({
+    sql: "UPDATE Players SET owner_ID = '99' WHERE owner_ID IS NOT NULL AND owner_ID != '99'"
   });
 }
 
@@ -811,9 +863,12 @@ export async function getDraftProgress() {
 
 // Update player ownership (for draft assignments)
 export async function updatePlayerOwnership(playerId: string, teamId: string) {
+  // Convert playerId from string format (e.g., "2.0") to integer (e.g., 2)
+  const numericPlayerId = parseFloat(playerId).toString();
+  
   return await db.execute({
     sql: "UPDATE Players SET owner_ID = ? WHERE player_ID = ?",
-    args: [teamId, playerId]
+    args: [teamId, numericPlayerId]
   });
 }
 
@@ -864,4 +919,69 @@ export async function initializeDraftSlots() {
     console.error('Error initializing draft slots:', error);
     throw error;
   }
+}
+
+export async function updatePlayerInjuryStatus(playerId: string, status: string) {
+  return await db.execute({
+    sql: "UPDATE Players SET injury_status = ? WHERE player_ID = ?",
+    args: [status, playerId]
+  });
+}
+
+export async function resetAllPlayersToHealthy() {
+  return await db.execute({
+    sql: "UPDATE Players SET injury_status = ? WHERE owner_ID != 99",
+    args: ['healthy']
+  });
+}
+
+// NFL Schedule functions
+export async function getNFLTeamOpponent(nflTeamName: string, week: number, season: number = 2025) {
+  return await getFirstResult({
+    sql: `
+      SELECT 
+        Week,
+        Home_Team,
+        Away_Team,
+        game_time_utc,
+        game_time_la,
+        venue,
+        status
+      FROM NFL_Schedule 
+      WHERE season = ? AND Week = ? AND (Home_Team = ? OR Away_Team = ?)
+    `,
+    args: [season, week, nflTeamName, nflTeamName]
+  });
+}
+
+export async function getNFLTeamOpponentInfo(nflTeamName: string, week: number, season: number = 2025) {
+  const game = await getNFLTeamOpponent(nflTeamName, week, season);
+  
+  if (!game) {
+    return null;
+  }
+  
+  const isHomeTeam = game.Home_Team === nflTeamName;
+  const opponent = isHomeTeam ? game.Away_Team : game.Home_Team;
+  
+  // Use the UTC time and convert it properly to LA time
+  const gameTime = new Date(game.game_time_utc).toLocaleString('en-US', {
+    timeZone: 'America/Los_Angeles',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+  
+  return {
+    opponent,
+    isHomeTeam,
+    gameTime,
+    venue: game.venue,
+    status: game.status,
+    displayText: `${isHomeTeam ? 'vs' : '@'} ${opponent}`,
+    kickoffTime: gameTime
+  };
 }

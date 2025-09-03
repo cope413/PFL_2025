@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { getTeamRoster, getDraftedTeamRoster } from '@/lib/database';
+import { getTeamRoster, getDraftedTeamRoster, getNFLTeamOpponentInfo } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get('teamId') || authUser.team;
     const isDraftContext = searchParams.get('draft') === 'true';
+    const week = parseInt(searchParams.get('week') || '1');
 
     if (!teamId) {
       return NextResponse.json({
@@ -29,6 +30,21 @@ export async function GET(request: NextRequest) {
     const players = isDraftContext 
       ? await getDraftedTeamRoster(teamId)
       : await getTeamRoster(teamId);
+
+    // Get unique NFL teams to fetch opponent info efficiently
+    const uniqueNFLTeams = [...new Set(players.map(p => p.nflTeam))];
+    const opponentInfoMap = new Map();
+    
+    // Fetch opponent info for all unique teams
+    for (const nflTeam of uniqueNFLTeams) {
+      try {
+        const opponentInfo = await getNFLTeamOpponentInfo(nflTeam, week);
+        opponentInfoMap.set(nflTeam, opponentInfo);
+      } catch (error) {
+        console.error(`Error fetching opponent info for ${nflTeam}:`, error);
+        opponentInfoMap.set(nflTeam, null);
+      }
+    }
 
     // Transform the data to match the expected format
     const transformedPlayers = players.map((player: any) => {
@@ -47,6 +63,13 @@ export async function GET(request: NextRequest) {
         ? Math.round((validPoints.reduce((sum, point) => sum + point, 0) / validPoints.length) * 100) / 100
         : 0;
 
+      // Use real injury status from database, fallback to 'healthy' if not set
+      console.log(`Player ${player.name}: injury_status = "${player.injury_status}" (type: ${typeof player.injury_status})`);
+      const injuryStatus = player.injury_status || 'healthy';
+
+      // Get opponent information from the map
+      const opponentInfo = opponentInfoMap.get(player.nflTeam);
+
       return {
         id: player.id.toString(),
         name: player.name,
@@ -54,11 +77,12 @@ export async function GET(request: NextRequest) {
         team: player.team,
         nflTeam: player.nflTeam,
         projectedPoints: 0, // Set to 0 since no real data exists
-        status: 'healthy' as const, // Mock status
+        status: injuryStatus as "healthy" | "questionable" | "doubtful" | "out" | "bye",
         byeWeek: player.byeWeek || undefined,
         teamId: player.team_id,
         ownerId: player.team,
-        recentPerformance: [averagePoints] // Use calculated average points
+        recentPerformance: [averagePoints], // Use calculated average points
+        opponentInfo: opponentInfo // Add opponent information
       };
     });
 

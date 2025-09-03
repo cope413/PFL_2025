@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin';
-import { getAllPlayersWithStats, updatePlayerWithStats, createPlayer } from '@/lib/database';
+import { getAllPlayersWithStats, updatePlayerWithStats, createPlayerWithStats } from '@/lib/database';
 
 // GET /api/admin/players - Get all players with stats
 export async function GET(request: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    await createPlayer(name, position, team, nflTeam, ownerId, weeklyStats);
+    await createPlayerWithStats(name, position, team, nflTeam, ownerId, weeklyStats);
     
     console.log('Player creation successful for:', name);
     
