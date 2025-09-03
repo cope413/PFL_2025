@@ -450,8 +450,8 @@ export default function TeamDashboard() {
 
   const lineupIssues: Array<string | { text: string; bold: boolean }> = []
   
-  // Check for incomplete lineup
-  if (!lineupValidation.isValid) {
+  // Only check for incomplete lineup if there IS a saved lineup
+  if (hasSavedLineup && !lineupValidation.isValid) {
     const missing = lineupValidation.missing
     if (missing.QB) lineupIssues.push("Missing Quarterback")
     if (missing.RB) lineupIssues.push("Missing Running Back")
@@ -918,7 +918,7 @@ export default function TeamDashboard() {
               </TabsList>
 
               <TabsContent value="lineup" className="space-y-6">
-                {lineupIssues.length > 0 && (
+                {hasSavedLineup && lineupIssues.length > 0 && (
                   <Alert className="mt-6 bg-red-50 border-red-200 text-red-800">
                     <AlertTriangle className="h-4 w-4 text-red-600" />
                     <AlertDescription>
