@@ -9,6 +9,15 @@ export interface PlayerScore {
   projectedPoints: number;
   isStarter: boolean;
   positionSlot: string;
+  opponentInfo?: {
+    opponent: string;
+    isHomeTeam: boolean;
+    gameTime: string;
+    venue: string;
+    status: string;
+    displayText: string;
+    kickoffTime: string;
+  } | null;
 }
 
 export interface MatchupDetails {

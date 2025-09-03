@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { getLineup, getTeamNameMap, getUserById, getTeamRoster, getResults, getCurrentWeek } from '@/lib/database';
+import { getLineup, getTeamNameMap, getUserById, getTeamRoster, getResults, getCurrentWeek, getNFLTeamOpponentInfo } from '@/lib/database';
 import { PlayerScore, MatchupDetails } from '@/lib/db-types';
 
 export async function GET(request: NextRequest) {
@@ -136,6 +136,14 @@ export async function GET(request: NextRequest) {
             if (playerData && playerData.length > 0) {
               const player = playerData[0];
               
+              // Get opponent information for this player's NFL team
+              let opponentInfo = null;
+              try {
+                opponentInfo = await getNFLTeamOpponentInfo(player.nflTeam || 'NFL', week);
+              } catch (error) {
+                console.error(`Error fetching opponent info for ${player.nflTeam}:`, error);
+              }
+              
               // Generate realistic projected points if we don't have actual data
               let projectedPoints = player.projectedPoints || 0;
               if (projectedPoints === 0) {
@@ -175,7 +183,8 @@ export async function GET(request: NextRequest) {
                 points: actualPoints,
                 projectedPoints: projectedPoints,
                 isStarter: true,
-                positionSlot: pos.name
+                positionSlot: pos.name,
+                opponentInfo: opponentInfo
               });
             } else {
               // Fallback for missing player data
@@ -187,7 +196,8 @@ export async function GET(request: NextRequest) {
                 points: 0,
                 projectedPoints: 0,
                 isStarter: true,
-                positionSlot: pos.name
+                positionSlot: pos.name,
+                opponentInfo: null
               });
             }
           } catch (error) {
@@ -201,7 +211,8 @@ export async function GET(request: NextRequest) {
               points: 0,
               projectedPoints: 0,
               isStarter: true,
-              positionSlot: pos.name
+              positionSlot: pos.name,
+              opponentInfo: null
             });
           }
         }
@@ -223,14 +234,20 @@ export async function GET(request: NextRequest) {
 
     const matchupDetails: MatchupDetails = {
       week,
-      team1Id: userData.team,
-      team1Name: teamNameMap.get(userData.team) || userData.team,
-      team1Score: userTotalScore,
-      team2Id: opponent,
-      team2Name: opponentName,
-      team2Score: opponentTotalScore,
-      team1Players: userPlayers,
-      team2Players: opponentPlayers,
+      team1: {
+        teamId: userData.team,
+        teamName: teamNameMap.get(userData.team) || userData.team,
+        totalScore: userTotalScore,
+        projectedScore: userPlayers.reduce((sum, p) => sum + p.projectedPoints, 0),
+        players: userPlayers
+      },
+      team2: {
+        teamId: opponent,
+        teamName: opponentName,
+        totalScore: opponentTotalScore,
+        projectedScore: opponentPlayers.reduce((sum, p) => sum + p.projectedPoints, 0),
+        players: opponentPlayers
+      },
       result,
       isComplete: week < currentWeek
     };

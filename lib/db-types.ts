@@ -14,15 +14,20 @@ export interface PlayerScore {
   playerId: string;
   playerName: string;
   position: string;
-  team: string;
-  fantasyPoints: number;
-  passingYards?: number;
-  passingTds?: number;
-  rushingYards?: number;
-  rushingTds?: number;
-  receptions?: number;
-  receivingYards?: number;
-  receivingTds?: number;
+  nflTeam: string;
+  points: number;
+  projectedPoints: number;
+  isStarter: boolean;
+  positionSlot: string;
+  opponentInfo?: {
+    opponent: string;
+    isHomeTeam: boolean;
+    gameTime: string;
+    venue: string;
+    status: string;
+    displayText: string;
+    kickoffTime: string;
+  } | null;
 }
 
 export interface MatchupDetails {

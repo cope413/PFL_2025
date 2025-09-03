@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Trophy, Calendar, Users, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertTriangle, Trophy, Calendar, Users, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { MatchupDetails, PlayerScore } from '@/hooks/useMatchupDetails';
 
 interface MatchupDetailsModalProps {
@@ -72,6 +72,15 @@ export function MatchupDetailsModal({
           <div className="font-medium text-sm">{player.playerName}</div>
           <div className="text-xs text-muted-foreground">
             {player.position} - {player.nflTeam}
+            {player.opponentInfo && (
+              <div className="mt-1">
+                <span className="font-medium">{player.opponentInfo.displayText}</span>
+                <span className="ml-2 text-muted-foreground">
+                  <Clock className="inline h-3 w-3 mr-1" />
+                  {player.opponentInfo.kickoffTime}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -120,16 +129,8 @@ export function MatchupDetailsModal({
     return null;
   }
 
-  const team1 = {
-    teamName: matchupDetails.team1Name,
-    totalScore: matchupDetails.team1Score,
-    players: matchupDetails.team1Players
-  };
-  const team2 = {
-    teamName: matchupDetails.team2Name,
-    totalScore: matchupDetails.team2Score,
-    players: matchupDetails.team2Players
-  };
+  const team1 = matchupDetails.team1;
+  const team2 = matchupDetails.team2;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
