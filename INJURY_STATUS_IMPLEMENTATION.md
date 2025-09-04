@@ -189,3 +189,4 @@ node scripts/reset-test-injury-data.js
 The injury status implementation is now complete and ready for use. The system will automatically use real injury data when available from API Sports, and gracefully fall back to "healthy" status when no data is available.
 
 
+

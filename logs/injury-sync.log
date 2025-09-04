@@ -1,0 +1,107 @@
+[dotenv@17.2.1] injecting env (6) from .env.local -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+=== Starting Injury Data Sync ===
+
+=== Checking Database Schema ===
+✓ injury_status column already exists
+
+=== Getting Players from Database ===
+Found 257 players in database
+
+=== Fetching Injury Data from API Sports ===
+  Processed 1/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Rhamondre Stevenson (New England Patriots): Questionable -> questionable
+  Processed 11/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jonnu Smith (Miami Dolphins): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Lamar Jackson (Baltimore Ravens): Questionable -> questionable
+  Processed 21/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Isaiah Likely (Baltimore Ravens): Questionable -> questionable
+  Processed 31/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Calvin Ridley (Tennessee Titans): Questionable -> questionable
+    Mapping: "NFI" -> "out"
+  - Joe Mixon (Houston Texans): NFI -> out
+  Processed 41/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - DeAndre Hopkins (Baltimore Ravens): Questionable -> questionable
+  Processed 51/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - A.J. Brown (Philadelphia Eagles): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - DeVonta Smith (Philadelphia Eagles): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Dallas Goedert (Philadelphia Eagles): Questionable -> questionable
+    Mapping: "PUP" -> "out"
+  - Brandon Aiyuk (San Francisco 49ers): PUP -> out
+  Processed 61/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jauan Jennings (San Francisco 49ers): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Darnell Mooney (Atlanta Falcons): Questionable -> questionable
+  Processed 71/257 players...
+  Processed 81/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Stefon Diggs (New England Patriots): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Khalil Shakir (Buffalo Bills): Questionable -> questionable
+  Processed 91/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Najee Harris (Pittsburgh Steelers): Questionable -> questionable
+  Processed 101/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Rachaad White (Tampa Bay Buccaneers): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Cade Otton (Tampa Bay Buccaneers): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Tyreek Hill (Miami Dolphins): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Mike Gesicki (Cincinnati Bengals): Questionable -> questionable
+    Mapping: "I.L." -> "out"
+  - Jason Sanders (Miami Dolphins): I.L. -> out
+  Processed 111/257 players...
+  Processed 121/257 players...
+  Processed 131/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Justin Jefferson (Minnesota Vikings): Questionable -> questionable
+  Processed 141/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Josh Downs (Indianapolis Colts): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Jaylen Wright (Miami Dolphins): Questionable -> questionable
+  Processed 151/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jayden Reed (Green Bay Packers): Questionable -> questionable
+  Processed 161/257 players...
+  Processed 171/257 players...
+  Processed 181/257 players...
+  Processed 191/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Kyle Monangai (Chicago Bears): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Tetairoa McMillan (Carolina Panthers): Questionable -> questionable
+    Mapping: "I.L." -> "out"
+  - Tyjae Spears (Tennessee Titans): I.L. -> out
+  Processed 201/257 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jaydon Blue (Dallas Cowboys): Questionable -> questionable
+  Processed 211/257 players...
+  Processed 221/257 players...
+  Processed 231/257 players...
+  Processed 241/257 players...
+  Processed 251/257 players...
+
+=== Sync Complete ===
+✓ Updated 29 players with injury status
+✓ 228 players remain healthy
+✓ 0 players had errors (set to healthy)
+✓ Total players processed: 257
+
+=== Injury Status Summary ===
+  - healthy: 228 players
+  - questionable: 25 players
+  - out: 4 players
+
+🎉 Injury data sync completed successfully!

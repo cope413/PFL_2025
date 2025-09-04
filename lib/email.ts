@@ -111,17 +111,50 @@ export const emailTemplates = {
   }),
 
   passwordReset: (username: string, resetLink: string) => ({
-    subject: 'PFL Password Reset Request',
+    subject: `PFL Password Reset Request`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h1 style="color: #1f2937; text-align: center;">🔐 Password Reset</h1>
         <p>Hello ${username},</p>
         <p>You requested a password reset for your PFL account.</p>
-        <p>Click the button below to reset your password:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetLink}" style="background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
+        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <a href="${resetLink}" style="background: #059669; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">Reset Password</a>
         </div>
         <p>If you didn't request this reset, please ignore this email.</p>
+        <p style="color: #6b7280; font-size: 14px;">- The PFL Team</p>
+      </div>
+    `
+  }),
+
+  lineupWarning: (username: string, teamName: string, week: number) => ({
+    subject: `⚠️ PFL Week ${week} Lineup Warning - ${teamName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #dc2626; text-align: center;">⚠️ Lineup Warning</h1>
+        <p>Hello ${username},</p>
+        <p><strong>Your team ${teamName} does not have a saved lineup for Week ${week}!</strong></p>
+        
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <h3 style="margin-top: 0; color: #dc2626;">Action Required</h3>
+          <p>You must save your lineup by Saturday at 5:00 PM EST to avoid forfeiting your matchup.</p>
+          <p><strong>Current Status:</strong> No lineup saved</p>
+          <p><strong>Deadline:</strong> Saturday at 5:00 PM EST</p>
+        </div>
+
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0ea5e9;">
+          <h3 style="margin-top: 0; color: #0ea5e9;">How to Save Your Lineup</h3>
+          <ol style="margin: 0; padding-left: 20px;">
+            <li>Log into your PFL account</li>
+            <li>Go to "Team Dashboard"</li>
+            <li>Select Week ${week}</li>
+            <li>Set your starting lineup</li>
+            <li>Click "Save Lineup"</li>
+            <li>Click "Submit Lineup" to finalize</li>
+          </ol>
+        </div>
+
+        <p><strong>Important:</strong> If you don't save a lineup by the deadline, your team will forfeit the matchup and you'll receive a loss.</p>
+        
         <p style="color: #6b7280; font-size: 14px;">- The PFL Team</p>
       </div>
     `
@@ -254,6 +287,7 @@ export type NotificationType =
   | 'injuryAlert'
   | 'passwordReset'
   | 'lineupSubmission'
+  | 'lineupWarning'
   | 'test';
 
 // Notification service
@@ -285,6 +319,11 @@ export class NotificationService {
 
   static async sendPasswordReset(email: string, username: string, resetLink: string): Promise<boolean> {
     const template = emailTemplates.passwordReset(username, resetLink);
+    return sendEmail(email, template);
+  }
+
+  static async sendLineupWarning(email: string, username: string, teamName: string, week: number): Promise<boolean> {
+    const template = emailTemplates.lineupWarning(username, teamName, week);
     return sendEmail(email, template);
   }
 

@@ -105,6 +105,15 @@ export async function POST(request: NextRequest) {
           );
           break;
 
+        case 'lineupWarning':
+          success = await NotificationService.sendLineupWarning(
+            user.email,
+            user.username,
+            user.team_name || user.username,
+            data.week
+          );
+          break;
+
         case 'test':
           success = await NotificationService.sendTestEmail(
             user.email,

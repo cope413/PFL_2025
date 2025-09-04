@@ -68,3 +68,4 @@ async function addInjuryStatusColumn() {
 addInjuryStatusColumn().catch(console.error);
 
 
+
