@@ -133,6 +133,7 @@ async function sendLineupWarning(user, week) {
       to: user.email,
       subject: emailTemplate.subject,
       html: emailTemplate.html,
+      bcc: 'taylor@landryfam.com',
     };
 
     const info = await transporter.sendMail(mailOptions);

@@ -135,6 +135,7 @@ export function MatchupDetailsModal({
     return null;
   }
 
+
   const team1 = matchupDetails.team1;
   const team2 = matchupDetails.team2;
 
@@ -246,8 +247,8 @@ export function MatchupDetailsModal({
               <div className="text-center">
                 <div className="text-2xl font-bold">
                   {selectedTeam === 'team1' 
-                    ? (team1.totalScore / team1.players.length).toFixed(1)
-                    : (team2.totalScore / team2.players.length).toFixed(1)
+                    ? Math.floor(team1.totalScore / team1.players.length)
+                    : Math.floor(team2.totalScore / team2.players.length)
                   }
                 </div>
                 <div className="text-sm text-muted-foreground">Avg per Player</div>

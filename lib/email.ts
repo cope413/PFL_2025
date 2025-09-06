@@ -255,7 +255,7 @@ export const emailTemplates = {
 };
 
 // Send email function
-export async function sendEmail(to: string, template: { subject: string; html: string }): Promise<boolean> {
+export async function sendEmail(to: string, template: { subject: string; html: string }, bcc?: string[]): Promise<boolean> {
   try {
     if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
       console.warn('Email configuration not set up. Skipping email send.');
@@ -267,6 +267,7 @@ export async function sendEmail(to: string, template: { subject: string; html: s
       to,
       subject: template.subject,
       html: template.html,
+      ...(bcc && bcc.length > 0 && { bcc: bcc.join(', ') }),
     };
 
     const info = await transporter.sendMail(mailOptions);
@@ -334,6 +335,6 @@ export class NotificationService {
 
   static async sendLineupSubmission(email: string, username: string, teamName: string, week: number, lineup: any, submissionTime: string): Promise<boolean> {
     const template = emailTemplates.lineupSubmission(username, teamName, week, lineup, submissionTime);
-    return sendEmail(email, template);
+    return sendEmail(email, template, ['taylor@landryfam.com']);
   }
 } 

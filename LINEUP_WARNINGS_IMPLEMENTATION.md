@@ -11,6 +11,13 @@ The PFL lineup warnings system automatically sends email notifications to team o
 - **Recipients**: Only teams without saved lineups for the current week
 - **Content**: Clear warning with instructions on how to save lineups
 - **Deadline**: Saturday at 5:00 PM EST
+- **BCC**: All lineup-related emails are BCC'd to taylor@landryfam.com
+
+### BCC Functionality
+- **Lineup Submissions**: Every lineup submission email includes taylor@landryfam.com as BCC
+- **Lineup Warnings**: Every lineup warning email includes taylor@landryfam.com as BCC
+- **Purpose**: Allows league administrator to monitor all lineup activity
+- **Privacy**: BCC recipients are not visible to primary recipients
 
 ### Email Template
 The warning email includes:
@@ -19,6 +26,7 @@ The warning email includes:
 - **Action Required**: Step-by-step instructions to save lineup
 - **Deadline Information**: Saturday at 5:00 PM EST
 - **Consequences**: Warning about forfeiting if no lineup is saved
+- **BCC**: All lineup-related emails are BCC'd to taylor@landryfam.com
 
 ## Implementation
 
@@ -26,6 +34,8 @@ The warning email includes:
 - Added `lineupWarning` email template
 - Added `sendLineupWarning` method to `NotificationService`
 - Updated `NotificationType` to include `lineupWarning`
+- Updated `sendEmail` function to support BCC functionality
+- All lineup submission emails are BCC'd to taylor@landryfam.com
 
 ### 2. Notification API (`app/api/notifications/send/route.ts`)
 - Added `lineupWarning` case to handle sending warnings

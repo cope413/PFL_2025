@@ -36,6 +36,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { useCurrentWeek } from "@/hooks/useCurrentWeek"
 import { useMatchupDetails } from "@/hooks/useMatchupDetails"
 import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
+import { AllLineupsModal } from "@/components/AllLineupsModal"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
@@ -59,6 +60,10 @@ export default function ScoreboardPage() {
   const [selectedTeamIds, setSelectedTeamIds] = useState<{ team1Id: string; team2Id: string } | null>(null)
   const { matchupDetails, loading: matchupDetailsLoading, error: matchupDetailsError, fetchMatchupDetails } = useMatchupDetails(selectedWeekForDetails || undefined, selectedTeamIds)
   const [isMatchupModalOpen, setIsMatchupModalOpen] = useState(false)
+  const [isAllLineupsModalOpen, setIsAllLineupsModalOpen] = useState(false)
+  const [allLineupsData, setAllLineupsData] = useState<any>(null)
+  const [allLineupsLoading, setAllLineupsLoading] = useState(false)
+  const [allLineupsError, setAllLineupsError] = useState<string | null>(null)
   const router = useRouter()
   const [matchups, setMatchups] = useState<Matchup[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,7 +97,7 @@ export default function ScoreboardPage() {
       setLoading(true)
       setError(null)
       
-      const response = await fetch(`/api/leagues/matchups?leagueId=l1&week=${selectedWeek}`)
+      const response = await fetch(`/api/leagues/matchups?leagueId=l1&week=${selectedWeek}&t=${Date.now()}`)
       
       if (!response.ok) {
         throw new Error(`Failed to fetch matchups: ${response.statusText}`)
@@ -117,6 +122,31 @@ export default function ScoreboardPage() {
     setSelectedWeekForDetails(week)
     setSelectedTeamIds({ team1Id, team2Id })
     setIsMatchupModalOpen(true)
+  }
+
+  const fetchAllLineups = async () => {
+    try {
+      setAllLineupsLoading(true)
+      setAllLineupsError(null)
+      
+      const response = await fetch(`/api/lineups/all?week=${selectedWeek}`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch lineups: ${response.statusText}`)
+      }
+      
+      const result = await response.json()
+      if (result.success) {
+        setAllLineupsData(result.data)
+        setIsAllLineupsModalOpen(true)
+      } else {
+        setAllLineupsError(result.error || 'Failed to fetch lineups')
+      }
+    } catch (err) {
+      console.error('Error fetching all lineups:', err)
+      setAllLineupsError(err instanceof Error ? err.message : 'Failed to fetch lineups')
+    } finally {
+      setAllLineupsLoading(false)
+    }
   }
 
   const getResultColor = (result: 'W' | 'L' | 'T') => {
@@ -309,6 +339,15 @@ export default function ScoreboardPage() {
                   ))}
                 </SelectContent>
               </Select>
+              <Button 
+                onClick={fetchAllLineups} 
+                disabled={allLineupsLoading || !selectedWeek}
+                variant="outline"
+                size="sm"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                {allLineupsLoading ? 'Loading...' : 'View All Lineups'}
+              </Button>
             </div>
           </div>
 
@@ -371,40 +410,36 @@ export default function ScoreboardPage() {
                             onClick={() => handleMatchupClick(matchup.week, matchup.team1_id, matchup.team2_id)}
                           >
                             <div className="grid grid-cols-3 items-center gap-4">
-                              <div className="text-center">
-                                <div className="flex items-center justify-center gap-2 mb-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {matchup.team1_id}
-                                  </Badge>
-                                  <span className="font-medium">{matchup.team1_name}</span>
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  Projected: {matchup.team1_score?.toFixed(1) || '0.0'}
+                              <div className="flex items-center justify-end gap-3">
+                                <Badge variant="outline" className="text-xs">
+                                  {matchup.team1_id}
+                                </Badge>
+                                <span className="font-medium">{matchup.team1_name}</span>
+                                <div className="text-2xl font-bold text-blue-600 min-w-[3rem] text-right">
+                                  {Math.floor(matchup.team1_score || 0)}
                                 </div>
                               </div>
                               
-                              <div className="text-center">
+                              <div className="flex flex-col items-center gap-2">
                                 <div className="text-lg font-bold text-muted-foreground">vs</div>
                                 {matchup.isComplete && (
                                   <Badge 
                                     variant="outline" 
-                                    className={`mt-2 ${getResultColor(matchup.result || 'T')} font-bold`}
+                                    className={`${getResultColor(matchup.result || 'T')} font-bold`}
                                   >
                                     {matchup.result || 'TBD'}
                                   </Badge>
                                 )}
                               </div>
                               
-                              <div className="text-center">
-                                <div className="flex items-center justify-center gap-2 mb-2">
-                                  <span className="font-medium">{matchup.team2_name}</span>
-                                  <Badge variant="outline" className="text-xs">
-                                    {matchup.team2_id}
-                                  </Badge>
+                              <div className="flex items-center justify-start gap-3">
+                                <div className="text-2xl font-bold text-blue-600 min-w-[3rem] text-left">
+                                  {Math.floor(matchup.team2_score || 0)}
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                  Projected: {matchup.team2_score?.toFixed(1) || '0.0'}
-                                </div>
+                                <span className="font-medium">{matchup.team2_name}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {matchup.team2_id}
+                                </Badge>
                               </div>
                             </div>
                           </div>
@@ -423,6 +458,15 @@ export default function ScoreboardPage() {
             matchupDetails={matchupDetails}
             loading={matchupDetailsLoading}
             error={matchupDetailsError}
+          />
+
+          {/* All Lineups Modal */}
+          <AllLineupsModal
+            isOpen={isAllLineupsModalOpen}
+            onClose={() => setIsAllLineupsModalOpen(false)}
+            data={allLineupsData}
+            loading={allLineupsLoading}
+            error={allLineupsError}
           />
         </div>
       </main>

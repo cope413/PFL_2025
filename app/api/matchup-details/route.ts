@@ -139,8 +139,8 @@ export async function GET(request: NextRequest) {
                   p.player_name as name,
                   p.position,
                   p.team_name as nflTeam,
-                  COALESCE(pts.week_${week}, 0) as points,
-                  COALESCE(pts.week_${week}, 0) as projectedPoints
+                  COALESCE(pts.week_${week.toString()}, 0) as points,
+                  COALESCE(pts.week_${week.toString()}, 0) as projectedPoints
                 FROM Players p
                 LEFT JOIN Points pts ON p.player_ID = pts.player_ID
                 WHERE p.player_ID = ?
@@ -187,8 +187,8 @@ export async function GET(request: NextRequest) {
                 }
               }
 
-              // For completed weeks, use actual points; for future weeks, use projected
-              const actualPoints = week < currentWeek ? (player.points || projectedPoints) : 0;
+              // Use actual points if available, otherwise use projected points
+              const actualPoints = Math.floor(player.points || 0);
 
               players.push({
                 playerId: player.id,
@@ -239,8 +239,8 @@ export async function GET(request: NextRequest) {
     const team1Players = await generatePlayerScores(team1, team1Lineup || {});
     const team2Players = await generatePlayerScores(team2, team2Lineup || {});
 
-    const team1TotalScore = team1Players.reduce((sum, p) => sum + p.points, 0);
-    const team2TotalScore = team2Players.reduce((sum, p) => sum + p.points, 0);
+    const team1TotalScore = Math.floor(team1Players.reduce((sum, p) => sum + (p.points || 0), 0));
+    const team2TotalScore = Math.floor(team2Players.reduce((sum, p) => sum + (p.points || 0), 0));
 
     // Determine result (from team1's perspective)
     let result: 'W' | 'L' | 'T' = 'L';
@@ -253,14 +253,14 @@ export async function GET(request: NextRequest) {
         teamId: team1,
         teamName: team1Name,
         totalScore: team1TotalScore,
-        projectedScore: team1Players.reduce((sum, p) => sum + p.projectedPoints, 0),
+        projectedScore: Math.floor(team1Players.reduce((sum, p) => sum + p.projectedPoints, 0)),
         players: team1Players
       },
       team2: {
         teamId: team2,
         teamName: team2Name,
         totalScore: team2TotalScore,
-        projectedScore: team2Players.reduce((sum, p) => sum + p.projectedPoints, 0),
+        projectedScore: Math.floor(team2Players.reduce((sum, p) => sum + p.projectedPoints, 0)),
         players: team2Players
       },
       result,

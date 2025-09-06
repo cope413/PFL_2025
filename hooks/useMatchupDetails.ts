@@ -65,7 +65,7 @@ export function useMatchupDetails(week?: number, teamIds?: { team1Id: string; te
         return;
       }
 
-      let url = `/api/matchup-details?week=${weekNumber}`;
+      let url = `/api/matchup-details?week=${weekNumber}&t=${Date.now()}`;
       if (teamIds) {
         url += `&team1Id=${teamIds.team1Id}&team2Id=${teamIds.team2Id}`;
       }
