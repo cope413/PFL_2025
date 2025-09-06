@@ -985,3 +985,72 @@ export async function getNFLTeamOpponentInfo(nflTeamName: string, week: number, 
     kickoffTime: gameTime
   };
 }
+
+// Game lock functions for preventing lineup changes after games start
+export async function getPlayerGameStartTime(playerId: string, week: number, season: number = 2025) {
+  // First get the player's NFL team
+  const player = await getFirstResult({
+    sql: 'SELECT team_name FROM Players WHERE player_ID = ?',
+    args: [playerId]
+  });
+  
+  if (!player) {
+    return null;
+  }
+  
+  // Get the game for this team in this week
+  const game = await getNFLTeamOpponent(player.team_name, week, season);
+  
+  if (!game) {
+    return null;
+  }
+  
+  return {
+    gameTimeUTC: game.game_time_utc,
+    gameTimeLA: game.game_time_la,
+    status: game.status,
+    hasStarted: new Date() >= new Date(game.game_time_utc)
+  };
+}
+
+export async function isPlayerGameLocked(playerId: string, week: number, season: number = 2025): Promise<boolean> {
+  const gameInfo = await getPlayerGameStartTime(playerId, week, season);
+  
+  if (!gameInfo) {
+    return false; // If no game info, allow changes
+  }
+  
+  // Game is locked if it has started
+  return gameInfo.hasStarted;
+}
+
+export async function getLockedPlayersForWeek(week: number, season: number = 2025): Promise<string[]> {
+  // Get all games for this week that have started
+  const startedGames = await getResults({
+    sql: `
+      SELECT Home_Team, Away_Team 
+      FROM NFL_Schedule 
+      WHERE season = ? AND Week = ? AND datetime(game_time_utc) <= datetime('now')
+    `,
+    args: [season, week]
+  });
+  
+  if (!startedGames || startedGames.length === 0) {
+    return [];
+  }
+  
+  // Get all players from teams that have started their games
+  const teamNames = startedGames.flatMap(game => [game.Home_Team, game.Away_Team]);
+  const placeholders = teamNames.map(() => '?').join(',');
+  
+  const lockedPlayers = await getResults({
+    sql: `
+      SELECT player_ID 
+      FROM Players 
+      WHERE team_name IN (${placeholders})
+    `,
+    args: teamNames
+  });
+  
+  return lockedPlayers.map(player => player.player_ID);
+}

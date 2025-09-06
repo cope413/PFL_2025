@@ -53,6 +53,8 @@ interface Player {
   recentPerformance: number[]
   teamId?: number
   ownerId?: string
+  isGameLocked?: boolean
+  gameStartTime?: string
   opponentInfo?: {
     opponent: string
     isHomeTeam: boolean
@@ -95,6 +97,7 @@ export default function TeamDashboard() {
   const [hasSubmittedLineup, setHasSubmittedLineup] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [lockedPlayers, setLockedPlayers] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
   useEffect(() => {
@@ -143,6 +146,7 @@ export default function TeamDashboard() {
     if (selectedWeek && initialLoadComplete && players.length > 0) {
       console.log('Calling loadLineup after roster is loaded')
       loadLineup()
+      fetchLockedPlayers()
     }
   }, [selectedWeek, initialLoadComplete, players.length])
 
@@ -189,6 +193,51 @@ export default function TeamDashboard() {
       setError(err instanceof Error ? err.message : 'Failed to fetch team roster')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchLockedPlayers = async () => {
+    if (!selectedWeek) return;
+    
+    try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        console.log('No auth token for fetchLockedPlayers')
+        return;
+      }
+
+      console.log('Fetching locked players for week:', selectedWeek)
+      const response = await fetch(`/api/lineups/locked-players?week=${selectedWeek}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      })
+
+      console.log('Locked players response status:', response.status)
+      if (response.ok) {
+        const result = await response.json()
+        console.log('Locked players result:', result)
+        if (result.success) {
+          const lockedSet = new Set(result.data.lockedPlayerIds)
+          console.log('Locked players set:', lockedSet)
+          console.log('Number of locked players:', lockedSet.size)
+          setLockedPlayers(lockedSet)
+          
+          // Update players with lock status
+          setPlayers(prevPlayers => {
+            const updatedPlayers = prevPlayers.map(player => ({
+              ...player,
+              isGameLocked: lockedSet.has(player.id) || lockedSet.has(parseInt(player.id))
+            }))
+            console.log('Updated players with lock status:', updatedPlayers.filter(p => p.isGameLocked))
+            return updatedPlayers
+          })
+        }
+      } else {
+        console.error('Failed to fetch locked players:', response.status, response.statusText)
+      }
+    } catch (err) {
+      console.error('Error fetching locked players:', err)
     }
   }
 
@@ -320,6 +369,16 @@ export default function TeamDashboard() {
     setPlayers((prev) => {
       const player = prev.find((p) => p.id === playerId)
       if (!player) return prev
+
+      // Check if player's game is locked
+      if (player.isGameLocked) {
+        toast({
+          title: "Cannot Change Lineup",
+          description: `${player.name}'s game has already started and cannot be moved.`,
+          variant: "destructive",
+        })
+        return prev
+      }
 
       // If player is currently a starter, move to bench
       if (player.isStarter) {
@@ -1077,6 +1136,12 @@ export default function TeamDashboard() {
                                                   </span>
                                                 </div>
                                               )}
+                                              {player.isGameLocked && (
+                                                <div className="mt-1 text-red-600 font-medium text-xs">
+                                                  <Clock className="inline h-3 w-3 mr-1" />
+                                                  Game Started - Locked
+                                                </div>
+                                              )}
                                             </div>
                                           </div>
                                         </div>
@@ -1090,8 +1155,20 @@ export default function TeamDashboard() {
                                           <Badge variant="outline" className={getStatusColor(player.status)}>
                                             {getStatusText(player.status)}
                                           </Badge>
-                                          <Button variant="outline" size="sm" onClick={() => togglePlayerStatus(player.id)}>
-                                            Bench
+                                          <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            onClick={() => togglePlayerStatus(player.id)}
+                                            disabled={player.isGameLocked}
+                                          >
+                                            {player.isGameLocked ? (
+                                              <>
+                                                <Clock className="h-4 w-4 mr-1" />
+                                                Locked
+                                              </>
+                                            ) : (
+                                              "Bench"
+                                            )}
                                           </Button>
                                         </div>
                                       </div>
@@ -1133,8 +1210,8 @@ export default function TeamDashboard() {
                               bench.map((player) => (
                                 <div
                                   key={player.id}
-                                  className={`flex items-center justify-between rounded-lg border p-3 transition-colors cursor-pointer ${getPlayerCardStyle(player)}`}
-                                  onClick={() => togglePlayerStatus(player.id)}
+                                  className={`flex items-center justify-between rounded-lg border p-3 transition-colors ${player.isGameLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'} ${getPlayerCardStyle(player)}`}
+                                  onClick={() => !player.isGameLocked && togglePlayerStatus(player.id)}
                                 >
                                   <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
@@ -1162,6 +1239,12 @@ export default function TeamDashboard() {
                                               <Clock className="inline h-3 w-3 mr-1" />
                                               {player.opponentInfo.kickoffTime}
                                             </span>
+                                          </div>
+                                        )}
+                                        {player.isGameLocked && (
+                                          <div className="mt-1 text-red-600 font-medium text-xs">
+                                            <Clock className="inline h-3 w-3 mr-1" />
+                                            Game Started - Locked
                                           </div>
                                         )}
                                       </div>

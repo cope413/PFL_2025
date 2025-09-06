@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
-import { getUserById, getLineup, getPlayerById } from '@/lib/database';
+import { getUserById, getLineup, getPlayerById, isPlayerGameLocked } from '@/lib/database';
 import { NotificationService } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
@@ -46,6 +46,34 @@ export async function POST(request: NextRequest) {
 
     console.log('Submitting lineup for user:', userData.team, 'week:', week);
     console.log('Lineup data:', lineup);
+
+    // Check if any players in the lineup have games that have started
+    const lineupPlayers = [
+      lineup.QB,
+      lineup.RB_1,
+      lineup.WR_1,
+      lineup.FLEX_1,
+      lineup.FLEX_2,
+      lineup.TE,
+      lineup.K,
+      lineup.DEF
+    ].filter(Boolean); // Remove empty values
+
+    const lockedPlayers = [];
+    for (const playerId of lineupPlayers) {
+      const isLocked = await isPlayerGameLocked(playerId, parseInt(week));
+      if (isLocked) {
+        lockedPlayers.push(playerId);
+      }
+    }
+
+    if (lockedPlayers.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: `Cannot submit lineup: ${lockedPlayers.length} player(s) have games that have already started`,
+        lockedPlayers: lockedPlayers
+      }, { status: 400 });
+    }
 
     // Verify that the lineup exists in the database (must be saved first)
     try {
