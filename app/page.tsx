@@ -99,11 +99,11 @@ export default function Home() {
   const getTopPlayers = () => {
     if (!players || players.length === 0) return [];
     
-    // Sort players by total points (descending) and take top 3
+    // Sort players by total points (descending) and take top 10
     return players
       .filter(player => player.totalPoints && player.totalPoints > 0) // Only players with points
       .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
-      .slice(0, 3)
+      .slice(0, 10)
       .map(player => ({
         id: player.id,
         name: player.name,
@@ -390,7 +390,7 @@ export default function Home() {
                   <BarChart3 className="h-5 w-5" />
                   Top Performers
                 </CardTitle>
-                <CardDescription>Highest scoring players this season</CardDescription>
+                <CardDescription>Top 10 performers from current week</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">

@@ -39,10 +39,20 @@ export async function getCurrentWeek(): Promise<number> {
       const endDate = (weekRow as any).end;
       const weekNum = (weekRow as any).week;
 
-      console.log(`Checking week ${weekNum}: ${startDate} to ${endDate}`);
-      console.log(`Current date ${currentDateStr} between ${startDate} and ${endDate}? ${currentDateStr >= startDate && currentDateStr <= endDate}`);
+      // Convert M/D/YY format to YYYY-MM-DD for proper comparison
+      const convertDate = (dateStr: string) => {
+        const [month, day, year] = dateStr.split('/');
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      };
 
-      if (currentDateStr >= startDate && currentDateStr <= endDate) {
+      const startDateConverted = convertDate(startDate);
+      const endDateConverted = convertDate(endDate);
+
+      console.log(`Checking week ${weekNum}: ${startDate} (${startDateConverted}) to ${endDate} (${endDateConverted})`);
+      console.log(`Current date ${currentDateStr} between ${startDateConverted} and ${endDateConverted}? ${currentDateStr >= startDateConverted && currentDateStr <= endDateConverted}`);
+
+      if (currentDateStr >= startDateConverted && currentDateStr <= endDateConverted) {
         console.log(`Found matching week: ${weekNum}`);
         return weekNum;
       }
@@ -55,16 +65,26 @@ export async function getCurrentWeek(): Promise<number> {
       const firstWeek = allWeeks[0] as any;
       const lastWeek = allWeeks[allWeeks.length - 1] as any;
 
-      console.log(`First week starts: ${firstWeek.start}, Last week ends: ${lastWeek.end}`);
+      // Convert dates for comparison
+      const convertDate = (dateStr: string) => {
+        const [month, day, year] = dateStr.split('/');
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      };
+
+      const firstWeekStart = convertDate(firstWeek.start);
+      const lastWeekEnd = convertDate(lastWeek.end);
+
+      console.log(`First week starts: ${firstWeek.start} (${firstWeekStart}), Last week ends: ${lastWeek.end} (${lastWeekEnd})`);
 
       // If current date is before the season starts, return week 1
-      if (currentDateStr < firstWeek.start) {
+      if (currentDateStr < firstWeekStart) {
         console.log('Current date is before season starts, returning week 1');
         return 1;
       }
 
       // If current date is after the season ends, return the last week
-      if (currentDateStr > lastWeek.end) {
+      if (currentDateStr > lastWeekEnd) {
         console.log(`Current date is after season ends, returning last week: ${lastWeek.week}`);
         return lastWeek.week;
       }

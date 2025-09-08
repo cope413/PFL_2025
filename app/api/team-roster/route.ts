@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { getTeamRoster, getDraftedTeamRoster, getNFLTeamOpponentInfo } from '@/lib/database';
+import { getTeamRoster, getDraftedTeamRoster, getNFLTeamOpponentInfo, getCurrentWeek } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,9 +46,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Get current week for average calculation
+    const currentWeek = await getCurrentWeek();
+    
     // Transform the data to match the expected format
     const transformedPlayers = players.map((player: any) => {
-      // Calculate average points from weeks 1-14
+      // Calculate total points from weeks 1-14
       const weekPoints = [
         Number(player.week_1), Number(player.week_2), Number(player.week_3), Number(player.week_4),
         Number(player.week_5), Number(player.week_6), Number(player.week_7), Number(player.week_8),
@@ -56,11 +59,12 @@ export async function GET(request: NextRequest) {
         Number(player.week_13), Number(player.week_14)
       ];
 
-      // Filter out zero/null values and calculate average
-      const validPoints = weekPoints.filter(point => point > 0);
-
-      const averagePoints = validPoints.length > 0
-        ? Math.round((validPoints.reduce((sum, point) => sum + point, 0) / validPoints.length) * 100) / 100
+      // Calculate total points
+      const totalPoints = weekPoints.reduce((sum, point) => sum + point, 0);
+      
+      // Calculate average points as totalPoints / currentWeek
+      const averagePoints = currentWeek > 0 
+        ? Math.round((totalPoints / currentWeek) * 100) / 100
         : 0;
 
       // Use real injury status from database, fallback to 'healthy' if not set

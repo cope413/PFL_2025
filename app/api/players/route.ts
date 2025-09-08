@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPlayer, createPlayerStats, deletePlayer, generateId, getPlayerById, getPlayers, getPlayersByPosition, getPlayersByTeam, getPlayersWithBye, getPlayerStats, updatePlayer, getResults } from '@/lib/database';
+import { createPlayer, createPlayerStats, deletePlayer, generateId, getPlayerById, getPlayers, getPlayersByPosition, getPlayersByTeam, getPlayersWithBye, getPlayerStats, updatePlayer, getResults, getCurrentWeek } from '@/lib/database';
 import { ApiResponse, Player, PlayerStats } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   try {
+    // Get current week for average calculation
+    const currentWeek = await getCurrentWeek();
+    
     // Get all players with their point totals from the Points table
     const playersWithStats = await getResults({
       sql: `
@@ -18,12 +21,7 @@ export async function GET(request: NextRequest) {
           COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) + 
           COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) + 
           COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) + 
-          COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0) as totalPoints,
-          (COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) + 
-           COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) + 
-           COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) + 
-           COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) + 
-           COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) / 14.0 as avgPoints
+          COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0) as totalPoints
         FROM Players p
         LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
         LEFT JOIN Points pts ON p.player_ID = pts.player_ID
@@ -33,17 +31,22 @@ export async function GET(request: NextRequest) {
     });
     
     // Transform the database players to match the frontend interface
-    const transformedPlayers = playersWithStats.map(player => ({
-      id: player.id,
-      name: player.name,
-      position: player.position,
-      team: player.team,
-      totalPoints: parseFloat(player.totalPoints || 0),
-      avgPoints: parseFloat(player.avgPoints || 0),
-      byeWeek: player.byeWeek || 0,
-      owner_ID: player.owner_ID,
-      status: 'Active' // Default status
-    }));
+    const transformedPlayers = playersWithStats.map(player => {
+      const totalPoints = parseFloat(player.totalPoints || 0);
+      const avgPoints = currentWeek > 0 ? totalPoints / currentWeek : 0;
+      
+      return {
+        id: player.id,
+        name: player.name,
+        position: player.position,
+        team: player.team,
+        totalPoints: totalPoints,
+        avgPoints: Math.round(avgPoints * 100) / 100, // Round to 2 decimal places
+        byeWeek: player.byeWeek || 0,
+        owner_ID: player.owner_ID,
+        status: 'Active' // Default status
+      };
+    });
 
     return NextResponse.json({
       success: true,
