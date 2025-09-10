@@ -454,6 +454,7 @@ export default function AdminDashboard() {
 
     setFinalizingWeek(week);
     try {
+      // Execute the finalization script
       const response = await fetch('/api/admin/finalize-week', {
         method: 'POST',
         headers: {

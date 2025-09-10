@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getResults, getFirstResult } from '@/lib/database';
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,106 +38,31 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get all teams
-    const teams = await getResults("SELECT team FROM user WHERE team IS NOT NULL");
+    // Execute the finalization script
+    console.log(`Executing finalization script for week ${week}...`);
     
-    // Get weekly matchups for this week
-    const matchups = await getResults({
-      sql: "SELECT * FROM WeeklyMatchups WHERE week = ?",
-      args: [week]
-    });
-
-    if (!matchups || matchups.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: `No matchups found for week ${week}.`
-      }, { status: 400 });
-    }
-
-    // Calculate scores for each team in this week
-    const weeklyResults = [];
-    
-    for (const team of teams) {
-      const teamId = team.team;
+    try {
+      // Use the generic script with week parameter
+      const scriptPath = `/home/cope413/Documents/GitHub/PFL_2025/scripts/finalize-week-generic.js`;
       
-      // Get all players for this team
-      const teamPlayers = await getResults({
-        sql: "SELECT * FROM Players WHERE owner_ID = ?",
-        args: [teamId]
+      const { stdout, stderr } = await execAsync(`node ${scriptPath} ${week}`, {
+        cwd: '/home/cope413/Documents/GitHub/PFL_2025',
+        timeout: 30000 // 30 second timeout
       });
-
-      // Calculate total score for this team this week
-      let teamScore = 0;
-      for (const player of teamPlayers) {
-        const weekScore = player[`week${week}`] || 0;
-        teamScore += weekScore;
+      
+      if (stderr) {
+        console.error('Script stderr:', stderr);
       }
-
-      weeklyResults.push({
-        teamId,
-        week,
-        score: teamScore
-      });
+      
+      console.log('Script output:', stdout);
+      
+      // Mark week as finalized in the database
+      await finalizeWeek(week);
+      
+    } catch (error) {
+      console.error('Error executing finalization script:', error);
+      throw new Error(`Failed to execute finalization script: ${error.message}`);
     }
-
-    // Process matchups and determine winners
-    const matchupResults = [];
-    
-    for (const matchup of matchups) {
-      const team1Id = matchup[`Team_1`];
-      const team2Id = matchup[`Team_2`];
-      
-      const team1Result = weeklyResults.find(r => r.teamId === team1Id);
-      const team2Result = weeklyResults.find(r => r.teamId === team2Id);
-      
-      if (!team1Result || !team2Result) {
-        console.warn(`Missing team result for matchup: ${team1Id} vs ${team2Id}`);
-        continue;
-      }
-
-      const team1Score = team1Result.score;
-      const team2Score = team2Result.score;
-      
-      // Determine winner
-      let team1Result_ = 'L';
-      let team2Result_ = 'L';
-      
-      if (team1Score > team2Score) {
-        team1Result_ = 'W';
-        team2Result_ = 'L';
-      } else if (team1Score < team2Score) {
-        team1Result_ = 'L';
-        team2Result_ = 'W';
-      } else {
-        team1Result_ = 'T';
-        team2Result_ = 'T';
-      }
-
-      matchupResults.push({
-        week,
-        team1Id,
-        team1Score,
-        team1Result: team1Result_,
-        team2Id,
-        team2Score,
-        team2Result: team2Result_
-      });
-    }
-
-    // Update standings based on results
-    for (const result of matchupResults) {
-      // Update team 1 standings
-      await updateTeamStandings(result.team1Id, result.team1Result, result.team1Score, result.team2Score);
-      
-      // Update team 2 standings
-      await updateTeamStandings(result.team2Id, result.team2Result, result.team2Score, result.team1Score);
-    }
-
-    // Mark week as finalized
-    await finalizeWeek(week);
-
-    // Store weekly scores for historical reference
-    await storeWeeklyScores(week, weeklyResults);
 
     return NextResponse.json({
       success: true,
