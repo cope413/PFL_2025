@@ -26,10 +26,13 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Get current week for average calculation
+    const currentWeek = await getCurrentWeek();
+    
     // Get players for the specified team - use drafted roster if in draft context
     const players = isDraftContext 
       ? await getDraftedTeamRoster(teamId)
-      : await getTeamRoster(teamId);
+      : await getTeamRoster(teamId, currentWeek);
 
     // Get unique NFL teams to fetch opponent info efficiently
     const uniqueNFLTeams = [...new Set(players.map(p => p.nflTeam))];
@@ -45,9 +48,6 @@ export async function GET(request: NextRequest) {
         opponentInfoMap.set(nflTeam, null);
       }
     }
-
-    // Get current week for average calculation
-    const currentWeek = await getCurrentWeek();
     
     // Transform the data to match the expected format
     const transformedPlayers = players.map((player: any) => {

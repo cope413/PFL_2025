@@ -7,8 +7,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   ClubIcon as Football,
   Settings,
@@ -28,18 +26,19 @@ import {
   LogOut,
   Menu,
   X,
-  Plus,
-  Filter,
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import DraftRoom from "@/components/DraftRoom"
+import WaiverDraftRoom from "@/components/WaiverDraftRoom"
 
 export default function DraftPage() {
   const { user, loading: authLoading, logout } = useAuth()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isDraftRoomOpen, setIsDraftRoomOpen] = useState(false)
+  const [isWaiverDraftRoomOpen, setIsWaiverDraftRoomOpen] = useState(false)
+  const [selectedWaiverWeek, setSelectedWaiverWeek] = useState<number | null>(null)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -222,7 +221,7 @@ export default function DraftPage() {
                   <div className="rounded-lg border p-4">
                     <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                       <div>
-                        <h3 className="text-lg font-bold">PFL</h3>
+                        <h3 className="text-lg font-bold">PFL Main Draft</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="h-4 w-4" />
                           <span>August 31, 2025 • 8:00 AM PST</span>
@@ -243,217 +242,122 @@ export default function DraftPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Draft Tools</CardTitle>
-                <CardDescription>Resources to help you prepare for your draft</CardDescription>
+                <CardTitle>Waiver Drafts</CardTitle>
+                <CardDescription>Season waiver drafts for player replacements</CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="rankings">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="rankings">Rankings</TabsTrigger>
-  
-                    <TabsTrigger value="sleepers">Sleepers</TabsTrigger>
-                    <TabsTrigger value="strategy">Strategy</TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="rankings">image.png
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-medium">Draft Rankings</h3>
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
-                            <Filter className="mr-2 h-4 w-4" />
-                            Filter
-                          </Button>
-                          <Button size="sm">Customize Rankings</Button>
+                <div className="space-y-4">
+                  <div className="rounded-lg border p-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold">Week 2-3 Waiver Draft</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>Wednesday, September 17, 2025 • 8:00 PM EST</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Users className="h-4 w-4" />
+                          <span>Waiver Order • 3 min timer</span>
                         </div>
                       </div>
-
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[50px]">Rank</TableHead>
-                            <TableHead>Player</TableHead>
-                            <TableHead>Team</TableHead>
-                            <TableHead>Pos</TableHead>
-                            <TableHead className="text-right">Bye</TableHead>
-                            <TableHead className="text-right">Proj Pts</TableHead>
-    
-                            <TableHead className="text-right">Value</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <TableRow key={i}>
-                              <TableCell className="font-medium">{i + 1}</TableCell>
-                              <TableCell>
-                                <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8">
-                                    <AvatarFallback>{`P${i + 1}`}</AvatarFallback>
-                                  </Avatar>
-                                  <div>Player {i + 1}</div>
-                                </div>
-                              </TableCell>
-                              <TableCell>Team</TableCell>
-                              <TableCell>Pos</TableCell>
-                              <TableCell className="text-right">{7 + i}</TableCell>
-                              <TableCell className="text-right">{350 - i * 15}</TableCell>
-                              
-                              <TableCell className="text-right">
-                                <Badge className="bg-green-100 text-green-800 hover:bg-green-100">+{5 - i}</Badge>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                      <div className="flex items-center justify-center mt-4">
-                        <Button variant="outline" className="mx-2 bg-transparent">
-                          Previous
-                        </Button>
-                        <Button variant="outline" className="mx-2 bg-transparent">
-                          Next
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedWaiverWeek(2)
+                            setIsWaiverDraftRoomOpen(true)
+                          }}
+                        >
+                          Enter Waiver Draft
                         </Button>
                       </div>
                     </div>
-                  </TabsContent>
+                  </div>
 
-
-                  <TabsContent value="sleepers">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Sleeper Picks</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Sleepers are players who are undervalued in drafts and have the potential to outperform their
-                        draft position. Here are our top sleeper picks for the 2025 season.
-                      </p>
-
-                      <div className="grid gap-4 md:grid-cols-3">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <Card key={i}>
-                            <CardHeader className="pb-2">
-                              <div className="flex items-center justify-between">
-                                <CardTitle className="text-base font-medium">Sleeper Player {i + 1}</CardTitle>
-
-                              </div>
-                              <CardDescription>Team • Position</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-muted-foreground">
-                                This player has tremendous upside due to a new offensive system and increased
-                                opportunity. Could easily outperform their current draft position.
-                              </p>
-                            </CardContent>
-                          </Card>
-                        ))}
+                  <div className="rounded-lg border p-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold">Week 5-6 Waiver Draft</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>Wednesday, October 8, 2025 • 8:00 PM EST</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Users className="h-4 w-4" />
+                          <span>Waiver Order • 3 min timer</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedWaiverWeek(5)
+                            setIsWaiverDraftRoomOpen(true)
+                          }}
+                        >
+                          Enter Waiver Draft
+                        </Button>
                       </div>
                     </div>
-                  </TabsContent>
-                  <TabsContent value="strategy">
-                    <div className="space-y-4">
-                      <h3 className="text-lg font-medium">Draft Strategy</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Prepare for your draft with these expert strategies and tips.
-                      </p>
+                  </div>
 
-                      <div className="grid gap-4 md:grid-cols-2">
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Position Scarcity</CardTitle>
-                            <CardDescription>Understanding when to draft each position</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                              Position scarcity refers to the limited number of elite players at certain positions.
-                              Understanding this concept can help you prioritize which positions to draft early.
-                            </p>
-                            <div className="mt-4 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">RB</span>
-                                <div className="h-2 w-[200px] rounded-full bg-muted">
-                                  <div className="h-2 rounded-full bg-red-500" style={{ width: "30%" }}></div>
-                                </div>
-                                <span className="text-sm">High Scarcity</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">WR</span>
-                                <div className="h-2 w-[200px] rounded-full bg-muted">
-                                  <div className="h-2 rounded-full bg-yellow-500" style={{ width: "60%" }}></div>
-                                </div>
-                                <span className="text-sm">Medium Scarcity</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">QB</span>
-                                <div className="h-2 w-[200px] rounded-full bg-muted">
-                                  <div className="h-2 rounded-full bg-green-500" style={{ width: "80%" }}></div>
-                                </div>
-                                <span className="text-sm">Low Scarcity</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card>
-                          <CardHeader>
-                            <CardTitle>Value-Based Drafting</CardTitle>
-                            <CardDescription>Maximizing player value at each pick</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <p className="text-sm text-muted-foreground">
-                              Value-Based Drafting (VBD) is a strategy that compares a player&apos;s projected points to a
-                              baseline at their position. This helps you identify which players offer the most value
-                              relative to their draft position.
-                            </p>
-                            <div className="mt-4">
-                              <Button variant="outline" className="w-full bg-transparent">
-                                Download VBD Cheat Sheet
-                              </Button>
-                            </div>
-                          </CardContent>
-                        </Card>
-
-                        <Card className="md:col-span-2">
-                          <CardHeader>
-                            <CardTitle>Draft Day Checklist</CardTitle>
-                            <CardDescription>Essential preparations for draft day</CardDescription>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <div className="h-5 w-5 rounded border flex items-center justify-center">
-                                  <div className="h-3 w-3 rounded-sm bg-primary"></div>
-                                </div>
-                                <span className="text-sm">Prepare custom rankings</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-5 w-5 rounded border flex items-center justify-center">
-                                  <div className="h-3 w-3 rounded-sm bg-primary"></div>
-                                </div>
-                                <span className="text-sm">Research injury updates</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-5 w-5 rounded border flex items-center justify-center">
-                                  <div className="h-3 w-3 rounded-sm bg-primary"></div>
-                                </div>
-                                <span className="text-sm">Create position tiers</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-5 w-5 rounded border flex items-center justify-center">
-                                  <div className="h-3 w-3 rounded-sm bg-primary"></div>
-                                </div>
-                                <span className="text-sm">Identify sleepers and potential busts</span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="h-5 w-5 rounded border flex items-center justify-center">
-                                  <div className="h-3 w-3 rounded-sm bg-primary"></div>
-                                </div>
-                                <span className="text-sm">Test your internet connection</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                  <div className="rounded-lg border p-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold">Week 8-9 Waiver Draft</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>Wednesday, October 29, 2025 • 8:00 PM EST</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Users className="h-4 w-4" />
+                          <span>Waiver Order • 3 min timer</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedWaiverWeek(8)
+                            setIsWaiverDraftRoomOpen(true)
+                          }}
+                        >
+                          Enter Waiver Draft
+                        </Button>
                       </div>
                     </div>
-                  </TabsContent>
-                </Tabs>
+                  </div>
+
+                  <div className="rounded-lg border p-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold">Week 11-12 Waiver Draft</h3>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          <span>Wednesday, November 19, 2025 • 8:00 PM EST</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                          <Users className="h-4 w-4" />
+                          <span>Waiver Order • 3 min timer</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline"
+                          onClick={() => {
+                            setSelectedWaiverWeek(11)
+                            setIsWaiverDraftRoomOpen(true)
+                          }}
+                        >
+                          Enter Waiver Draft
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+
           </div>
         </div>
       </main>
@@ -461,6 +365,17 @@ export default function DraftPage() {
       {/* Draft Room Modal */}
       {isDraftRoomOpen && (
         <DraftRoom onClose={() => setIsDraftRoomOpen(false)} />
+      )}
+
+      {/* Waiver Draft Room Modal */}
+      {isWaiverDraftRoomOpen && selectedWaiverWeek && (
+        <WaiverDraftRoom 
+          onClose={() => {
+            setIsWaiverDraftRoomOpen(false)
+            setSelectedWaiverWeek(null)
+          }} 
+          week={selectedWaiverWeek}
+        />
       )}
     </div>
   )

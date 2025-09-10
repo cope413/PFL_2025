@@ -115,3 +115,55 @@ export interface NotificationPreferences {
   updated_at: string;
 }
 
+// Waiver System Types
+export interface WaiverPlayer {
+  player_id: string;
+  team_id: string;
+  waiver_order: number;
+  waived_at: string;
+  status: 'available' | 'drafted';
+  player_name: string;
+  position: string;
+  nfl_team: string;
+  team_name?: string;
+  owner_name?: string;
+}
+
+export interface WaiverDraft {
+  id: string;
+  week: number;
+  scheduled_date: string;
+  status: 'scheduled' | 'in_progress' | 'completed';
+  created_at: string;
+  started_at?: string;
+  completed_at?: string;
+}
+
+export interface WaiverDraftOrder {
+  team_id: string;
+  draft_order: number;
+  team_name?: string;
+  owner_name?: string;
+}
+
+export interface WaiverPick {
+  pick_number: number;
+  team_id: string;
+  player_id: string;
+  picked_at: string;
+  player_name: string;
+  position: string;
+  nfl_team: string;
+  team_name?: string;
+  owner_name?: string;
+}
+
+export interface WaiverDraftInfo {
+  draft: WaiverDraft;
+  draftOrder: WaiverDraftOrder[];
+  waivedPlayers: WaiverPlayer[];
+  picks: WaiverPick[];
+  currentPick: number;
+  isActive: boolean;
+}
+

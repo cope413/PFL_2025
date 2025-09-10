@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import WaiverDraftRoom from '@/components/WaiverDraftRoom';
 import {
   Dialog,
   DialogContent,
@@ -151,6 +152,49 @@ export default function AdminDashboard() {
   const [currentWeek, setCurrentWeek] = useState(1);
   const [loadingWeekStatus, setLoadingWeekStatus] = useState(false);
   const [finalizingWeek, setFinalizingWeek] = useState<number | null>(null);
+  const [waiverDrafts, setWaiverDrafts] = useState<any[]>([]);
+  const [waivedPlayers, setWaivedPlayers] = useState<any[]>([]);
+  const [selectedWaiverWeek, setSelectedWaiverWeek] = useState<number | null>(null);
+  const [isWaiverDraftRoomOpen, setIsWaiverDraftRoomOpen] = useState(false);
+
+  // Debug waived players state
+  useEffect(() => {
+    console.log('Admin - Waived players state changed:', waivedPlayers);
+  }, [waivedPlayers]);
+
+  // Waiver management functions
+  const fetchWaiverData = async () => {
+    try {
+      // Fetch waiver drafts
+      const draftsResponse = await fetch('/api/waiver?action=waiver-drafts');
+      const draftsData = await draftsResponse.json();
+      if (draftsData.success) {
+        setWaiverDrafts(draftsData.data);
+      }
+
+      // Fetch waived players
+      const playersResponse = await fetch('/api/waiver?action=waived-players');
+      const playersData = await playersResponse.json();
+      console.log('Admin - Waived players API response:', playersData);
+      if (playersData.success) {
+        console.log('Admin - Setting waived players:', playersData.data);
+        setWaivedPlayers(playersData.data);
+      }
+    } catch (error) {
+      console.error('Error fetching waiver data:', error);
+    }
+  };
+
+  const handleManageDraft = (week: number) => {
+    setSelectedWaiverWeek(week);
+    setIsWaiverDraftRoomOpen(true);
+  };
+
+  const closeWaiverDraftRoom = () => {
+    setIsWaiverDraftRoomOpen(false);
+    setSelectedWaiverWeek(null);
+    fetchWaiverData(); // Refresh data when closing
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -173,6 +217,7 @@ export default function AdminDashboard() {
       fetchStats();
       fetchPlayers();
       fetchWeekStatus();
+      fetchWaiverData();
     }
   }, [user, loading, router, toast]);
 
@@ -862,6 +907,7 @@ export default function AdminDashboard() {
           <TabsTrigger value="users">User Management</TabsTrigger>
           <TabsTrigger value="players">Player Management</TabsTrigger>
           <TabsTrigger value="weekly">Weekly Management</TabsTrigger>
+          <TabsTrigger value="waiver">Waiver Management</TabsTrigger>
           <TabsTrigger value="stats">System Statistics</TabsTrigger>
         </TabsList>
 
@@ -1323,6 +1369,149 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="waiver" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Waiver Management</CardTitle>
+              <CardDescription>
+                Manage waiver drafts, view waived players, and oversee the waiver system.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Waiver Drafts</CardTitle>
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{waiverDrafts.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Scheduled for season
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Waived Players</CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{waivedPlayers.length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Currently available
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Active Drafts</CardTitle>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{waiverDrafts.filter(draft => draft.status === 'in_progress').length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Currently in progress
+                      </p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{waiverDrafts.filter(draft => draft.status === 'completed').length}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Drafts finished
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold">Waiver Draft Schedule</h3>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Week 2-3 Waiver Draft</CardTitle>
+                        <CardDescription>Wednesday, September 17, 2025 • 8:00 PM EST</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">Scheduled</Badge>
+                          <Button variant="outline" size="sm" onClick={() => handleManageDraft(2)}>
+                            Manage Draft
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Week 5-6 Waiver Draft</CardTitle>
+                        <CardDescription>Wednesday, October 8, 2025 • 8:00 PM EST</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">Scheduled</Badge>
+                          <Button variant="outline" size="sm" onClick={() => handleManageDraft(5)}>
+                            Manage Draft
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Week 8-9 Waiver Draft</CardTitle>
+                        <CardDescription>Wednesday, October 29, 2025 • 8:00 PM EST</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">Scheduled</Badge>
+                          <Button variant="outline" size="sm" onClick={() => handleManageDraft(8)}>
+                            Manage Draft
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-base">Week 11-12 Waiver Draft</CardTitle>
+                        <CardDescription>Wednesday, November 19, 2025 • 8:00 PM EST</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">Scheduled</Badge>
+                          <Button variant="outline" size="sm" onClick={() => handleManageDraft(11)}>
+                            Manage Draft
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
+                <Alert>
+                  <Shield className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Waiver System Rules:</strong> Players can be waived during weeks 2, 5, 8, and 11. 
+                    Each waived player gives teams one waiver draft pick. Draft order is based on worst record, 
+                    lowest points scored, then highest draft order. Waiver drafts are held on Wednesday nights 
+                    at 8:00 PM EST with a 3-minute timer per pick.
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Edit User Dialog */}
@@ -1639,6 +1828,14 @@ export default function AdminDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Waiver Draft Room Modal */}
+      {isWaiverDraftRoomOpen && selectedWaiverWeek && (
+        <WaiverDraftRoom
+          week={selectedWaiverWeek}
+          onClose={closeWaiverDraftRoom}
+        />
+      )}
         </div>
       </main>
     </div>

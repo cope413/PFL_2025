@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ApiResponse, Team } from '@/lib/types';
-import { getAllStandings, getTeamStanding, getTeamRoster } from '@/lib/database';
+import { getAllStandings, getTeamStanding, getTeamRoster, getCurrentWeek } from '@/lib/database';
 
 export async function GET(request: Request) {
   try {
@@ -19,7 +19,8 @@ export async function GET(request: Request) {
       }
 
       // Get team roster
-      const roster = await getTeamRoster(teamId);
+      const currentWeek = await getCurrentWeek();
+      const roster = await getTeamRoster(teamId, currentWeek);
 
       const teamData = {
         id: teamId,

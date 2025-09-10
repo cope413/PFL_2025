@@ -585,7 +585,7 @@ export async function updateUserProfile(userId: string, username: string, email:
   }
 }
 
-export async function getTeamRoster(teamId: string) {
+export async function getTeamRoster(teamId: string, currentWeek: number = 1) {
   return await getResults({
     sql: `
       SELECT
@@ -595,7 +595,7 @@ export async function getTeamRoster(teamId: string) {
         p.team_name as nflTeam,
         p.owner_ID as team,
         p.team_id,
-        COALESCE(p.injury_status, 'healthy') as injury_status,
+        COALESCE(p.injury_status, 'healthy') as status,
         COALESCE(n.bye, 0) as byeWeek,
         COALESCE(pts.week_1, 0) as week_1,
         COALESCE(pts.week_2, 0) as week_2,
@@ -610,14 +610,32 @@ export async function getTeamRoster(teamId: string) {
         COALESCE(pts.week_11, 0) as week_11,
         COALESCE(pts.week_12, 0) as week_12,
         COALESCE(pts.week_13, 0) as week_13,
-        COALESCE(pts.week_14, 0) as week_14
+        COALESCE(pts.week_14, 0) as week_14,
+        (COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) + 
+         COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) + 
+         COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) + 
+         COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) + 
+         COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) as totalPoints,
+        CASE 
+          WHEN (COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) + 
+                COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) + 
+                COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) + 
+                COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) + 
+                COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) > 0
+          THEN ROUND((COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) + 
+                     COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) + 
+                     COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) + 
+                     COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) + 
+                     COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) / ?, 2)
+          ELSE 0.0
+        END as avgPoints
       FROM Players p
       LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
       LEFT JOIN Points pts ON p.player_ID = pts.player_ID
       WHERE p.owner_ID = ?
       ORDER BY p.position, p.player_name
     `,
-    args: [teamId]
+    args: [Math.max(1, currentWeek - 1), teamId]
   });
 }
 
@@ -1073,4 +1091,361 @@ export async function getLockedPlayersForWeek(week: number, season: number = 202
   });
   
   return lockedPlayers.map(player => player.player_ID);
+}
+
+// Waiver System Database Functions
+
+// Waiver Players Table Functions
+export async function waivePlayer(playerId: string, teamId: string, waiverOrder: number) {
+  return await db.execute({
+    sql: `
+      INSERT INTO WaiverPlayers (player_id, team_id, waiver_order, waived_at, status)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP, 'available')
+    `,
+    args: [playerId, teamId, waiverOrder]
+  });
+}
+
+export async function getWaivedPlayers(currentWeek: number = 1) {
+  return await getResults({
+    sql: `
+      SELECT 
+        wp.player_id,
+        wp.team_id,
+        wp.waiver_order,
+        wp.waived_at,
+        wp.status,
+        p.player_name,
+        p.position,
+        p.team_name as nfl_team,
+        u.team_name as team_name,
+        u.owner_name,
+        (COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) +
+         COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) +
+         COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) +
+         COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) +
+         COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) as total_points,
+        CASE
+          WHEN (COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) +
+                COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) +
+                COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) +
+                COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) +
+                COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) > 0
+          THEN ROUND((COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) +
+                     COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) +
+                     COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) +
+                     COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) +
+                     COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) / ?, 2)
+          ELSE 0.0
+        END as avg_points
+      FROM WaiverPlayers wp
+      LEFT JOIN Players p ON wp.player_id = p.player_ID
+      LEFT JOIN user u ON wp.team_id = u.team
+      LEFT JOIN Points pts ON p.player_ID = pts.player_ID
+      WHERE wp.status = 'available'
+      ORDER BY wp.waiver_order
+    `,
+    args: [Math.max(1, currentWeek - 1)]
+  });
+}
+
+// Get free agents (players with owner_id = 99) - only skill positions
+export async function getFreeAgents(currentWeek: number = 1) {
+  return await getResults({
+    sql: `
+      SELECT 
+        p.player_ID as player_id,
+        '99' as team_id,
+        0 as waiver_order,
+        NULL as waived_at,
+        'available' as status,
+        p.player_name,
+        p.position,
+        p.team_name as nfl_team,
+        'Free Agent' as team_name,
+        'Free Agent' as owner_name,
+        (COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) +
+         COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) +
+         COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) +
+         COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) +
+         COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) as total_points,
+        CASE
+          WHEN (COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) +
+                COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) +
+                COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) +
+                COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) +
+                COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) > 0
+          THEN ROUND((COALESCE(pts.week_1, 0) + COALESCE(pts.week_2, 0) + COALESCE(pts.week_3, 0) +
+                     COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) +
+                     COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) +
+                     COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) +
+                     COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0)) / ?, 2)
+          ELSE 0.0
+        END as avg_points
+      FROM Players p
+      LEFT JOIN Points pts ON p.player_ID = pts.player_ID
+      WHERE p.owner_ID = 99 
+        AND p.position IN ('QB', 'WR', 'TE', 'RB', 'PK')
+      ORDER BY p.position, p.player_name
+    `,
+    args: [Math.max(1, currentWeek - 1)]
+  });
+}
+
+export async function getWaivedPlayersByTeam(teamId: string) {
+  return await getResults({
+    sql: `
+      SELECT 
+        wp.player_id,
+        wp.team_id,
+        wp.waiver_order,
+        wp.waived_at,
+        wp.status,
+        p.player_name,
+        p.position,
+        p.team_name as nfl_team
+      FROM WaiverPlayers wp
+      LEFT JOIN Players p ON wp.player_id = p.player_ID
+      WHERE wp.team_id = ? AND wp.status = 'available'
+      ORDER BY wp.waiver_order
+    `,
+    args: [teamId]
+  });
+}
+
+export async function removeWaivedPlayer(playerId: string, teamId: string) {
+  // First, get the player's current waiver order
+  const waiverPlayer = await getResults({
+    sql: 'SELECT waiver_order FROM WaiverPlayers WHERE player_id = ? AND team_id = ? AND status = ?',
+    args: [playerId, teamId, 'available']
+  });
+
+  if (!waiverPlayer || waiverPlayer.length === 0) {
+    throw new Error('Player not found in waiver list');
+  }
+
+  const waiverOrder = waiverPlayer[0].waiver_order;
+
+  // Remove the player from the waiver list
+  await db.execute({
+    sql: 'DELETE FROM WaiverPlayers WHERE player_id = ? AND team_id = ? AND status = ?',
+    args: [playerId, teamId, 'available']
+  });
+
+  // Update the waiver order for remaining players (decrement orders higher than the removed player)
+  await db.execute({
+    sql: 'UPDATE WaiverPlayers SET waiver_order = waiver_order - 1 WHERE team_id = ? AND waiver_order > ?',
+    args: [teamId, waiverOrder]
+  });
+
+  // Return the player to the team's roster
+  await db.execute({
+    sql: 'UPDATE Players SET owner_ID = ? WHERE player_ID = ?',
+    args: [teamId, playerId]
+  });
+
+  return true;
+}
+
+export async function getUserByTeamId(teamId: string) {
+  return await getFirstResult({
+    sql: 'SELECT * FROM user WHERE team = ?',
+    args: [teamId]
+  });
+}
+
+
+// Waiver Drafts Table Functions
+export async function createWaiverDraft(week: number, scheduledDate: string, status: string = 'scheduled') {
+  return await db.execute({
+    sql: `
+      INSERT INTO WaiverDrafts (week, scheduled_date, status, created_at)
+      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+    `,
+    args: [week, scheduledDate, status]
+  });
+}
+
+export async function getWaiverDrafts() {
+  return await getResults({
+    sql: `
+      SELECT 
+        wd.id,
+        wd.week,
+        wd.scheduled_date,
+        wd.status,
+        wd.created_at,
+        wd.started_at,
+        wd.completed_at
+      FROM WaiverDrafts wd
+      ORDER BY wd.week
+    `
+  });
+}
+
+export async function getWaiverDraftByWeek(week: number) {
+  return await getFirstResult({
+    sql: `
+      SELECT 
+        wd.id,
+        wd.week,
+        wd.scheduled_date,
+        wd.status,
+        wd.created_at,
+        wd.started_at,
+        wd.completed_at
+      FROM WaiverDrafts wd
+      WHERE wd.week = ?
+    `,
+    args: [week]
+  });
+}
+
+export async function updateWaiverDraftStatus(draftId: string, status: string) {
+  const updateFields = ['status = ?'];
+  const args = [status];
+  
+  if (status === 'in_progress') {
+    updateFields.push('started_at = CURRENT_TIMESTAMP');
+  } else if (status === 'completed') {
+    updateFields.push('completed_at = CURRENT_TIMESTAMP');
+  }
+  
+  return await db.execute({
+    sql: `
+      UPDATE WaiverDrafts 
+      SET ${updateFields.join(', ')}
+      WHERE id = ?
+    `,
+    args: [...args, draftId]
+  });
+}
+
+// Waiver Draft Order Functions
+export async function calculateWaiverDraftOrder(week: number) {
+  // Get standings data to determine draft order
+  const standings = await getResults({
+    sql: `
+      SELECT 
+        s.Team_ID,
+        COALESCE(s.Wins, 0) as wins,
+        COALESCE(s.Losses, 0) as losses,
+        COALESCE(s.Ties, 0) as ties,
+        COALESCE(s.PF, 0.0) as pointsFor,
+        u.team_name,
+        u.owner_name
+      FROM Standings s
+      LEFT JOIN user u ON s.Team_ID = u.team
+      ORDER BY 
+        s.Wins ASC,
+        s.PF ASC,
+        s.Team_ID ASC
+    `
+  });
+  
+  return standings;
+}
+
+export async function saveWaiverDraftOrder(draftId: string, draftOrder: Array<{teamId: string, order: number}>) {
+  // Clear existing order for this draft
+  await db.execute({
+    sql: 'DELETE FROM WaiverDraftOrder WHERE draft_id = ?',
+    args: [draftId]
+  });
+  
+  // Insert new order
+  for (const team of draftOrder) {
+    await db.execute({
+      sql: `
+        INSERT INTO WaiverDraftOrder (draft_id, team_id, draft_order)
+        VALUES (?, ?, ?)
+      `,
+      args: [draftId, team.teamId, team.order]
+    });
+  }
+}
+
+export async function getWaiverDraftOrder(draftId: string) {
+  return await getResults({
+    sql: `
+      SELECT 
+        wdo.team_id,
+        wdo.draft_order,
+        u.team_name,
+        u.owner_name
+      FROM WaiverDraftOrder wdo
+      LEFT JOIN user u ON wdo.team_id = u.team
+      WHERE wdo.draft_id = ?
+      ORDER BY wdo.draft_order
+    `,
+    args: [draftId]
+  });
+}
+
+// Waiver Picks Functions
+export async function makeWaiverPick(draftId: string, teamId: string, playerId: string, pickNumber: number) {
+  return await db.execute({
+    sql: `
+      INSERT INTO WaiverPicks (draft_id, team_id, player_id, pick_number, picked_at)
+      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `,
+    args: [draftId, teamId, playerId, pickNumber]
+  });
+}
+
+export async function getWaiverPicks(draftId: string) {
+  return await getResults({
+    sql: `
+      SELECT 
+        wp.pick_number,
+        wp.team_id,
+        wp.player_id,
+        wp.picked_at,
+        p.player_name,
+        p.position,
+        p.team_name as nfl_team,
+        u.team_name,
+        u.owner_name
+      FROM WaiverPicks wp
+      LEFT JOIN Players p ON wp.player_id = p.player_ID
+      LEFT JOIN user u ON wp.team_id = u.team
+      WHERE wp.draft_id = ?
+      ORDER BY wp.pick_number
+    `,
+    args: [draftId]
+  });
+}
+
+export async function updatePlayerOwnershipAfterWaiver(playerId: string, newTeamId: string) {
+  return await db.execute({
+    sql: 'UPDATE Players SET owner_ID = ? WHERE player_ID = ?',
+    args: [newTeamId, playerId]
+  });
+}
+
+export async function markWaiverPlayerAsDrafted(playerId: string) {
+  return await db.execute({
+    sql: 'UPDATE WaiverPlayers SET status = ? WHERE player_id = ?',
+    args: ['drafted', playerId]
+  });
+}
+
+
+// Helper function to check if it's a waiver week
+export function isWaiverWeek(week: number): boolean {
+  return week === 2 || week === 5 || week === 8 || week === 11;
+}
+
+// Helper function to get waiver deadline for a week
+export function getWaiverDeadline(week: number): Date {
+  // Waiver deadline is 7:00 PM EST on Friday before the waiver draft week
+  const deadline = new Date();
+  deadline.setHours(19, 0, 0, 0); // 7:00 PM EST
+  deadline.setDate(deadline.getDate() + (5 - deadline.getDay())); // Next Friday
+  
+  // Adjust for the specific week
+  const weekOffset = week - 2; // Week 2 is the first waiver week
+  deadline.setDate(deadline.getDate() + (weekOffset * 7));
+  
+  return deadline;
 }

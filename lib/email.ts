@@ -251,6 +251,41 @@ export const emailTemplates = {
         <p style="color: #6b7280; font-size: 14px;">- The PFL Team</p>
       </div>
     `
+  }),
+
+  playerWaived: (username: string, teamName: string, playerName: string, position: string, nflTeam: string, waiverOrder: number, deadline: string) => ({
+    subject: `PFL Player Waived - ${playerName} (${teamName})`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #dc2626; text-align: center;">📤 Player Waived</h1>
+        <p>Hello ${username},</p>
+        <p>You have successfully waived a player from your team.</p>
+        
+        <div style="background: #fef2f2; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+          <h3 style="margin-top: 0; color: #dc2626;">Waived Player Details</h3>
+          <p><strong>Player:</strong> ${playerName}</p>
+          <p><strong>Position:</strong> ${position}</p>
+          <p><strong>NFL Team:</strong> ${nflTeam}</p>
+          <p><strong>Waiver Order:</strong> ${waiverOrder}</p>
+          <p><strong>Team:</strong> ${teamName}</p>
+        </div>
+
+        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0ea5e9;">
+          <h3 style="margin-top: 0; color: #0ea5e9;">What Happens Next?</h3>
+          <p>This player is now available for other teams to draft in the upcoming waiver draft.</p>
+          <p><strong>Waiver Deadline:</strong> ${new Date(deadline).toLocaleString()}</p>
+          <p>You can still remove this player from the waiver list before the deadline if you change your mind.</p>
+        </div>
+
+        <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; font-weight: bold;">💡 Reminder</p>
+          <p style="margin: 5px 0 0 0;">You can remove this player from the waiver list before the deadline by going to your Team Dashboard → Waiver Management tab.</p>
+        </div>
+
+        <p>Good luck with your waiver strategy!</p>
+        <p style="color: #6b7280; font-size: 14px;">- The PFL Team</p>
+      </div>
+    `
   })
 };
 
@@ -289,6 +324,7 @@ export type NotificationType =
   | 'passwordReset'
   | 'lineupSubmission'
   | 'lineupWarning'
+  | 'playerWaived'
   | 'test';
 
 // Notification service
@@ -335,6 +371,11 @@ export class NotificationService {
 
   static async sendLineupSubmission(email: string, username: string, teamName: string, week: number, lineup: any, submissionTime: string): Promise<boolean> {
     const template = emailTemplates.lineupSubmission(username, teamName, week, lineup, submissionTime);
+    return sendEmail(email, template, ['taylor@landryfam.com']);
+  }
+
+  static async sendPlayerWaivedNotification(email: string, username: string, teamName: string, playerName: string, position: string, nflTeam: string, waiverOrder: number, deadline: string): Promise<boolean> {
+    const template = emailTemplates.playerWaived(username, teamName, playerName, position, nflTeam, waiverOrder, deadline);
     return sendEmail(email, template, ['taylor@landryfam.com']);
   }
 } 

@@ -37,6 +37,7 @@ import { useCurrentWeek } from "@/hooks/useCurrentWeek"
 import { useTeamWeeklyResults } from "@/hooks/useTeamWeeklyResults"
 import { useMatchupDetails } from "@/hooks/useMatchupDetails"
 import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
+import WaiverManagement from "@/components/WaiverManagement"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 
@@ -1000,9 +1001,10 @@ export default function TeamDashboard() {
             </div>
           ) : (
             <Tabs defaultValue="lineup" className="mt-6">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="lineup">Lineup</TabsTrigger>
                 <TabsTrigger value="results">Weekly Results</TabsTrigger>
+                <TabsTrigger value="waiver">Waiver Management</TabsTrigger>
               </TabsList>
 
               <TabsContent value="lineup" className="space-y-6">
@@ -1531,6 +1533,10 @@ export default function TeamDashboard() {
                     </Card>
                                      </>
                  )}
+               </TabsContent>
+
+               <TabsContent value="waiver" className="space-y-6">
+                 <WaiverManagement teamId={user?.team || ''} />
                </TabsContent>
              </Tabs>
            )}
