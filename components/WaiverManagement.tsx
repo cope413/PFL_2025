@@ -338,8 +338,7 @@ export default function WaiverManagement({ teamId }: WaiverManagementProps) {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="text-sm font-medium">Order: {player.waiver_order}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-sm font-medium">
                         {new Date(player.waived_at).toLocaleDateString()}
                       </div>
                     </div>
