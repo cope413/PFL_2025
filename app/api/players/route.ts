@@ -33,7 +33,9 @@ export async function GET(request: NextRequest) {
     // Transform the database players to match the frontend interface
     const transformedPlayers = playersWithStats.map(player => {
       const totalPoints = parseFloat(player.totalPoints || 0);
-      const avgPoints = currentWeek > 0 ? totalPoints / currentWeek : 0;
+      // Calculate average based on completed weeks (current week - 1)
+      const completedWeeks = Math.max(1, currentWeek - 1);
+      const avgPoints = completedWeeks > 0 ? totalPoints / completedWeeks : 0;
       
       return {
         id: player.id,

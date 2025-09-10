@@ -99,8 +99,10 @@ export default function TeamDashboard() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [lockedPlayers, setLockedPlayers] = useState<Set<string>>(new Set())
   const { toast } = useToast()
+  const [fetchedRosterForWeek, setFetchedRosterForWeek] = useState<string | null>(null)
 
   useEffect(() => {
+    console.log('🔍 useEffect [user, authLoading, router] #5 triggered')
     if (!authLoading && !user) {
       // Redirect to login if no user is authenticated
       router.push('/auth')
@@ -109,56 +111,68 @@ export default function TeamDashboard() {
   }, [user, authLoading, router])
 
   useEffect(() => {
+    console.log('🔍 useEffect [user] #3 triggered')
     if (user) {
       // Get team name from user data
       setUserTeamName(user.team_name || user.team || user.username)
       
-      // Fetch team roster from API
-      fetchTeamRoster()
+      // Don't fetch roster here - let the other useEffect handle it
     }
   }, [user])
 
   useEffect(() => {
+    console.log('🔍 useEffect [currentWeek, currentWeekLoading] #4 triggered')
     if (!currentWeekLoading && currentWeek > 0) {
       setSelectedWeek(currentWeek.toString())
     }
   }, [currentWeek, currentWeekLoading])
 
   useEffect(() => {
-    console.log('useEffect triggered - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete)
-    if (selectedWeek && initialLoadComplete && players.length === 0) {
-      console.log('Calling fetchTeamRoster - no players loaded yet')
-      // Only fetch team roster if we don't have players yet
+    console.log('🔍 useEffect [selectedWeek, initialLoadComplete] #1 triggered - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete, 'fetchedRosterForWeek:', fetchedRosterForWeek)
+    if (selectedWeek && !initialLoadComplete && fetchedRosterForWeek !== selectedWeek) {
+      console.log('🔍 #1 Calling fetchTeamRoster for initial load')
+      setFetchedRosterForWeek(selectedWeek)
       fetchTeamRoster()
-      // Reset submission state when week changes
-      setHasSubmittedLineup(false)
     } else if (selectedWeek && initialLoadComplete) {
-      console.log('Players already loaded, skipping fetchTeamRoster')
-      // Reset submission state when week changes
+      console.log('🔍 #1 Week changed, resetting submission state only')
+      // Reset submission state when week changes - NO roster fetch
       setHasSubmittedLineup(false)
+      // Reset the state so we can fetch roster for the new week
+      setFetchedRosterForWeek(null)
     } else {
-      console.log('Not calling lineup functions - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete)
+      console.log('🔍 #1 Not calling lineup functions - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete, 'fetchedRosterForWeek:', fetchedRosterForWeek)
     }
-  }, [selectedWeek, initialLoadComplete]) // Only load lineup after initial load is complete
+  }, [selectedWeek, initialLoadComplete, fetchedRosterForWeek]) // Fetch roster on initial load only
+
 
   // Separate useEffect for loading lineup after roster is fetched
   useEffect(() => {
+    console.log('🔍 useEffect [selectedWeek, initialLoadComplete] #2 for lineup triggered - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete, 'players.length:', players.length)
     if (selectedWeek && initialLoadComplete && players.length > 0) {
-      console.log('Calling loadLineup after roster is loaded')
+      console.log('🔍 #2 Calling loadLineup after roster is loaded')
       loadLineup()
       fetchLockedPlayers()
     }
-  }, [selectedWeek, initialLoadComplete, players.length])
+  }, [selectedWeek, initialLoadComplete]) // Removed players.length dependency
 
-  const fetchTeamRoster = async () => {
+  const fetchTeamRoster = async (isRefresh = false) => {
+    console.log('🔍 fetchTeamRoster called with isRefresh:', isRefresh, 'stack trace:', new Error().stack)
     try {
-      setLoading(true)
-      setError(null)
+      // If we already have players loaded and this is not a refresh, don't fetch again
+      if (players.length > 0 && !isRefresh) {
+        console.log('🔍 Skipping roster fetch - already have players and this is not a refresh')
+        return
+      }
+      
+      if (!isRefresh) {
+        setLoading(true)
+        setError(null)
+      }
       
       const token = localStorage.getItem('auth_token')
       if (!token) {
         setError('No authentication token found')
-        setLoading(false)
+        if (!isRefresh) setLoading(false)
         return
       }
 
@@ -184,7 +198,9 @@ export default function TeamDashboard() {
         console.log('Setting players:', result.data)
         console.log('Number of players:', result.data.length)
         setPlayers(result.data)
-        setInitialLoadComplete(true) // Mark initial load as complete
+        if (!isRefresh) {
+          setInitialLoadComplete(true) // Mark initial load as complete
+        }
       } else {
         setError(result.error || 'Failed to fetch team roster')
       }
@@ -192,7 +208,9 @@ export default function TeamDashboard() {
       console.error('Error fetching team roster:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch team roster')
     } finally {
-      setLoading(false)
+      if (!isRefresh) {
+        setLoading(false)
+      }
     }
   }
 
@@ -1149,7 +1167,7 @@ export default function TeamDashboard() {
                                           <div className="text-right">
                                             <div className="font-medium">{player.projectedPoints} pts</div>
                                             <div className="text-xs text-muted-foreground">
-                                              Last: {player.recentPerformance[0]}
+                                              Average: {player.recentPerformance[0]}
                                             </div>
                                           </div>
                                           <Badge variant="outline" className={getStatusColor(player.status)}>

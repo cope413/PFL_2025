@@ -62,9 +62,10 @@ export async function GET(request: NextRequest) {
       // Calculate total points
       const totalPoints = weekPoints.reduce((sum, point) => sum + point, 0);
       
-      // Calculate average points as totalPoints / currentWeek
-      const averagePoints = currentWeek > 0 
-        ? Math.round((totalPoints / currentWeek) * 100) / 100
+      // Calculate average points based on completed weeks (current week - 1)
+      const completedWeeks = Math.max(1, currentWeek - 1);
+      const averagePoints = completedWeeks > 0 
+        ? Math.round((totalPoints / completedWeeks) * 100) / 100
         : 0;
 
       // Use real injury status from database, fallback to 'healthy' if not set
