@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -35,6 +35,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth"
 import { useCurrentWeek } from "@/hooks/useCurrentWeek"
 import { useMatchupDetails } from "@/hooks/useMatchupDetails"
+import { useMatchups } from "@/hooks/useMatchups"
 import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
 import { AllLineupsModal } from "@/components/AllLineupsModal"
 import { useRouter } from "next/navigation"
@@ -65,12 +66,12 @@ export default function ScoreboardPage() {
   const [allLineupsLoading, setAllLineupsLoading] = useState(false)
   const [allLineupsError, setAllLineupsError] = useState<string | null>(null)
   const router = useRouter()
-  const [matchups, setMatchups] = useState<Matchup[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [selectedWeek, setSelectedWeek] = useState<string>("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { toast } = useToast()
+  
+  // Use the optimized useMatchups hook
+  const { matchups, loading, error } = useMatchups(selectedWeek ? parseInt(selectedWeek) : undefined, 'l1')
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -86,43 +87,13 @@ export default function ScoreboardPage() {
     }
   }, [currentWeek, currentWeekLoading])
 
-  useEffect(() => {
-    if (selectedWeek) {
-      fetchMatchups()
-    }
-  }, [selectedWeek])
+  // Remove the old fetchMatchups function and useEffect since useMatchups hook handles this
 
-  const fetchMatchups = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      const response = await fetch(`/api/leagues/matchups?leagueId=l1&week=${selectedWeek}&t=${Date.now()}`)
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch matchups: ${response.statusText}`)
-      }
-
-      const result = await response.json()
-      
-      if (result.success) {
-        setMatchups(result.data || [])
-      } else {
-        setError(result.error || 'Failed to fetch matchups')
-      }
-    } catch (err) {
-      console.error('Error fetching matchups:', err)
-      setError(err instanceof Error ? err.message : 'Failed to fetch matchups')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleMatchupClick = (week: number, team1Id: string, team2Id: string) => {
+  const handleMatchupClick = useCallback((week: number, team1Id: string, team2Id: string) => {
     setSelectedWeekForDetails(week)
     setSelectedTeamIds({ team1Id, team2Id })
     setIsMatchupModalOpen(true)
-  }
+  }, [])
 
   const fetchAllLineups = async () => {
     try {
@@ -149,7 +120,7 @@ export default function ScoreboardPage() {
     }
   }
 
-  const getResultColor = (result: 'W' | 'L' | 'T') => {
+  const getResultColor = useCallback((result: 'W' | 'L' | 'T') => {
     switch (result) {
       case 'W':
         return 'bg-green-100 text-green-800 border-green-200'
@@ -160,7 +131,33 @@ export default function ScoreboardPage() {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
-  }
+  }, [])
+
+  // Memoize the week options to prevent re-rendering
+  const weekOptions = useMemo(() => 
+    Array.from({ length: 18 }, (_, i) => i + 1), []
+  )
+
+  // Loading skeleton component
+  const MatchupSkeleton = () => (
+    <div className="border border-border rounded-lg p-4 animate-pulse">
+      <div className="grid grid-cols-3 items-center gap-4">
+        <div className="flex items-center justify-end gap-3">
+          <div className="h-6 w-8 bg-gray-200 rounded"></div>
+          <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          <div className="h-8 w-12 bg-gray-200 rounded"></div>
+        </div>
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-4 w-8 bg-gray-200 rounded"></div>
+        </div>
+        <div className="flex items-center justify-start gap-3">
+          <div className="h-8 w-12 bg-gray-200 rounded"></div>
+          <div className="h-4 w-24 bg-gray-200 rounded"></div>
+          <div className="h-6 w-8 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -332,9 +329,9 @@ export default function ScoreboardPage() {
                   <SelectValue placeholder={currentWeekLoading ? "Loading..." : "Week"} />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 18 }, (_, i) => (
-                    <SelectItem key={i + 1} value={(i + 1).toString()}>
-                      Week {i + 1}
+                  {weekOptions.map((weekNum) => (
+                    <SelectItem key={weekNum} value={weekNum.toString()}>
+                      Week {weekNum}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -391,11 +388,10 @@ export default function ScoreboardPage() {
                     </div>
 
                     {loading ? (
-                      <div className="flex items-center justify-center py-8">
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                          <p className="text-muted-foreground">Loading matchups...</p>
-                        </div>
+                      <div className="space-y-4">
+                        {Array.from({ length: 8 }, (_, i) => (
+                          <MatchupSkeleton key={i} />
+                        ))}
                       </div>
                     ) : matchups.length === 0 ? (
                       <div className="text-center py-8">

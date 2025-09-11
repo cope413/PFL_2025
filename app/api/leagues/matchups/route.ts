@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWeek, getResults, getTeamNameMap } from '@/lib/database';
 import { Matchup, ApiResponse } from '@/lib/db-types';
 
+// Simple in-memory cache for matchups data
+const matchupsCache = new Map<string, { data: Matchup[], timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,6 +16,17 @@ export async function GET(request: NextRequest) {
     if (!week) {
       const currentWeek = await getCurrentWeek();
       week = currentWeek.toString();
+    }
+
+    // Check cache first
+    const cacheKey = `${leagueId}_${week}`;
+    const cached = matchupsCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+      return NextResponse.json<ApiResponse<Matchup[]>>({
+        success: true,
+        data: cached.data,
+        message: 'Matchups retrieved from cache'
+      });
     }
 
     // Check if WeeklyMatchups table exists
@@ -51,47 +66,56 @@ export async function GET(request: NextRequest) {
     // Transform the weekly data into individual matchups
     const matchups: Matchup[] = [];
 
-    // Helper function to calculate team score for a given week
-    const calculateTeamScore = async (teamId: string, week: number): Promise<{ actual: number, projected: number }> => {
+    // Optimized function to calculate all team scores in one query
+    const calculateAllTeamScores = async (weekNumber: number): Promise<Map<string, number>> => {
       try {
-        // Get the team's lineup for this week
-        const lineup = await getResults({
-          sql: 'SELECT * FROM Lineups WHERE owner_ID = ? AND week = ?',
-          args: [teamId, week.toString()]
+        // Get all lineups for this week in one query
+        const lineups = await getResults({
+          sql: 'SELECT owner_ID, QB, RB_1, WR_1, FLEX_1, FLEX_2, TE, K, DEF FROM Lineups WHERE week = ?',
+          args: [weekNumber.toString()]
         });
 
-        if (!lineup || lineup.length === 0) {
-          return { actual: 0, projected: 0 };
+        if (!lineups || lineups.length === 0) {
+          return new Map();
         }
 
-        const teamLineup = lineup[0];
-        let actualScore = 0;
+        // Get all player points for this week in one query
+        const playerPoints = await getResults({
+          sql: `SELECT player_ID, week_${weekNumber} as points FROM Points WHERE week_${weekNumber} IS NOT NULL`,
+          args: []
+        });
 
-        // Calculate scores for each position
+        // Create a map for quick player point lookups
+        const pointsMap = new Map<string, number>();
+        playerPoints.forEach((row: any) => {
+          pointsMap.set(row.player_ID, Math.floor(row.points || 0));
+        });
+
+        // Calculate scores for all teams
+        const teamScores = new Map<string, number>();
         const positions = ['QB', 'RB_1', 'WR_1', 'FLEX_1', 'FLEX_2', 'TE', 'K', 'DEF'];
-        
-        for (const pos of positions) {
-          const playerId = teamLineup[pos];
-          if (playerId) {
-            // Get player's points for this week
-            const playerPoints = await getResults({
-              sql: `SELECT week_${week} as points FROM Points WHERE player_ID = ?`,
-              args: [playerId]
-            });
 
-            if (playerPoints && playerPoints.length > 0) {
-              const points = playerPoints[0].points === null ? 0 : Math.floor(playerPoints[0].points || 0);
-              actualScore += points;
+        lineups.forEach((lineup: any) => {
+          let totalScore = 0;
+          positions.forEach(pos => {
+            const playerId = lineup[pos];
+            if (playerId && pointsMap.has(playerId)) {
+              totalScore += pointsMap.get(playerId) || 0;
             }
-          }
-        }
+          });
+          teamScores.set(lineup.owner_ID, totalScore);
+        });
 
-        return { actual: actualScore, projected: 0 };
+        return teamScores;
       } catch (error) {
-        console.error(`Error calculating score for team ${teamId} week ${week}:`, error);
-        return { actual: 0, projected: 0 };
+        console.error(`Error calculating team scores for week ${weekNumber}:`, error);
+        return new Map();
       }
     };
+
+    // Calculate all team scores once for the requested week
+    const teamScores = await calculateAllTeamScores(parseInt(week));
+    const currentWeek = await getCurrentWeek();
 
     for (const weekRow of weeklyData) {
       const weekNumber = weekRow.Week;
@@ -109,18 +133,17 @@ export async function GET(request: NextRequest) {
           const team1Name = teamNameMap.get(team1Id) || team1Id;
           const team2Name = teamNameMap.get(team2Id) || team2Id;
 
-          // Calculate actual scores for both teams
-          const team1Scores = await calculateTeamScore(team1Id, weekNumber);
-          const team2Scores = await calculateTeamScore(team2Id, weekNumber);
+          // Get pre-calculated scores
+          const team1Score = teamScores.get(team1Id) || 0;
+          const team2Score = teamScores.get(team2Id) || 0;
 
           // Determine if the matchup is complete (for completed weeks)
-          const currentWeek = await getCurrentWeek();
           const isComplete = weekNumber < currentWeek;
 
           // Determine result (from team1's perspective)
           let result: 'W' | 'L' | 'T' = 'L';
-          if (team1Scores.actual > team2Scores.actual) result = 'W';
-          else if (team1Scores.actual === team2Scores.actual) result = 'T';
+          if (team1Score > team2Score) result = 'W';
+          else if (team1Score === team2Score) result = 'T';
 
           matchups.push({
             id: `week${weekNumber}_match${i + 1}`,
@@ -129,10 +152,10 @@ export async function GET(request: NextRequest) {
             team2_id: team2Id,
             team1_name: team1Name,
             team2_name: team2Name,
-            team1_score: team1Scores.actual,
-            team2_score: team2Scores.actual,
-            team1_projected: team1Scores.projected,
-            team2_projected: team2Scores.projected,
+            team1_score: team1Score,
+            team2_score: team2Score,
+            team1_projected: 0, // Projected scores not implemented yet
+            team2_projected: 0,
             date: `2024-09-${String(weekNumber + 20).padStart(2, '0')}`, // Mock date based on week
             is_complete: isComplete,
             result: result
@@ -149,6 +172,12 @@ export async function GET(request: NextRequest) {
         message: `No matchups found for week ${week}`
       });
     }
+
+    // Cache the results
+    matchupsCache.set(cacheKey, {
+      data: matchups,
+      timestamp: Date.now()
+    });
 
     return NextResponse.json<ApiResponse<Matchup[]>>({
       success: true,
