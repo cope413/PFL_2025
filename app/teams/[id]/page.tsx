@@ -101,28 +101,26 @@ export default function TeamDetailsPage() {
           setPlayers(rosterData.data?.roster || []);
         }
 
-        // Fetch team matchups for all weeks
-        const allMatchups: Matchup[] = [];
-        
-        // Fetch matchups for weeks 1-20 (full season)
-        for (let week = 1; week <= 20; week++) {
-          try {
-            const matchupsResponse = await fetch(`/api/leagues/matchups?leagueId=l1&week=${week}`);
-            if (matchupsResponse.ok) {
-              const matchupsData = await matchupsResponse.json();
-              if (matchupsData.data && matchupsData.data.length > 0) {
-                const weekMatchups = matchupsData.data.filter((m: Matchup) => 
-                  m.team1_id === teamId || m.team2_id === teamId
-                );
-                allMatchups.push(...weekMatchups);
-              }
+        // Fetch team matchups for all weeks using batch endpoint
+        try {
+          const matchupsResponse = await fetch(`/api/teams/${teamId}/matchups`);
+          if (matchupsResponse.ok) {
+            const matchupsData = await matchupsResponse.json();
+            if (matchupsData.success && matchupsData.data) {
+              setMatchups(matchupsData.data);
+              console.log(`✅ Fetched ${matchupsData.data.length} matchups for team ${teamId} in single request`);
+            } else {
+              console.error('Failed to fetch matchups:', matchupsData.error);
+              setMatchups([]);
             }
-          } catch (error) {
-            console.error(`Error fetching matchups for week ${week}:`, error);
+          } else {
+            console.error('Matchups API request failed:', matchupsResponse.statusText);
+            setMatchups([]);
           }
+        } catch (error) {
+          console.error('Error fetching team matchups:', error);
+          setMatchups([]);
         }
-        
-        setMatchups(allMatchups);
 
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
