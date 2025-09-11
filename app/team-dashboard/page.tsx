@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -101,6 +101,8 @@ export default function TeamDashboard() {
   const [lockedPlayers, setLockedPlayers] = useState<Set<string>>(new Set())
   const { toast } = useToast()
   const [fetchedRosterForWeek, setFetchedRosterForWeek] = useState<string | null>(null)
+  const [loadingLineup, setLoadingLineup] = useState(false)
+  const fetchingRosterRef = useRef(false)
 
   useEffect(() => {
     console.log('🔍 useEffect [user, authLoading, router] #5 triggered')
@@ -128,36 +130,30 @@ export default function TeamDashboard() {
     }
   }, [currentWeek, currentWeekLoading])
 
+  // Single useEffect for initial roster fetch - only runs once per week change
   useEffect(() => {
-    console.log('🔍 useEffect [selectedWeek, initialLoadComplete] #1 triggered - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete, 'fetchedRosterForWeek:', fetchedRosterForWeek)
-    if (selectedWeek && !initialLoadComplete && fetchedRosterForWeek !== selectedWeek) {
-      console.log('🔍 #1 Calling fetchTeamRoster for initial load')
+    console.log('🔍 useEffect [selectedWeek] triggered - selectedWeek:', selectedWeek, 'fetchedRosterForWeek:', fetchedRosterForWeek)
+    if (selectedWeek && fetchedRosterForWeek !== selectedWeek) {
+      console.log('🔍 Fetching roster for week:', selectedWeek)
       setFetchedRosterForWeek(selectedWeek)
       fetchTeamRoster()
-    } else if (selectedWeek && initialLoadComplete) {
-      console.log('🔍 #1 Week changed, resetting submission state only')
-      // Reset submission state when week changes - NO roster fetch
+      // Reset submission state when week changes
       setHasSubmittedLineup(false)
-      // Reset the state so we can fetch roster for the new week
-      setFetchedRosterForWeek(null)
-    } else {
-      console.log('🔍 #1 Not calling lineup functions - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete, 'fetchedRosterForWeek:', fetchedRosterForWeek)
     }
-  }, [selectedWeek, initialLoadComplete, fetchedRosterForWeek]) // Fetch roster on initial load only
-
+  }, [selectedWeek]) // Only depend on selectedWeek to prevent loops
 
   // Separate useEffect for loading lineup after roster is fetched
   useEffect(() => {
-    console.log('🔍 useEffect [selectedWeek, initialLoadComplete] #2 for lineup triggered - selectedWeek:', selectedWeek, 'initialLoadComplete:', initialLoadComplete, 'players.length:', players.length)
-    if (selectedWeek && initialLoadComplete && players.length > 0) {
-      console.log('🔍 #2 Calling loadLineup after roster is loaded')
+    console.log('🔍 useEffect [players.length, fetchedRosterForWeek] for lineup triggered - players.length:', players.length, 'fetchedRosterForWeek:', fetchedRosterForWeek)
+    if (players.length > 0 && fetchedRosterForWeek === selectedWeek) {
+      console.log('🔍 Loading lineup after roster is loaded')
       loadLineup()
       fetchLockedPlayers()
     }
-  }, [selectedWeek, initialLoadComplete]) // Removed players.length dependency
+  }, [players.length, fetchedRosterForWeek, selectedWeek]) // Depend on players.length and fetchedRosterForWeek
 
   const fetchTeamRoster = async (isRefresh = false) => {
-    console.log('🔍 fetchTeamRoster called with isRefresh:', isRefresh, 'stack trace:', new Error().stack)
+    console.log('🔍 fetchTeamRoster called with isRefresh:', isRefresh, 'fetchingRosterRef.current:', fetchingRosterRef.current)
     try {
       // If we already have players loaded and this is not a refresh, don't fetch again
       if (players.length > 0 && !isRefresh) {
@@ -165,7 +161,14 @@ export default function TeamDashboard() {
         return
       }
       
+      // Prevent duplicate calls if already fetching
+      if (fetchingRosterRef.current && !isRefresh) {
+        console.log('🔍 Skipping roster fetch - already fetching')
+        return
+      }
+      
       if (!isRefresh) {
+        fetchingRosterRef.current = true
         setLoading(true)
         setError(null)
       }
@@ -209,6 +212,7 @@ export default function TeamDashboard() {
       console.error('Error fetching team roster:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch team roster')
     } finally {
+      fetchingRosterRef.current = false
       if (!isRefresh) {
         setLoading(false)
       }
@@ -261,7 +265,21 @@ export default function TeamDashboard() {
   }
 
   const loadLineup = async () => {
+    // Prevent duplicate calls if already loading
+    if (loadingLineup) {
+      console.log('🔍 Skipping lineup load - already loading')
+      return
+    }
+
+    // Prevent duplicate calls if we already have starters set
+    const currentStarters = players.filter(p => p.isStarter)
+    if (currentStarters.length > 0) {
+      console.log('🔍 Skipping lineup load - already have starters set')
+      return
+    }
+
     try {
+      setLoadingLineup(true)
       const token = localStorage.getItem('auth_token')
       if (!token) {
         console.log('No auth token found for lineup loading')
@@ -291,14 +309,12 @@ export default function TeamDashboard() {
       console.log('Lineup API result:', result)
       
       if (result.success && result.data) {
-        console.log('Loaded lineup:', result.data)
+        console.log('Loaded lineup for week:', selectedWeek)
         
         // Update players to reflect the loaded lineup
         const lineup = result.data
+        
         setPlayers(prevPlayers => {
-          console.log('Before lineup update - Tetairoa McMillan status:', 
-            prevPlayers.find(p => p.name === 'Tetairoa McMillan')?.status)
-          
           const updatedPlayers = prevPlayers.map(player => ({
             ...player, // Preserve all existing player data including injury status
             isStarter: 
@@ -312,8 +328,19 @@ export default function TeamDashboard() {
               player.id === lineup.DEF
           }))
           
-          console.log('After lineup update - Tetairoa McMillan status:', 
-            updatedPlayers.find(p => p.name === 'Tetairoa McMillan')?.status)
+          const starters = updatedPlayers.filter(p => p.isStarter)
+          const bench = updatedPlayers.filter(p => !p.isStarter)
+          console.log('✅ Lineup loaded - Starters:', starters.length, 'Bench:', bench.length)
+          
+          // Check if lineup has actually changed to prevent unnecessary re-renders
+          const currentStarters = prevPlayers.filter(p => p.isStarter)
+          const hasChanged = starters.length !== currentStarters.length || 
+            !starters.every((starter, index) => starter.id === currentStarters[index]?.id)
+          
+          if (!hasChanged) {
+            console.log('Lineup unchanged, skipping state update')
+            return prevPlayers
+          }
           
           return updatedPlayers
         })
@@ -333,6 +360,8 @@ export default function TeamDashboard() {
       }
     } catch (err) {
       console.error('Error loading lineup:', err)
+    } finally {
+      setLoadingLineup(false)
     }
   }
 

@@ -21,11 +21,23 @@ function mapToUser(row: any): User {
   };
 }
 
+// Cache for current week to avoid repeated database calls
+let currentWeekCache: { week: number; date: string; timestamp: number } | null = null;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // Function to determine current week based on date ranges
 export async function getCurrentWeek(): Promise<number> {
   try {
     const currentDate = new Date();
     const currentDateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+    // Check cache first
+    if (currentWeekCache && 
+        currentWeekCache.date === currentDateStr && 
+        (Date.now() - currentWeekCache.timestamp) < CACHE_TTL) {
+      console.log('Using cached current week:', currentWeekCache.week);
+      return currentWeekCache.week;
+    }
 
     console.log('Current date:', currentDateStr);
 
@@ -54,6 +66,14 @@ export async function getCurrentWeek(): Promise<number> {
 
       if (currentDateStr >= startDateConverted && currentDateStr <= endDateConverted) {
         console.log(`Found matching week: ${weekNum}`);
+        
+        // Cache the result
+        currentWeekCache = {
+          week: weekNum,
+          date: currentDateStr,
+          timestamp: Date.now()
+        };
+        
         return weekNum;
       }
     }
