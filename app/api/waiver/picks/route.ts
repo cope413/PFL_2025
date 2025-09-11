@@ -140,20 +140,20 @@ export async function POST(request: NextRequest) {
         }
 
         const draft = await getWaiverDraftByWeek(parseInt(statusDraftId));
-        const draftOrder = await getWaiverDraftOrder(statusDraftId);
+        const statusDraftOrder = await getWaiverDraftOrder(statusDraftId);
         const picks = await getWaiverPicks(statusDraftId);
-        const waivedPlayers = await getWaivedPlayers();
+        const statusWaivedPlayers = await getWaivedPlayers();
 
         return NextResponse.json({
           success: true,
           data: {
             draft,
-            draftOrder,
+            draftOrder: statusDraftOrder,
             picks,
-            waivedPlayers,
+            waivedPlayers: statusWaivedPlayers,
             currentPick: picks.length + 1,
-            totalPicks: waivedPlayers.length,
-            isComplete: picks.length >= waivedPlayers.length
+            totalPicks: statusWaivedPlayers.length,
+            isComplete: picks.length >= statusWaivedPlayers.length
           }
         });
 
