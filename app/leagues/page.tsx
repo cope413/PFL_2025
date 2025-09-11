@@ -36,6 +36,7 @@ import { useMatchupDetails } from "@/hooks/useMatchupDetails"
 import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
 import { useStandings } from "@/hooks/useStandings"
 import { useMatchups } from "@/hooks/useMatchups"
+import { useAwards } from "@/hooks/useAwards"
 
 export default function LeaguesPage() {
   const router = useRouter();
@@ -43,6 +44,7 @@ export default function LeaguesPage() {
   const { currentWeek, loading: currentWeekLoading } = useCurrentWeek();
   const { standings, loading: standingsLoading, error: standingsError } = useStandings();
   const { matchups, loading, error } = useMatchups(undefined, 'l1'); // No week specified, will use current week
+  const { awards, loading: awardsLoading, error: awardsError } = useAwards();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [selectedWeekForDetails, setSelectedWeekForDetails] = useState<number | null>(null);
   const [isMatchupModalOpen, setIsMatchupModalOpen] = useState(false);
@@ -50,10 +52,6 @@ export default function LeaguesPage() {
   const { matchupDetails, loading: matchupDetailsLoading, error: matchupDetailsError, fetchMatchupDetails } = useMatchupDetails(selectedWeekForDetails || undefined, selectedTeamIds);
 
   // Remove authentication requirement for public access
-
-  const handleOpenPDF = () => {
-    window.open('/scoring.pdf', '_blank');
-  };
 
   const handleMatchupClick = (week: number, team1Id: string, team2Id: string) => {
     setSelectedWeekForDetails(week);
@@ -275,6 +273,7 @@ export default function LeaguesPage() {
                   <TabsList className="mb-4">
                     <TabsTrigger value="standings">Standings</TabsTrigger>
                     <TabsTrigger value="schedule">Schedule</TabsTrigger>
+                    <TabsTrigger value="awards">Awards</TabsTrigger>
                     <TabsTrigger value="rules">Rules</TabsTrigger>
                   </TabsList>
                   <TabsContent value="standings">
@@ -411,20 +410,729 @@ export default function LeaguesPage() {
                       </div>
                     </div>
                   </TabsContent>
+                  <TabsContent value="awards">
+                    <div className="space-y-6">
+                      {awardsLoading ? (
+                        <div className="flex items-center justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                          <span>Loading awards...</span>
+                        </div>
+                      ) : awardsError ? (
+                        <div className="text-center py-8 text-red-600">
+                          Error loading awards: {awardsError}
+                        </div>
+                      ) : awards ? (
+                        <div className="space-y-8">
+                          {/* First Half Awards */}
+                          <div>
+                            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                              <Trophy className="h-5 w-5 text-amber-500" />
+                              First Half of Season (Weeks 1-7)
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <Target className="h-5 w-5 text-blue-500" />
+                                    High Game Score
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-blue-600">
+                                      {awards.firstHalf.highGameScore.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.firstHalf.highGameScore.teamName}
+                                    </div>
+                                    {awards.firstHalf.highGameScore.week && (
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Week {awards.firstHalf.highGameScore.week}
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <TrendingUp className="h-5 w-5 text-orange-500" />
+                                    High Losing Score
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-orange-600">
+                                      {awards.firstHalf.highLosingScore.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.firstHalf.highLosingScore.teamName}
+                                    </div>
+                                    {awards.firstHalf.highLosingScore.week && (
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Week {awards.firstHalf.highLosingScore.week}
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <BarChart3 className="h-5 w-5 text-red-500" />
+                                    Toughest Schedule
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-red-600">
+                                      {awards.firstHalf.toughestSchedule.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.firstHalf.toughestSchedule.teamName}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Points Against
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <Award className="h-5 w-5 text-purple-500" />
+                                    Best Loser
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-purple-600">
+                                      {awards.firstHalf.bestLoser.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.firstHalf.bestLoser.teamName}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Points in Losses
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          </div>
+
+                          {/* Second Half Awards */}
+                          <div>
+                            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                              <Trophy className="h-5 w-5 text-amber-500" />
+                              Second Half of Season (Weeks 8-14)
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <Target className="h-5 w-5 text-blue-500" />
+                                    High Game Score
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-blue-600">
+                                      {awards.secondHalf.highGameScore.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.secondHalf.highGameScore.teamName}
+                                    </div>
+                                    {awards.secondHalf.highGameScore.week && (
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Week {awards.secondHalf.highGameScore.week}
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <TrendingUp className="h-5 w-5 text-orange-500" />
+                                    High Losing Score
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-orange-600">
+                                      {awards.secondHalf.highLosingScore.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.secondHalf.highLosingScore.teamName}
+                                    </div>
+                                    {awards.secondHalf.highLosingScore.week && (
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        Week {awards.secondHalf.highLosingScore.week}
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <BarChart3 className="h-5 w-5 text-red-500" />
+                                    Toughest Schedule
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-red-600">
+                                      {awards.secondHalf.toughestSchedule.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.secondHalf.toughestSchedule.teamName}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Points Against
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card>
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-lg flex items-center gap-2">
+                                    <Award className="h-5 w-5 text-purple-500" />
+                                    Best Loser
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <div className="text-center">
+                                    <div className="text-2xl font-bold text-purple-600">
+                                      {awards.secondHalf.bestLoser.value.toFixed(1)}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {awards.secondHalf.bestLoser.teamName}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground mt-1">
+                                      Points in Losses
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          No awards data available
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
                   <TabsContent value="rules">
                     <div className="space-y-6">
                       <div>
                         <h3 className="text-lg font-medium mb-3">Scoring Rules</h3>
-                        <div className="rounded-lg border p-4">
-                          <iframe 
-                            src="/scoring.pdf" 
-                            className="w-full h-96 border-0"
-                            title="Scoring Rules PDF"
-                          />
-                          <div className="mt-4 text-center">
-                            <Button variant="outline" onClick={handleOpenPDF}>
-                              Open PDF in New Tab
-                            </Button>
+                        <div className="rounded-lg border p-6">
+                          <div className="space-y-6">
+                            {/* General Scoring */}
+                            <div>
+                              <h4 className="text-md font-semibold mb-3 text-blue-700">1. Offensive, Defensive & Special Teams Scoring (General)</h4>
+                              <div className="overflow-x-auto">
+                                <table className="w-full border-collapse border border-gray-300">
+                                  <thead>
+                                    <tr className="bg-gray-50">
+                                      <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                      <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td className="border border-gray-300 px-4 py-2 font-medium">Touchdowns (Overtime scores count double):</td>
+                                      <td className="border border-gray-300 px-4 py-2"></td>
+                                    </tr>
+                                    <tr>
+                                      <td className="border border-gray-300 px-4 py-2 pl-8">Less than 20 yards</td>
+                                      <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="border border-gray-300 px-4 py-2 pl-8">20 - 49 yards</td>
+                                      <td className="border border-gray-300 px-4 py-2 text-center">9</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="border border-gray-300 px-4 py-2 pl-8">50 - 79 yards</td>
+                                      <td className="border border-gray-300 px-4 py-2 text-center">12</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="border border-gray-300 px-4 py-2 pl-8">80 yards or more</td>
+                                      <td className="border border-gray-300 px-4 py-2 text-center">15</td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+
+                            {/* Offensive Points */}
+                            <div>
+                              <h4 className="text-md font-semibold mb-3 text-green-700">2. Offensive Points (No Overtime Bonus unless noted)</h4>
+                              <div className="space-y-4">
+                                {/* PAT */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Point(s) After Touchdown (Overtime scores count double):</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">One Point Conversion</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">1</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">Two Point Conversion - Passing</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">3</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">Two Point Conversion - Rushing or Receiving</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">3</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+
+                                {/* Field Goals */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Field Goals (Overtime scores count double):</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">0 - 39 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">3</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">40 - 49 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">50-59 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">9</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">60-69 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">12</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">70+ yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">15</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+
+                                {/* Passing Yards */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Passing Yards:</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">0 - 199 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">0</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">200-249 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">2</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">250-299 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">4</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">300-334 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">335-364 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">8</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">365-399 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">10</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">400-434 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">12</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">435-464 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">14</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">465-499 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">16</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">500-534 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">18</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">535-564 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">20</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">565-599 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">22</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">600 & up yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">24</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+
+                                {/* Rushing/Receiving Yards */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Rushing or Receiving Yards:</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">0 - 49 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">0</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">50 - 74 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">2</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">75-99 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">4</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">100-134 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">135-164 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">8</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">165-199 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">10</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">200-234 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">12</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">235-264 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">14</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">265-299 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">16</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">300-334 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">18</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">335-364 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">20</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">365-399 yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">22</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">400 & up yards</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">24</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+
+                                {/* Reception Points */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Reception Points (see note below):</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">0 - 2 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">0</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">3 - 5 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">1</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">6 - 8 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">3</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">9-11 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">12-14 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">9</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">15-17 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">12</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">18-20 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">15</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">21-23 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">18</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">24-26 catches</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">21</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mt-2 italic">
+                                    <strong>Note:</strong> Reception Points only apply when they exceed points for Receiving Yards (excluding bonus points) and are instead of yardage points, not in addition to. This category does not affect Combined Yards Bonus points.
+                                  </p>
+                                </div>
+
+                                {/* Carries Points */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Carries Points (see note below):</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">0 - 11 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">0</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">12-17 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">1</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">18-23 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">3</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">24-29 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">30-35 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">9</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">36-41 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">12</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">42-47 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">15</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">48-53 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">18</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">54-59 carries</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">21</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                  <p className="text-sm text-gray-600 mt-2 italic">
+                                    <strong>Note:</strong> Carries Points only apply when they exceed points for Rushing Yards (excluding bonus points) and are instead of yardage points, not in addition to. This category does not affect Combined Yards Bonus points.
+                                  </p>
+                                </div>
+
+                                {/* Combined Yards Bonus */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Combined Yards Bonus Points (in addition to Yardage, Carries and Reception pts):</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">50 yards rushing & 50 yards receiving</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">2</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">75 yards rushing & 75 yards receiving</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">4</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">100 yards rushing & 100 yards receiving</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">50 yards rushing or receiving & 200 yards passing</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">2</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">75 yards rushing or receiving & 250 yards passing</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">4</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">100 yards rushing or receiving & 300 yards passing</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Defensive Points */}
+                            <div>
+                              <h4 className="text-md font-semibold mb-3 text-red-700">3. Defensive Points (includes defense and special teams) (No Overtime Bonus unless noted)</h4>
+                              <div className="space-y-4">
+                                {/* Basic Defensive Stats */}
+                                <div>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">Sack</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">1</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">Turnover (fumble recovered by the Defense or interception) (as reported by the NFL)</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">1</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">Safety (Overtime scores count double)</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">Extra Point (or two point) attempt returned by the Defense for a score</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+
+                                {/* Net Yards Allowed */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Net Yards Allowed (team yards allowed [passing+rushing-sacks]) (only one applies):</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">a) Team holds opponent under 200 yards (entire game)</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">6</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">b) Team gives up more than 199 yards and less than 240 yards (entire game)</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">4</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">c) Team gives up more than 239 yards and less than 280 yards (entire game)</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">2</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+
+                                {/* Points Allowed */}
+                                <div>
+                                  <h5 className="font-medium mb-2">Points Allowed (includes Off., Def. & Sp. Teams scores) (only one applies):</h5>
+                                  <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse border border-gray-300">
+                                      <thead>
+                                        <tr className="bg-gray-50">
+                                          <th className="border border-gray-300 px-4 py-2 text-left font-medium">Description</th>
+                                          <th className="border border-gray-300 px-4 py-2 text-center font-medium">Points</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">a) Less than 7 points scored (per quarter, excludes overtime)</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">1</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">b) No points allowed (per quarter, excludes overtime)</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">2</td>
+                                        </tr>
+                                        <tr>
+                                          <td className="border border-gray-300 px-4 py-2">c) Shutout for entire game including overtime</td>
+                                          <td className="border border-gray-300 px-4 py-2 text-center">12 total</td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
