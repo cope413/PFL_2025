@@ -498,7 +498,7 @@ export default function WaiverManagement({ teamId }: WaiverManagementProps) {
             <div className="flex items-start gap-2">
               <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
               <div>
-                <strong>Draft Order:</strong> Based on worst record, lowest points scored, then highest draft order
+                <strong>Draft Order:</strong> Based on worst record, lowest points scored
               </div>
             </div>
             <div className="flex items-start gap-2">
