@@ -110,7 +110,7 @@ export function AllLineupsModal({ isOpen, onClose, data, loading, error }: AllLi
               <p className="text-muted-foreground">No lineups submitted for Week {week}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {lineups.map((lineup) => (
                 <div key={lineup.teamId} className="border border-border rounded-lg p-3">
                   <div className="mb-3">
@@ -121,36 +121,36 @@ export function AllLineupsModal({ isOpen, onClose, data, loading, error }: AllLi
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">QB:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">QB:</span>
                       <span>{lineup.QB || 'Empty'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">RB:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">RB:</span>
                       <span>{lineup.RB_1 || 'Empty'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">WR:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">WR:</span>
                       <span>{lineup.WR_1 || 'Empty'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">TE:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">TE:</span>
                       <span>{lineup.TE || 'Empty'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">FLEX 1:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">FLEX 1:</span>
                       <span>{lineup.FLEX_1 || 'Empty'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">FLEX 2:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">FLEX 2:</span>
                       <span>{lineup.FLEX_2 || 'Empty'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">K:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">K:</span>
                       <span>{lineup.K || 'Empty'}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="font-medium text-muted-foreground">D/ST:</span>
+                    <div className="flex">
+                      <span className="font-medium text-muted-foreground w-16">D/ST:</span>
                       <span>{lineup.DEF || 'Empty'}</span>
                     </div>
                   </div>
