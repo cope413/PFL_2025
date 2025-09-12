@@ -73,13 +73,14 @@ export default function ScoreboardPage() {
   // Use the optimized useMatchups hook
   const { matchups, loading, error } = useMatchups(selectedWeek ? parseInt(selectedWeek) : undefined, 'l1')
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      // Redirect to login if no user is authenticated
-      router.push('/auth')
-      return
-    }
-  }, [user, authLoading, router])
+  // Remove authentication requirement - scoreboard is now public
+  // useEffect(() => {
+  //   if (!authLoading && !user) {
+  //     // Redirect to login if no user is authenticated
+  //     router.push('/auth')
+  //     return
+  //   }
+  // }, [user, authLoading, router])
 
   useEffect(() => {
     if (!currentWeekLoading && currentWeek > 0) {
@@ -211,18 +212,26 @@ export default function ScoreboardPage() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button>
-            <Avatar>
-              <AvatarImage src="" alt="User" />
-              <AvatarFallback>{user?.team || "U"}</AvatarFallback>
-            </Avatar>
-            <Button variant="outline" size="sm" onClick={logout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
+            {user ? (
+              <>
+                <Button variant="outline" size="sm" className="hidden md:flex bg-transparent" onClick={() => router.push('/settings')}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Button>
+                <Avatar>
+                  <AvatarImage src="" alt="User" />
+                  <AvatarFallback>{user?.team || "U"}</AvatarFallback>
+                </Avatar>
+                <Button variant="outline" size="sm" onClick={logout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" size="sm" onClick={() => router.push('/auth')}>
+                Login
+              </Button>
+            )}
             
             {/* Mobile Menu Button */}
             <Button
@@ -299,18 +308,32 @@ export default function ScoreboardPage() {
                 </Link>
               )}
               <div className="pt-2 border-t">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full justify-start bg-transparent" 
-                  onClick={() => {
-                    router.push('/settings')
-                    setIsMobileMenuOpen(false)
-                  }}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Button>
+                {user ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start bg-transparent" 
+                    onClick={() => {
+                      router.push('/settings')
+                      setIsMobileMenuOpen(false)
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full justify-start bg-transparent" 
+                    onClick={() => {
+                      router.push('/auth')
+                      setIsMobileMenuOpen(false)
+                    }}
+                  >
+                    Login
+                  </Button>
+                )}
               </div>
             </nav>
           </div>
@@ -336,15 +359,17 @@ export default function ScoreboardPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Button 
-                onClick={fetchAllLineups} 
-                disabled={allLineupsLoading || !selectedWeek}
-                variant="outline"
-                size="sm"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                {allLineupsLoading ? 'Loading...' : 'View All Lineups'}
-              </Button>
+              {user && (
+                <Button 
+                  onClick={fetchAllLineups} 
+                  disabled={allLineupsLoading || !selectedWeek}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  {allLineupsLoading ? 'Loading...' : 'View All Lineups'}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -357,11 +382,11 @@ export default function ScoreboardPage() {
             </Alert>
           )}
 
-          {authLoading ? (
+          {authLoading && !user ? (
             <div className="mt-6 flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Checking authentication...</p>
+                <p className="text-muted-foreground">Loading...</p>
               </div>
             </div>
           ) : (
@@ -384,7 +409,9 @@ export default function ScoreboardPage() {
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <h2 className="text-xl font-semibold">Week {selectedWeek} Matchups</h2>
-                      <p className="text-sm text-muted-foreground">Click any matchup to view lineups</p>
+                      <p className="text-sm text-muted-foreground">
+                        {user ? 'Click any matchup to view lineups' : 'Login to view detailed lineups'}
+                      </p>
                     </div>
 
                     {loading ? (
@@ -402,8 +429,10 @@ export default function ScoreboardPage() {
                         {matchups.map((matchup) => (
                           <div
                             key={matchup.id}
-                            className="border border-border rounded-lg p-4 cursor-pointer hover:bg-muted/50 transition-colors"
-                            onClick={() => handleMatchupClick(matchup.week, matchup.team1_id, matchup.team2_id)}
+                            className={`border border-border rounded-lg p-4 transition-colors ${
+                              user ? 'cursor-pointer hover:bg-muted/50' : 'cursor-default'
+                            }`}
+                            onClick={user ? () => handleMatchupClick(matchup.week, matchup.team1_id, matchup.team2_id) : undefined}
                           >
                             <div className="grid grid-cols-3 items-center gap-4">
                               <div className="flex items-center justify-end gap-3">

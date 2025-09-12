@@ -81,14 +81,14 @@ export async function GET(request: NextRequest) {
 
         // Get all player points for this week in one query
         const playerPoints = await getResults({
-          sql: `SELECT player_ID, week_${weekNumber} as points FROM Points WHERE week_${weekNumber} IS NOT NULL`,
+          sql: `SELECT player_ID, COALESCE(week_${weekNumber}, 0) as points FROM Points`,
           args: []
         });
 
         // Create a map for quick player point lookups
         const pointsMap = new Map<string, number>();
         playerPoints.forEach((row: any) => {
-          pointsMap.set(row.player_ID, Math.floor(row.points || 0));
+          pointsMap.set(row.player_ID.toString(), Math.floor(row.points || 0));
         });
 
         // Calculate scores for all teams
