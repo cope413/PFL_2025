@@ -39,18 +39,36 @@ interface Player {
   status: string;
 }
 
+interface WaivedPlayer {
+  player_id: string;
+  team_id: string;
+  waiver_order: number;
+  waived_at: string;
+  status: string;
+  player_name: string;
+  position: string;
+  nfl_team: string;
+  team_name: string;
+  owner_name: string;
+  total_points: number;
+  avg_points: number;
+}
+
 export default function PlayersPage() {
   const { user, loading: authLoading, logout } = useAuth()
   const router = useRouter()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [players, setPlayers] = useState<Player[]>([])
   const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([])
+  const [waivedPlayers, setWaivedPlayers] = useState<WaivedPlayer[]>([])
   const [loading, setLoading] = useState(true)
+  const [waivedLoading, setWaivedLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPosition, setSelectedPosition] = useState('all')
   const [selectedTeam, setSelectedTeam] = useState('all')
   const [selectedOwnership, setSelectedOwnership] = useState('all')
+  const [activeTab, setActiveTab] = useState('all-players')
 
   // Fetch players data
   useEffect(() => {
@@ -76,6 +94,33 @@ export default function PlayersPage() {
 
     fetchPlayers()
   }, [])
+
+  // Fetch waived players data
+  const fetchWaivedPlayers = async () => {
+    try {
+      setWaivedLoading(true)
+      const response = await fetch('/api/waiver?action=waived-players')
+      const data = await response.json()
+      
+      if (data.success) {
+        setWaivedPlayers(data.data)
+      } else {
+        setError(data.error || 'Failed to fetch waived players')
+      }
+    } catch (err) {
+      setError('Failed to fetch waived players')
+      console.error('Error fetching waived players:', err)
+    } finally {
+      setWaivedLoading(false)
+    }
+  }
+
+  // Fetch waived players when tab is switched
+  useEffect(() => {
+    if (activeTab === 'waived-players' && waivedPlayers.length === 0) {
+      fetchWaivedPlayers()
+    }
+  }, [activeTab, waivedPlayers.length])
 
   // Filter players based on search term, position, and team
   useEffect(() => {
@@ -291,11 +336,18 @@ export default function PlayersPage() {
           </div>
 
           <div className="mt-6 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Player Search</CardTitle>
-                <CardDescription>Find players by name, team, position, or status</CardDescription>
-              </CardHeader>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="all-players">All Players</TabsTrigger>
+                <TabsTrigger value="waived-players">Waived Players</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="all-players" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Player Search</CardTitle>
+                    <CardDescription>Find players by name, team, position, or status</CardDescription>
+                  </CardHeader>
               <CardContent>
                 <div className="flex flex-col gap-4 md:flex-row">
                   <div className="relative flex-1">
@@ -479,6 +531,85 @@ export default function PlayersPage() {
                 )}
               </CardContent>
             </Card>
+              </TabsContent>
+              
+              <TabsContent value="waived-players" className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Waived Players</CardTitle>
+                    <CardDescription>Players who have been waived by teams and are available for pickup</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {waivedLoading ? (
+                      <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-2">
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                          <span>Loading waived players...</span>
+                        </div>
+                      </div>
+                    ) : error ? (
+                      <Alert>
+                        <AlertDescription>{error}</AlertDescription>
+                      </Alert>
+                    ) : (
+                      <div className="max-h-[600px] overflow-y-auto">
+                        <Table>
+                          <TableHeader className="sticky top-0 bg-background z-10">
+                            <TableRow>
+                              <TableHead>Player</TableHead>
+                              <TableHead>Position</TableHead>
+                              <TableHead>NFL Team</TableHead>
+                              <TableHead>Former Team</TableHead>
+                              <TableHead>Waived By</TableHead>
+                              <TableHead className="text-right">Total Points</TableHead>
+                              <TableHead className="text-right">Avg Points</TableHead>
+                              <TableHead>Waived Date</TableHead>
+                              <TableHead>Status</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {waivedPlayers.length === 0 ? (
+                              <TableRow>
+                                <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                                  No waived players found.
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              waivedPlayers.map((player, index) => (
+                                <TableRow key={player.player_id}>
+                                  <TableCell>
+                                    <div className="flex items-center gap-3">
+                                      <Avatar className="h-8 w-8">
+                                        <AvatarFallback>
+                                          {player.player_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div>
+                                        <div className="font-medium">{player.player_name}</div>
+                                      </div>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell>{player.position}</TableCell>
+                                  <TableCell>{player.nfl_team}</TableCell>
+                                  <TableCell>{player.team_name}</TableCell>
+                                  <TableCell>{player.owner_name}</TableCell>
+                                  <TableCell className="text-right font-medium">{player.total_points.toFixed(1)}</TableCell>
+                                  <TableCell className="text-right text-muted-foreground">{player.avg_points.toFixed(1)}</TableCell>
+                                  <TableCell>{new Date(player.waived_at).toLocaleDateString()}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="secondary" className="text-xs">{player.status}</Badge>
+                                  </TableCell>
+                                </TableRow>
+                              ))
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </main>

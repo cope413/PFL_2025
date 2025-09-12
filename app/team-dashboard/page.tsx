@@ -48,6 +48,8 @@ interface Player {
   team: string
   nflTeam: string
   projectedPoints: number
+  currentWeekPoints?: number
+  averagePoints?: number
   status: "healthy" | "questionable" | "doubtful" | "out" | "bye"
   isStarter: boolean
   byeWeek?: number
@@ -1196,9 +1198,9 @@ export default function TeamDashboard() {
                                         </div>
                                         <div className="flex items-center gap-3">
                                           <div className="text-right">
-                                            <div className="font-medium">{player.projectedPoints} pts</div>
+                                            <div className="font-medium">{player.currentWeekPoints || player.projectedPoints} pts</div>
                                             <div className="text-xs text-muted-foreground">
-                                              Average: {player.recentPerformance[0]}
+                                              Average: {player.averagePoints || player.recentPerformance[0]}
                                             </div>
                                           </div>
                                           <Badge variant="outline" className={getStatusColor(player.status)}>
@@ -1300,7 +1302,10 @@ export default function TeamDashboard() {
                                     </div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm font-medium">{player.recentPerformance[0]}</div>
+                                    <div className="text-sm font-medium">{player.currentWeekPoints || player.projectedPoints} pts</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      Average: {player.averagePoints || player.recentPerformance[0]}
+                                    </div>
                                     <Badge variant="outline" className={`text-xs ${getStatusColor(player.status)}`}>
                                       {getStatusText(player.status)}
                                     </Badge>

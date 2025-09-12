@@ -62,6 +62,9 @@ export async function GET(request: NextRequest) {
       // Calculate total points
       const totalPoints = weekPoints.reduce((sum, point) => sum + point, 0);
       
+      // Get current week points
+      const currentWeekPoints = weekPoints[currentWeek - 1] || 0;
+      
       // Calculate average points based on completed weeks (current week - 1)
       const completedWeeks = Math.max(1, currentWeek - 1);
       const averagePoints = completedWeeks > 0 
@@ -81,12 +84,14 @@ export async function GET(request: NextRequest) {
         position: player.position,
         team: player.team,
         nflTeam: player.nflTeam,
-        projectedPoints: 0, // Set to 0 since no real data exists
+        projectedPoints: currentWeekPoints, // Use current week points
+        currentWeekPoints: currentWeekPoints, // Add current week points
         status: injuryStatus as "healthy" | "questionable" | "doubtful" | "out" | "bye",
         byeWeek: player.byeWeek || undefined,
         teamId: player.team_id,
         ownerId: player.team,
         recentPerformance: [averagePoints], // Use calculated average points
+        averagePoints: averagePoints, // Add average points
         opponentInfo: opponentInfo // Add opponent information
       };
     });
