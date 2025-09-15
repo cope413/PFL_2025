@@ -4,7 +4,7 @@ import { Matchup, ApiResponse } from '@/lib/db-types';
 
 // Simple in-memory cache for matchups data
 const matchupsCache = new Map<string, { data: Matchup[], timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 30 * 1000; // 30 seconds (reduced for more frequent updates)
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,16 +18,16 @@ export async function GET(request: NextRequest) {
       week = currentWeek.toString();
     }
 
-    // Check cache first
-    const cacheKey = `${leagueId}_${week}`;
-    const cached = matchupsCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
-      return NextResponse.json<ApiResponse<Matchup[]>>({
-        success: true,
-        data: cached.data,
-        message: 'Matchups retrieved from cache'
-      });
-    }
+    // Cache disabled to ensure real-time score updates
+    // const cacheKey = `${leagueId}_${week}`;
+    // const cached = matchupsCache.get(cacheKey);
+    // if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+    //   return NextResponse.json<ApiResponse<Matchup[]>>({
+    //     success: true,
+    //     data: cached.data,
+    //     message: 'Matchups retrieved from cache'
+    //   });
+    // }
 
     // Check if WeeklyMatchups table exists
     const tableExists = await getResults(`
@@ -173,11 +173,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Cache the results
-    matchupsCache.set(cacheKey, {
-      data: matchups,
-      timestamp: Date.now()
-    });
+    // Cache disabled to ensure real-time score updates
+    // matchupsCache.set(cacheKey, {
+    //   data: matchups,
+    //   timestamp: Date.now()
+    // });
 
     return NextResponse.json<ApiResponse<Matchup[]>>({
       success: true,

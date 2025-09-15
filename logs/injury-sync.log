@@ -184,3 +184,183 @@ Found 256 players in database
   - out: 5 players
 
 🎉 Injury data sync completed successfully!
+[dotenv@17.2.2] injecting env (6) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+=== Starting Injury Data Sync ===
+
+=== Checking Database Schema ===
+✓ injury_status column already exists
+
+=== Getting Players from Database ===
+Found 256 players in database
+
+=== Fetching Injury Data from API Sports ===
+  Processed 1/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Christian Kirk (Houston Texans): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Evan Engram (Denver Broncos): Questionable -> questionable
+  Processed 11/256 players...
+  Processed 21/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Isaiah Likely (Baltimore Ravens): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Drake London (Atlanta Falcons): Questionable -> questionable
+  Processed 31/256 players...
+    Mapping: "NFI" -> "out"
+  - Joe Mixon (Houston Texans): NFI -> out
+  Processed 41/256 players...
+  Processed 51/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Brock Purdy (San Francisco 49ers): Questionable -> questionable
+    Mapping: "PUP" -> "out"
+  - Brandon Aiyuk (San Francisco 49ers): PUP -> out
+    Mapping: "Questionable" -> "questionable"
+  - Jauan Jennings (San Francisco 49ers): Questionable -> questionable
+  Processed 61/256 players...
+    Mapping: "Sidelined" -> "healthy"
+  - George Kittle (San Francisco 49ers): Sidelined -> healthy
+    Mapping: "Questionable" -> "questionable"
+  - Darnell Mooney (Atlanta Falcons): Questionable -> questionable
+  Processed 71/256 players...
+  Processed 81/256 players...
+    Mapping: "I.L." -> "out"
+  - Tyler Bass (Buffalo Bills): I.L. -> out
+  Processed 91/256 players...
+  Processed 101/256 players...
+    Mapping: "I.L." -> "out"
+  - Jason Sanders (Miami Dolphins): I.L. -> out
+  Processed 111/256 players...
+  Processed 121/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Austin Ekeler (Washington Commanders): Questionable -> questionable
+  Processed 131/256 players...
+  Processed 141/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jaylen Wright (Miami Dolphins): Questionable -> questionable
+  Processed 151/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jayden Reed (Green Bay Packers): Questionable -> questionable
+  Processed 161/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Brock Bowers (Las Vegas Raiders): Questionable -> questionable
+  Processed 171/256 players...
+  Processed 181/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Matthew Golden (Green Bay Packers): Questionable -> questionable
+  Processed 191/256 players...
+    Mapping: "I.L." -> "out"
+  - Tyjae Spears (Tennessee Titans): I.L. -> out
+  Processed 201/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Xavier Worthy (Kansas City Chiefs): Questionable -> questionable
+  Processed 211/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Will Shipley (Philadelphia Eagles): Questionable -> questionable
+  Processed 221/256 players...
+  Processed 231/256 players...
+  Processed 241/256 players...
+  Processed 251/256 players...
+
+=== Sync Complete ===
+✓ Updated 19 players with injury status
+✓ 237 players remain healthy
+✓ 0 players had errors (set to healthy)
+✓ Total players processed: 256
+
+=== Injury Status Summary ===
+  - healthy: 237 players
+  - questionable: 14 players
+  - out: 5 players
+
+🎉 Injury data sync completed successfully!
+[dotenv@17.2.2] injecting env (6) from .env.local -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar
+=== Starting Injury Data Sync ===
+
+=== Checking Database Schema ===
+✓ injury_status column already exists
+
+=== Getting Players from Database ===
+Found 256 players in database
+
+=== Fetching Injury Data from API Sports ===
+  Processed 1/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Christian Kirk (Houston Texans): Questionable -> questionable
+  Processed 11/256 players...
+  Processed 21/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Isaiah Likely (Baltimore Ravens): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Drake London (Atlanta Falcons): Questionable -> questionable
+  Processed 31/256 players...
+    Mapping: "NFI" -> "out"
+  - Joe Mixon (Houston Texans): NFI -> out
+  Processed 41/256 players...
+  Processed 51/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Dallas Goedert (Philadelphia Eagles): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Brock Purdy (San Francisco 49ers): Questionable -> questionable
+    Mapping: "PUP" -> "out"
+  - Brandon Aiyuk (San Francisco 49ers): PUP -> out
+    Mapping: "Questionable" -> "questionable"
+  - Jauan Jennings (San Francisco 49ers): Questionable -> questionable
+  Processed 61/256 players...
+    Mapping: "I.L." -> "out"
+  - George Kittle (San Francisco 49ers): I.L. -> out
+    Mapping: "Questionable" -> "questionable"
+  - Darnell Mooney (Atlanta Falcons): Questionable -> questionable
+  Processed 71/256 players...
+  Processed 81/256 players...
+    Mapping: "I.L." -> "out"
+  - Tyler Bass (Buffalo Bills): I.L. -> out
+  Processed 91/256 players...
+  Processed 101/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jaylen Waddle (Miami Dolphins): Questionable -> questionable
+    Mapping: "I.L." -> "out"
+  - Jason Sanders (Miami Dolphins): I.L. -> out
+  Processed 111/256 players...
+  Processed 121/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Austin Ekeler (Washington Commanders): Questionable -> questionable
+  Processed 131/256 players...
+  Processed 141/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Jaylen Wright (Miami Dolphins): Questionable -> questionable
+  Processed 151/256 players...
+    Mapping: "Sidelined" -> "healthy"
+  - Jayden Reed (Green Bay Packers): Sidelined -> healthy
+  Processed 161/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Brock Bowers (Las Vegas Raiders): Questionable -> questionable
+  Processed 171/256 players...
+  Processed 181/256 players...
+  Processed 191/256 players...
+    Mapping: "I.L." -> "out"
+  - Tyjae Spears (Tennessee Titans): I.L. -> out
+  Processed 201/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Xavier Worthy (Kansas City Chiefs): Questionable -> questionable
+  Processed 211/256 players...
+    Mapping: "Questionable" -> "questionable"
+  - Mason Taylor (New York Jets): Questionable -> questionable
+    Mapping: "Questionable" -> "questionable"
+  - Will Shipley (Philadelphia Eagles): Questionable -> questionable
+  Processed 221/256 players...
+  Processed 231/256 players...
+  Processed 241/256 players...
+  Processed 251/256 players...
+
+=== Sync Complete ===
+✓ Updated 20 players with injury status
+✓ 236 players remain healthy
+✓ 0 players had errors (set to healthy)
+✓ Total players processed: 256
+
+=== Injury Status Summary ===
+  - healthy: 236 players
+  - questionable: 14 players
+  - out: 6 players
+
+🎉 Injury data sync completed successfully!

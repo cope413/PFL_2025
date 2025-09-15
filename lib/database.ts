@@ -615,7 +615,7 @@ export async function getTeamRoster(teamId: string, currentWeek: number = 1) {
         p.team_name as nflTeam,
         p.owner_ID as team,
         p.team_id,
-        COALESCE(p.injury_status, 'healthy') as status,
+        COALESCE(p.injury_status, 'healthy') as injury_status,
         COALESCE(n.bye, 0) as byeWeek,
         COALESCE(pts.week_1, 0) as week_1,
         COALESCE(pts.week_2, 0) as week_2,
@@ -764,10 +764,16 @@ export async function getSystemStats() {
 
 export async function getAllPlayersWithStats() {
   // Get all players with proper column mapping
-  const players = await getResults("SELECT player_ID, player_name as name, position, team_id, team_name as nfl_team, owner_ID FROM Players ORDER BY player_name");
+  const players = await getResults({
+    sql: "SELECT player_ID, player_name as name, position, team_id, team_name as nfl_team, owner_ID FROM Players ORDER BY player_name",
+    args: []
+  });
   
   // Get all player stats for weeks 1-14 from Points table
-  const stats = await getResults("SELECT player_ID, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12, week_13, week_14 FROM Points ORDER BY player_ID");
+  const stats = await getResults({
+    sql: "SELECT player_ID, week_1, week_2, week_3, week_4, week_5, week_6, week_7, week_8, week_9, week_10, week_11, week_12, week_13, week_14 FROM Points ORDER BY player_ID",
+    args: []
+  });
   
   // Create a map of stats by player ID
   const statsByPlayer = new Map();
