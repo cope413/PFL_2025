@@ -99,17 +99,17 @@ export default function Home() {
   const getTopPlayers = () => {
     if (!players || players.length === 0) return [];
     
-    // Sort players by total points (descending) and take top 10
+    // Sort players by current week points (descending) and take top 10
     return players
-      .filter(player => player.totalPoints && player.totalPoints > 0) // Only players with points
-      .sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0))
+      .filter(player => player.currentWeekPoints && player.currentWeekPoints > 0) // Only players with current week points
+      .sort((a, b) => (b.currentWeekPoints || 0) - (a.currentWeekPoints || 0))
       .slice(0, 10)
       .map(player => ({
         id: player.id,
         name: player.name,
         position: player.position,
         team: player.team,
-        fantasyPoints: player.totalPoints || 0,
+        fantasyPoints: player.currentWeekPoints || 0,
         projectedPoints: player.avgPoints || 0
       }));
   };

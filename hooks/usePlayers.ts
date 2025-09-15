@@ -6,6 +6,7 @@ interface Player {
   position: string;
   team: string;
   totalPoints: number;
+  currentWeekPoints: number;
   avgPoints: number;
   byeWeek: number;
   owner_ID?: string;

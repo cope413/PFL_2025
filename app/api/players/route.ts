@@ -21,18 +21,37 @@ export async function GET(request: NextRequest) {
           COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) + 
           COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) + 
           COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) + 
-          COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0) as totalPoints
+          COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0) as totalPoints,
+          CASE 
+            WHEN ? = 1 THEN COALESCE(pts.week_1, 0)
+            WHEN ? = 2 THEN COALESCE(pts.week_2, 0)
+            WHEN ? = 3 THEN COALESCE(pts.week_3, 0)
+            WHEN ? = 4 THEN COALESCE(pts.week_4, 0)
+            WHEN ? = 5 THEN COALESCE(pts.week_5, 0)
+            WHEN ? = 6 THEN COALESCE(pts.week_6, 0)
+            WHEN ? = 7 THEN COALESCE(pts.week_7, 0)
+            WHEN ? = 8 THEN COALESCE(pts.week_8, 0)
+            WHEN ? = 9 THEN COALESCE(pts.week_9, 0)
+            WHEN ? = 10 THEN COALESCE(pts.week_10, 0)
+            WHEN ? = 11 THEN COALESCE(pts.week_11, 0)
+            WHEN ? = 12 THEN COALESCE(pts.week_12, 0)
+            WHEN ? = 13 THEN COALESCE(pts.week_13, 0)
+            WHEN ? = 14 THEN COALESCE(pts.week_14, 0)
+            ELSE 0
+          END as currentWeekPoints
         FROM Players p
         LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
         LEFT JOIN Points pts ON p.player_ID = pts.player_ID
         WHERE p.position IN ('QB', 'RB', 'WR', 'TE', 'PK', 'D/ST')
         ORDER BY totalPoints DESC
-      `
+      `,
+      args: [currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek]
     });
     
     // Transform the database players to match the frontend interface
     const transformedPlayers = playersWithStats.map(player => {
       const totalPoints = parseFloat(player.totalPoints || 0);
+      const currentWeekPoints = parseFloat(player.currentWeekPoints || 0);
       // Calculate average based on completed weeks (current week - 1)
       const completedWeeks = Math.max(1, currentWeek - 1);
       const avgPoints = completedWeeks > 0 ? totalPoints / completedWeeks : 0;
@@ -43,6 +62,7 @@ export async function GET(request: NextRequest) {
         position: player.position,
         team: player.team,
         totalPoints: totalPoints,
+        currentWeekPoints: currentWeekPoints,
         avgPoints: Math.round(avgPoints * 100) / 100, // Round to 2 decimal places
         byeWeek: player.byeWeek || 0,
         owner_ID: player.owner_ID,
