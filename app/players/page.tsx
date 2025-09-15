@@ -15,6 +15,8 @@ import {
   Search,
   Filter,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
   Star,
   StarHalf,
   LogOut,
@@ -33,10 +35,29 @@ interface Player {
   position: string;
   team: string;
   totalPoints: number;
+  currentWeekPoints: number;
   avgPoints: number;
   byeWeek: number;
   owner_ID: string;
   status: string;
+  week_1: number;
+  week_2: number;
+  week_3: number;
+  week_4: number;
+  week_5: number;
+  week_6: number;
+  week_7: number;
+  week_8: number;
+  week_9: number;
+  week_10: number;
+  week_11: number;
+  week_12: number;
+  week_13: number;
+  week_14: number;
+  week_15: number;
+  week_16: number;
+  week_17: number;
+  week_18: number;
 }
 
 interface WaivedPlayer {
@@ -69,6 +90,8 @@ export default function PlayersPage() {
   const [selectedTeam, setSelectedTeam] = useState('all')
   const [selectedOwnership, setSelectedOwnership] = useState('all')
   const [activeTab, setActiveTab] = useState('all-players')
+  const [sortField, setSortField] = useState<'totalPoints' | 'avgPoints' | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
 
   // Fetch players data
   useEffect(() => {
@@ -122,7 +145,19 @@ export default function PlayersPage() {
     }
   }, [activeTab, waivedPlayers.length])
 
-  // Filter players based on search term, position, and team
+  // Sort function
+  const handleSort = (field: 'totalPoints' | 'avgPoints') => {
+    if (sortField === field) {
+      // Toggle direction if same field
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // New field, default to descending
+      setSortField(field)
+      setSortDirection('desc')
+    }
+  }
+
+  // Filter and sort players based on search term, position, team, and sorting
   useEffect(() => {
     let filtered = players
 
@@ -156,8 +191,22 @@ export default function PlayersPage() {
       }
     }
 
+    // Sort players
+    if (sortField) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortField]
+        const bValue = b[sortField]
+        
+        if (sortDirection === 'asc') {
+          return aValue - bValue
+        } else {
+          return bValue - aValue
+        }
+      })
+    }
+
     setFilteredPlayers(filtered)
-  }, [players, searchTerm, selectedPosition, selectedTeam, selectedOwnership])
+  }, [players, searchTerm, selectedPosition, selectedTeam, selectedOwnership, sortField, sortDirection])
 
 
 
@@ -417,7 +466,7 @@ export default function PlayersPage() {
                     </Select>
                     <Select value={selectedOwnership} onValueChange={setSelectedOwnership}>
                       <SelectTrigger className="w-[130px]">
-                        <SelectValue placeholder="Ownership" />
+                        <SelectValue placeholder="Owner" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Players</SelectItem>
@@ -433,6 +482,8 @@ export default function PlayersPage() {
                         setSelectedPosition('all')
                         setSelectedTeam('all')
                         setSelectedOwnership('all')
+                        setSortField(null)
+                        setSortDirection('desc')
                       }}
                     >
                       <Filter className="mr-2 h-4 w-4" />
@@ -468,7 +519,7 @@ export default function PlayersPage() {
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 ) : (
-                  <div className="max-h-[600px] overflow-y-auto">
+                  <div className="max-h-[600px] overflow-auto scrollbar-thick">
                     <Table>
                       <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
@@ -476,16 +527,65 @@ export default function PlayersPage() {
                           <TableHead>Player</TableHead>
                           <TableHead>Position</TableHead>
                           <TableHead>Team</TableHead>
-                          <TableHead className="text-right">Total Points</TableHead>
-                          <TableHead className="text-right">Avg Points</TableHead>
-                          <TableHead>Ownership</TableHead>
-                          <TableHead>Status</TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                            onClick={() => handleSort('totalPoints')}
+                          >
+                            <div className="flex items-center justify-end gap-1">
+                              Total Points
+                              {sortField === 'totalPoints' ? (
+                                sortDirection === 'desc' ? (
+                                  <ArrowDown className="h-4 w-4" />
+                                ) : (
+                                  <ArrowUp className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead 
+                            className="text-right cursor-pointer hover:bg-muted/50 select-none"
+                            onClick={() => handleSort('avgPoints')}
+                          >
+                            <div className="flex items-center justify-end gap-1">
+                              Avg Points
+                              {sortField === 'avgPoints' ? (
+                                sortDirection === 'desc' ? (
+                                  <ArrowDown className="h-4 w-4" />
+                                ) : (
+                                  <ArrowUp className="h-4 w-4" />
+                                )
+                              ) : (
+                                <ArrowUpDown className="h-4 w-4 opacity-50" />
+                              )}
+                            </div>
+                          </TableHead>
+                          <TableHead>Owner</TableHead>
+                          <TableHead className="text-center">1</TableHead>
+                          <TableHead className="text-center">2</TableHead>
+                          <TableHead className="text-center">3</TableHead>
+                          <TableHead className="text-center">4</TableHead>
+                          <TableHead className="text-center">5</TableHead>
+                          <TableHead className="text-center">6</TableHead>
+                          <TableHead className="text-center">7</TableHead>
+                          <TableHead className="text-center">8</TableHead>
+                          <TableHead className="text-center">9</TableHead>
+                          <TableHead className="text-center">10</TableHead>
+                          <TableHead className="text-center">11</TableHead>
+                          <TableHead className="text-center">12</TableHead>
+                          <TableHead className="text-center">13</TableHead>
+                          <TableHead className="text-center">14</TableHead>
+                          <TableHead className="text-center">15</TableHead>
+                          <TableHead className="text-center">16</TableHead>
+                          <TableHead className="text-center">17</TableHead>
+                          <TableHead className="text-center">18</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredPlayers.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                            <TableCell colSpan={25} className="text-center py-8 text-muted-foreground">
                               No players found matching your filters.
                             </TableCell>
                           </TableRow>
@@ -517,9 +617,24 @@ export default function PlayersPage() {
                                   {player.owner_ID === '99' ? 'Free Agent' : player.owner_ID}
                                 </Badge>
                               </TableCell>
-                              <TableCell>
-                                <Badge variant="secondary" className="text-xs">{player.status}</Badge>
-                              </TableCell>
+                              <TableCell className="text-center text-sm">{player.week_1.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_2.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_3.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_4.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_5.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_6.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_7.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_8.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_9.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_10.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_11.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_12.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_13.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_14.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_15.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_16.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_17.toFixed(1)}</TableCell>
+                              <TableCell className="text-center text-sm">{player.week_18.toFixed(1)}</TableCell>
                             </TableRow>
                           ))
                         )}

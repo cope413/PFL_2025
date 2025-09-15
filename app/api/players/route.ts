@@ -21,7 +21,8 @@ export async function GET(request: NextRequest) {
           COALESCE(pts.week_4, 0) + COALESCE(pts.week_5, 0) + COALESCE(pts.week_6, 0) + 
           COALESCE(pts.week_7, 0) + COALESCE(pts.week_8, 0) + COALESCE(pts.week_9, 0) + 
           COALESCE(pts.week_10, 0) + COALESCE(pts.week_11, 0) + COALESCE(pts.week_12, 0) + 
-          COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0) as totalPoints,
+          COALESCE(pts.week_13, 0) + COALESCE(pts.week_14, 0) + COALESCE(pts.week_15, 0) + 
+          COALESCE(pts.week_16, 0) + COALESCE(pts.week_17, 0) + COALESCE(pts.week_18, 0) as totalPoints,
           CASE 
             WHEN ? = 1 THEN COALESCE(pts.week_1, 0)
             WHEN ? = 2 THEN COALESCE(pts.week_2, 0)
@@ -37,15 +38,37 @@ export async function GET(request: NextRequest) {
             WHEN ? = 12 THEN COALESCE(pts.week_12, 0)
             WHEN ? = 13 THEN COALESCE(pts.week_13, 0)
             WHEN ? = 14 THEN COALESCE(pts.week_14, 0)
+            WHEN ? = 15 THEN COALESCE(pts.week_15, 0)
+            WHEN ? = 16 THEN COALESCE(pts.week_16, 0)
+            WHEN ? = 17 THEN COALESCE(pts.week_17, 0)
+            WHEN ? = 18 THEN COALESCE(pts.week_18, 0)
             ELSE 0
-          END as currentWeekPoints
+          END as currentWeekPoints,
+          COALESCE(pts.week_1, 0) as week_1,
+          COALESCE(pts.week_2, 0) as week_2,
+          COALESCE(pts.week_3, 0) as week_3,
+          COALESCE(pts.week_4, 0) as week_4,
+          COALESCE(pts.week_5, 0) as week_5,
+          COALESCE(pts.week_6, 0) as week_6,
+          COALESCE(pts.week_7, 0) as week_7,
+          COALESCE(pts.week_8, 0) as week_8,
+          COALESCE(pts.week_9, 0) as week_9,
+          COALESCE(pts.week_10, 0) as week_10,
+          COALESCE(pts.week_11, 0) as week_11,
+          COALESCE(pts.week_12, 0) as week_12,
+          COALESCE(pts.week_13, 0) as week_13,
+          COALESCE(pts.week_14, 0) as week_14,
+          COALESCE(pts.week_15, 0) as week_15,
+          COALESCE(pts.week_16, 0) as week_16,
+          COALESCE(pts.week_17, 0) as week_17,
+          COALESCE(pts.week_18, 0) as week_18
         FROM Players p
         LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
         LEFT JOIN Points pts ON p.player_ID = pts.player_ID
         WHERE p.position IN ('QB', 'RB', 'WR', 'TE', 'PK', 'D/ST')
         ORDER BY totalPoints DESC
       `,
-      args: [currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek]
+      args: [currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek, currentWeek]
     });
     
     // Transform the database players to match the frontend interface
@@ -66,7 +89,25 @@ export async function GET(request: NextRequest) {
         avgPoints: Math.round(avgPoints * 100) / 100, // Round to 2 decimal places
         byeWeek: player.byeWeek || 0,
         owner_ID: player.owner_ID,
-        status: 'Active' // Default status
+        status: 'Active', // Default status
+        week_1: parseFloat(player.week_1 || 0),
+        week_2: parseFloat(player.week_2 || 0),
+        week_3: parseFloat(player.week_3 || 0),
+        week_4: parseFloat(player.week_4 || 0),
+        week_5: parseFloat(player.week_5 || 0),
+        week_6: parseFloat(player.week_6 || 0),
+        week_7: parseFloat(player.week_7 || 0),
+        week_8: parseFloat(player.week_8 || 0),
+        week_9: parseFloat(player.week_9 || 0),
+        week_10: parseFloat(player.week_10 || 0),
+        week_11: parseFloat(player.week_11 || 0),
+        week_12: parseFloat(player.week_12 || 0),
+        week_13: parseFloat(player.week_13 || 0),
+        week_14: parseFloat(player.week_14 || 0),
+        week_15: parseFloat(player.week_15 || 0),
+        week_16: parseFloat(player.week_16 || 0),
+        week_17: parseFloat(player.week_17 || 0),
+        week_18: parseFloat(player.week_18 || 0)
       };
     });
 
