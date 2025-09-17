@@ -21,7 +21,6 @@ import {
   ArrowUpDown,
   Play,
   Pause,
-  SkipForward,
   Undo2,
   Shield,
   AlertCircle,
@@ -76,6 +75,8 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
   const [currentPick, setCurrentPick] = useState(1)
   const [waivedPlayers, setWaivedPlayers] = useState<WaiverPlayer[]>([])
   const [draftOrder, setDraftOrder] = useState<WaiverDraftOrder[]>([])
+  const [customSequence, setCustomSequence] = useState<any[]>([])
+  const [nextPickInfo, setNextPickInfo] = useState<any>(null)
   const [picks, setPicks] = useState<WaiverPick[]>([])
   const [selectedPlayer, setSelectedPlayer] = useState<string>("")
   const [isDraftActive, setIsDraftActive] = useState(false)
@@ -86,6 +87,8 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
   const [showTimeWarning, setShowTimeWarning] = useState(false)
   const [draftStatus, setDraftStatus] = useState<'scheduled' | 'in_progress' | 'completed'>('scheduled')
   const [draftId, setDraftId] = useState<string>("")
+  const [isPaused, setIsPaused] = useState(false)
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true)
   
   const { user } = useAuth()
   const { 
@@ -94,34 +97,65 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
     error, 
     refreshWaiverData,
     makeWaiverPick,
-    autoPick,
     startWaiverDraft,
-    completeWaiverDraft
+    completeWaiverDraft,
+    undoLastPick,
+    clearDraft
   } = useWaiver()
 
-  // Load waiver draft data
-  useEffect(() => {
-    const loadWaiverDraft = async () => {
-      try {
-        const response = await fetch(`/api/waiver?action=waiver-draft&week=${week}`)
-        const data = await response.json()
+  // Load waiver draft data function
+  const loadWaiverDraft = async () => {
+    try {
+      const response = await fetch(`/api/waiver?action=waiver-draft&week=${week}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        setWaivedPlayers(data.data.waivedPlayers || [])
+        setDraftOrder(data.data.draftOrder || [])
+        setCustomSequence(data.data.customSequence || [])
+        setNextPickInfo(data.data.nextPickInfo || null)
+        setPicks(data.data.picks || [])
         
-        if (data.success) {
-          setWaivedPlayers(data.data.waivedPlayers || [])
-          setDraftOrder(data.data.draftOrder || [])
-          setPicks(data.data.picks || [])
-          setCurrentPick(data.data.currentPick || 1)
-          setIsDraftActive(data.data.isActive || false)
-          setDraftStatus(data.data.draft.status || 'scheduled')
-          setDraftId(data.data.draft.id || '')
-        }
-      } catch (err) {
-        console.error('Error loading waiver draft:', err)
+        // Calculate current pick based on existing picks
+        const existingPicks = data.data.picks || []
+        const calculatedCurrentPick = existingPicks.length + 1
+        setCurrentPick(calculatedCurrentPick)
+        
+        setIsDraftActive(data.data.isActive || false)
+        setDraftStatus(data.data.draft.status || 'scheduled')
+        setDraftId(data.data.draft.id || '')
       }
+    } catch (err) {
+      console.error('Error loading waiver draft:', err)
     }
+  }
 
+  // Load waiver draft data on component mount
+  useEffect(() => {
     loadWaiverDraft()
   }, [week])
+
+  // Auto-refresh during active draft
+  useEffect(() => {
+    let interval: NodeJS.Timeout
+    
+    // Only auto-refresh if:
+    // 1. Draft is in progress
+    // 2. Not paused
+    // 3. Auto-refresh is enabled
+    // 4. User is not actively interacting (no selected player)
+    if (draftStatus === 'in_progress' && !isPaused && autoRefreshEnabled && !selectedPlayer) {
+      interval = setInterval(() => {
+        loadWaiverDraft()
+      }, 3000) // Refresh every 3 seconds
+    }
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval)
+      }
+    }
+  }, [draftStatus, isPaused, autoRefreshEnabled, selectedPlayer, week])
 
   // Update waived players when hook data changes
   useEffect(() => {
@@ -154,11 +188,17 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
     }
   }, [timeRemaining])
 
-  const getCurrentPickingTeam = (): WaiverDraftOrder | null => {
+  const getCurrentPickingTeam = (): any => {
+    if (customSequence.length > 0) {
+      return customSequence.find(pick => pick.pick_number === currentPick) || null
+    }
     return draftOrder.find(team => team.draft_order === currentPick) || null
   }
 
-  const getNextPickingTeam = (): WaiverDraftOrder | null => {
+  const getNextPickingTeam = (): any => {
+    if (customSequence.length > 0) {
+      return customSequence.find(pick => pick.pick_number === currentPick + 1) || null
+    }
     return draftOrder.find(team => team.draft_order === currentPick + 1) || null
   }
 
@@ -206,43 +246,26 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
     }
   }
 
-  const handleAutoPick = async () => {
+  const handleUndoLastPick = async () => {
     if (!draftId) return
-
-    const currentTeam = getCurrentPickingTeam()
-    if (!currentTeam) return
-
-    const autoPlayer = await autoPick(draftId, currentTeam.team_id, currentPick)
     
-    if (autoPlayer) {
-      // Update local state
-      const newPick: WaiverPick = {
-        pick_number: currentPick,
-        team_id: currentTeam.team_id,
-        player_id: autoPlayer.playerId,
-        picked_at: new Date().toISOString(),
-        player_name: autoPlayer.playerName,
-        position: autoPlayer.position,
-        nfl_team: '',
-        team_name: currentTeam.team_name,
-        owner_name: currentTeam.owner_name
-      }
-      
-      setPicks(prev => [...prev, newPick])
-      setWaivedPlayers(prev => prev.filter(p => p.player_id !== autoPlayer.playerId))
-      
-      // Move to next pick
-      if (currentPick < waivedPlayers.length) {
-        setCurrentPick(prev => prev + 1)
-      } else {
-        // Draft complete
-        setIsDraftActive(false)
-        setDraftStatus('completed')
-        await completeWaiverDraft(draftId)
-      }
-      
-      // Reset timer
-      setTimeRemaining(180)
+    const success = await undoLastPick(draftId)
+    if (success) {
+      // Reload the draft data to get updated picks
+      await loadWaiverDraft()
+    }
+  }
+
+  const handleClearDraft = async () => {
+    if (!draftId) return
+    
+    const confirmed = window.confirm('Are you sure you want to clear all picks from this draft? This action cannot be undone.')
+    if (!confirmed) return
+    
+    const success = await clearDraft(draftId)
+    if (success) {
+      // Reload the draft data to get updated picks
+      await loadWaiverDraft()
     }
   }
 
@@ -260,6 +283,12 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
   const pauseDraft = () => {
     setIsDraftActive(false)
     setShowTimeWarning(false)
+    setIsPaused(true)
+  }
+
+  const resumeDraft = () => {
+    setIsDraftActive(true)
+    setIsPaused(false)
   }
 
   const filteredPlayers = waivedPlayers.filter(player => {
@@ -267,6 +296,11 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
                          player.nfl_team.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesPosition = positionFilter === "ALL" || player.position === positionFilter
     return matchesSearch && matchesPosition
+  }).sort((a, b) => {
+    // Sort by average points (highest to lowest)
+    const avgA = parseFloat(a.avg_points) || 0
+    const avgB = parseFloat(b.avg_points) || 0
+    return avgB - avgA
   })
 
   const formatTime = (seconds: number) => {
@@ -303,10 +337,18 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
                     View Only
                   </div>
                 )}
-                <Badge variant={draftStatus === 'in_progress' ? 'default' : 'secondary'}>
-                  {draftStatus === 'scheduled' ? 'Scheduled' : 
-                   draftStatus === 'in_progress' ? 'In Progress' : 'Completed'}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={draftStatus === 'in_progress' ? 'default' : 'secondary'}>
+                    {draftStatus === 'scheduled' ? 'Scheduled' : 
+                     draftStatus === 'in_progress' ? 'In Progress' : 'Completed'}
+                  </Badge>
+                  {autoRefreshEnabled && draftStatus === 'in_progress' && !isPaused && (
+                    <div className="flex items-center gap-1 text-xs text-green-600">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      Live
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -462,14 +504,17 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
                         </Button>
                       ) : draftStatus === 'in_progress' ? (
                         <>
-                          <Button variant="outline" onClick={pauseDraft}>
-                            <Pause className="mr-2 h-4 w-4" />
-                            Pause
-                          </Button>
-                          <Button variant="outline" onClick={handleAutoPick}>
-                            <SkipForward className="mr-2 h-4 w-4" />
-                            Auto Pick
-                          </Button>
+                          {isPaused ? (
+                            <Button variant="outline" onClick={resumeDraft}>
+                              <Play className="mr-2 h-4 w-4" />
+                              Resume
+                            </Button>
+                          ) : (
+                            <Button variant="outline" onClick={pauseDraft}>
+                              <Pause className="mr-2 h-4 w-4" />
+                              Pause
+                            </Button>
+                          )}
                         </>
                       ) : (
                         <Badge variant="secondary">Draft Complete</Badge>
@@ -486,26 +531,108 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
                 {/* Draft Order */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-sm">Draft Order</CardTitle>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm">Draft Order</CardTitle>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={loadWaiverDraft}
+                          className="h-6 w-6 p-0"
+                        >
+                          <RefreshCw className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setAutoRefreshEnabled(!autoRefreshEnabled)}
+                          className={`h-6 px-2 text-xs ${
+                            autoRefreshEnabled 
+                              ? 'text-green-600 bg-green-50' 
+                              : 'text-gray-500 bg-gray-50'
+                          }`}
+                        >
+                          {autoRefreshEnabled ? 'Auto' : 'Manual'}
+                        </Button>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-4 gap-2">
-                      {draftOrder.map((team, index) => (
-                        <div 
-                          key={team.team_id}
-                          className={`p-2 rounded text-center text-sm ${
-                            team.draft_order === currentPick 
-                              ? 'bg-primary text-primary-foreground' 
-                              : 'bg-muted'
-                          }`}
-                        >
-                          <div className="font-bold">{team.draft_order}</div>
-                          <div className="text-xs">{team.team_id}</div>
-                          <div className="text-xs truncate">
-                            {team.owner_name || team.team_name}
-                          </div>
-                        </div>
-                      ))}
+                      {customSequence.length > 0 ? (
+                        // Show custom sequence if available
+                        customSequence.map((pick, index) => {
+                          // Find if this pick has been made
+                          const madePick = picks.find(p => p.pick_number === pick.pick_number);
+                          
+                          return (
+                            <div 
+                              key={`${pick.team_id}-${pick.pick_number}`}
+                              className={`p-2 rounded text-center text-sm ${
+                                pick.pick_number === currentPick 
+                                  ? 'bg-primary text-primary-foreground' 
+                                  : madePick 
+                                    ? 'bg-green-100 border border-green-300' 
+                                    : 'bg-muted'
+                              }`}
+                            >
+                              <div className="font-bold">{pick.pick_number}</div>
+                              <div className="text-xs">{pick.team_id}</div>
+                              <div className="text-xs truncate">
+                                {pick.owner_name || pick.team_name || pick.username}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                R{pick.round_number}
+                              </div>
+                              {madePick && (
+                                <div className="mt-1 pt-1 border-t border-gray-300">
+                                  <div className="text-xs font-medium text-green-700">
+                                    {madePick.player_name}
+                                  </div>
+                                  <div className="text-xs text-green-600">
+                                    {madePick.position}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        // Fallback to regular draft order
+                        draftOrder.map((team, index) => {
+                          // Find if this pick has been made
+                          const madePick = picks.find(p => p.pick_number === team.draft_order);
+                          
+                          return (
+                            <div 
+                              key={team.team_id}
+                              className={`p-2 rounded text-center text-sm ${
+                                team.draft_order === currentPick 
+                                  ? 'bg-primary text-primary-foreground' 
+                                  : madePick 
+                                    ? 'bg-green-100 border border-green-300' 
+                                    : 'bg-muted'
+                              }`}
+                            >
+                              <div className="font-bold">{team.draft_order}</div>
+                              <div className="text-xs">{team.team_id}</div>
+                              <div className="text-xs truncate">
+                                {team.owner_name || team.team_name}
+                              </div>
+                              {madePick && (
+                                <div className="mt-1 pt-1 border-t border-gray-300">
+                                  <div className="text-xs font-medium text-green-700">
+                                    {madePick.player_name}
+                                  </div>
+                                  <div className="text-xs text-green-600">
+                                    {madePick.position}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -567,13 +694,38 @@ export default function WaiverDraftRoom({ onClose, week }: WaiverDraftRoomProps)
                   </div>
                   
                   {user?.is_admin ? (
-                    <Button 
-                      onClick={makePick} 
-                      disabled={!selectedPlayer || draftStatus !== 'in_progress'}
-                      className="w-full"
-                    >
-                      Make Pick
-                    </Button>
+                    <div className="space-y-2">
+                      <Button 
+                        onClick={makePick} 
+                        disabled={!selectedPlayer || draftStatus !== 'in_progress'}
+                        className="w-full"
+                      >
+                        Make Pick
+                      </Button>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={handleUndoLastPick}
+                          disabled={picks.length === 0 || draftStatus !== 'in_progress'}
+                          className="flex-1"
+                        >
+                          <RotateCcw className="mr-1 h-3 w-3" />
+                          Undo
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={handleClearDraft}
+                          disabled={picks.length === 0 || draftStatus !== 'in_progress'}
+                          className="flex-1"
+                        >
+                          <Trash2 className="mr-1 h-3 w-3" />
+                          Clear
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-md border border-amber-200">

@@ -1408,6 +1408,66 @@ export async function getWaiverDraftOrder(draftId: string) {
   });
 }
 
+export async function getCustomDraftSequence(draftId: string) {
+  return await getResults({
+    sql: `
+      SELECT 
+        cds.pick_number,
+        cds.team_id,
+        cds.round_number,
+        u.team_name,
+        u.owner_name,
+        u.username
+      FROM CustomDraftSequence cds
+      LEFT JOIN user u ON cds.team_id = u.team
+      WHERE cds.draft_id = ?
+      ORDER BY cds.pick_number
+    `,
+    args: [draftId]
+  });
+}
+
+export async function getNextPickInfo(draftId: string) {
+  // Check if there's a custom draft sequence
+  const customSequence = await getCustomDraftSequence(draftId);
+  
+  if (customSequence && customSequence.length > 0) {
+    // Use custom sequence
+    const completedPicks = await getResults({
+      sql: 'SELECT COUNT(*) as count FROM WaiverPicks WHERE draft_id = ?',
+      args: [draftId]
+    });
+    
+    const completedCount = completedPicks[0]?.count || 0;
+    const nextPick = customSequence[completedCount];
+    
+    return {
+      hasCustomSequence: true,
+      nextPick: nextPick,
+      totalPicks: customSequence.length,
+      completedPicks: completedCount
+    };
+  } else {
+    // Use standard cycling logic
+    const draftOrder = await getWaiverDraftOrder(draftId);
+    const completedPicks = await getResults({
+      sql: 'SELECT COUNT(*) as count FROM WaiverPicks WHERE draft_id = ?',
+      args: [draftId]
+    });
+    
+    const completedCount = completedPicks[0]?.count || 0;
+    const nextTeamIndex = completedCount % draftOrder.length;
+    const nextTeam = draftOrder[nextTeamIndex];
+    
+    return {
+      hasCustomSequence: false,
+      nextPick: nextTeam,
+      totalPicks: draftOrder.length,
+      completedPicks: completedCount
+    };
+  }
+}
+
 // Waiver Picks Functions
 export async function makeWaiverPick(draftId: string, teamId: string, playerId: string, pickNumber: number) {
   return await db.execute({

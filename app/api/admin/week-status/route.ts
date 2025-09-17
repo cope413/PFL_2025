@@ -18,9 +18,9 @@ export async function GET(request: NextRequest) {
     // Get week status for all weeks
     const weekStatus = await getResults(`
       SELECT 
-        week,
-        COALESCE(is_finalized, FALSE) as is_finalized,
-        COALESCE(finalized_at, NULL) as finalized_at
+        all_weeks.week,
+        COALESCE(ws.is_finalized, FALSE) as is_finalized,
+        COALESCE(ws.finalized_at, NULL) as finalized_at
       FROM (
         SELECT 1 as week UNION ALL
         SELECT 2 UNION ALL
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
         SELECT 14
       ) all_weeks
       LEFT JOIN WeekStatus ws ON all_weeks.week = ws.week
-      ORDER BY week
+      ORDER BY all_weeks.week
     `);
 
     // Get weekly scores for completed weeks

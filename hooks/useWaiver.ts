@@ -14,6 +14,8 @@ interface UseWaiverReturn {
   autoPick: (draftId: string, teamId: string, pickNumber: number) => Promise<any>;
   startWaiverDraft: (draftId: string) => Promise<boolean>;
   completeWaiverDraft: (draftId: string) => Promise<boolean>;
+  undoLastPick: (draftId: string) => Promise<boolean>;
+  clearDraft: (draftId: string) => Promise<boolean>;
 }
 
 export function useWaiver(): UseWaiverReturn {
@@ -266,6 +268,56 @@ export function useWaiver(): UseWaiverReturn {
     refreshWaiverData();
   }, []);
 
+  const undoLastPick = async (draftId: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/waiver/picks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          action: 'undo-last-pick',
+          draftId
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await refreshWaiverData();
+      }
+      return data.success;
+    } catch (error) {
+      console.error('Error undoing last pick:', error);
+      return false;
+    }
+  };
+
+  const clearDraft = async (draftId: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/waiver/picks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify({
+          action: 'clear-draft',
+          draftId
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        await refreshWaiverData();
+      }
+      return data.success;
+    } catch (error) {
+      console.error('Error clearing draft:', error);
+      return false;
+    }
+  };
+
   return {
     waiverDrafts,
     waivedPlayers,
@@ -278,6 +330,8 @@ export function useWaiver(): UseWaiverReturn {
     makeWaiverPick,
     autoPick,
     startWaiverDraft,
-    completeWaiverDraft
+    completeWaiverDraft,
+    undoLastPick,
+    clearDraft
   };
 }

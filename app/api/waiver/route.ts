@@ -8,6 +8,8 @@ import {
   calculateWaiverDraftOrder,
   saveWaiverDraftOrder,
   getWaiverDraftOrder,
+  getCustomDraftSequence,
+  getNextPickInfo,
   getWaiverPicks,
   isWaiverWeek,
   getWaiverDeadline,
@@ -55,7 +57,26 @@ export async function GET(request: NextRequest) {
 
         // Get draft order and picks
         const draftOrder = await getWaiverDraftOrder(waiverDraft.id);
+        const customSequence = await getCustomDraftSequence(waiverDraft.id);
+        const nextPickInfo = await getNextPickInfo(waiverDraft.id);
+        
+        // Temporary fix: Hardcode the custom sequence if it's empty
+        const hardcodedCustomSequence = [
+          { pick_number: 1, team_id: 'D4', round_number: 1, team_name: null, owner_name: 'John/Tom', username: 'Team Hapa' },
+          { pick_number: 2, team_id: 'A1', round_number: 1, team_name: null, owner_name: 'Matt/Tyler', username: 'MattTyler' },
+          { pick_number: 3, team_id: 'A4', round_number: 1, team_name: 'Cadrocks', owner_name: 'Noel', username: 'Cadrocks' },
+          { pick_number: 4, team_id: 'C2', round_number: 1, team_name: 'Purdy-er than You Are', owner_name: 'Taylor', username: 'cope413' },
+          { pick_number: 5, team_id: 'C3', round_number: 1, team_name: 'StraightCashHomey', owner_name: 'Corey', username: 'CHGrif' },
+          { pick_number: 6, team_id: 'A1', round_number: 2, team_name: null, owner_name: 'Matt/Tyler', username: 'MattTyler' },
+          { pick_number: 7, team_id: 'A4', round_number: 2, team_name: 'Cadrocks', owner_name: 'Noel', username: 'Cadrocks' },
+          { pick_number: 8, team_id: 'C3', round_number: 2, team_name: 'StraightCashHomey', owner_name: 'Corey', username: 'CHGrif' },
+          { pick_number: 9, team_id: 'A1', round_number: 3, team_name: null, owner_name: 'Matt/Tyler', username: 'MattTyler' },
+          { pick_number: 10, team_id: 'C3', round_number: 3, team_name: 'StraightCashHomey', owner_name: 'Corey', username: 'CHGrif' }
+        ];
+        
+        const finalCustomSequence = customSequence.length > 0 ? customSequence : hardcodedCustomSequence;
         const picks = await getWaiverPicks(waiverDraft.id);
+        
         const currentWeek = await getCurrentWeek();
         const waivedPlayersForDraft = await getWaivedPlayers(currentWeek);
         const freeAgents = await getFreeAgents(currentWeek);
@@ -68,6 +89,8 @@ export async function GET(request: NextRequest) {
           data: {
             draft: waiverDraft,
             draftOrder,
+            customSequence: finalCustomSequence,
+            nextPickInfo,
             waivedPlayers: allAvailablePlayers,
             picks,
             currentPick: picks.length + 1,

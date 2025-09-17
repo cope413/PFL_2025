@@ -3,10 +3,12 @@ import {
   makeWaiverPick, 
   getWaiverPicks,
   getWaiverDraftOrder,
+  getCustomDraftSequence,
   getWaiverDraftByWeek,
   updatePlayerOwnershipAfterWaiver,
   markWaiverPlayerAsDrafted,
-  getWaivedPlayers
+  getWaivedPlayers,
+  getResults
 } from '@/lib/database';
 
 export async function GET(request: NextRequest) {
@@ -44,7 +46,10 @@ export async function POST(request: NextRequest) {
       case 'make-pick':
         const { draftId, teamId, playerId, pickNumber } = data;
         
+        console.log('Make pick request:', { draftId, teamId, playerId, pickNumber });
+        
         if (!draftId || !teamId || !playerId || !pickNumber) {
+          console.log('Missing required fields:', { draftId, teamId, playerId, pickNumber });
           return NextResponse.json(
             { success: false, error: 'Draft ID, team ID, player ID, and pick number are required' },
             { status: 400 }
@@ -52,10 +57,37 @@ export async function POST(request: NextRequest) {
         }
 
         // Verify it's the team's turn to pick
-        const draftOrder = await getWaiverDraftOrder(draftId);
-        const currentPickTeam = draftOrder.find(team => team.draft_order === pickNumber);
+        const customSequence = await getCustomDraftSequence(draftId);
+        
+        // Temporary fix: Use hardcoded custom sequence if database functions return empty
+        const hardcodedCustomSequence = [
+          { pick_number: 1, team_id: 'D4', round_number: 1, team_name: null, owner_name: 'John/Tom', username: 'Team Hapa' },
+          { pick_number: 2, team_id: 'A1', round_number: 1, team_name: null, owner_name: 'Matt/Tyler', username: 'MattTyler' },
+          { pick_number: 3, team_id: 'A4', round_number: 1, team_name: 'Cadrocks', owner_name: 'Noel', username: 'Cadrocks' },
+          { pick_number: 4, team_id: 'C2', round_number: 1, team_name: 'Purdy-er than You Are', owner_name: 'Taylor', username: 'cope413' },
+          { pick_number: 5, team_id: 'C3', round_number: 1, team_name: 'StraightCashHomey', owner_name: 'Corey', username: 'CHGrif' },
+          { pick_number: 6, team_id: 'A1', round_number: 2, team_name: null, owner_name: 'Matt/Tyler', username: 'MattTyler' },
+          { pick_number: 7, team_id: 'A4', round_number: 2, team_name: 'Cadrocks', owner_name: 'Noel', username: 'Cadrocks' },
+          { pick_number: 8, team_id: 'C3', round_number: 2, team_name: 'StraightCashHomey', owner_name: 'Corey', username: 'CHGrif' },
+          { pick_number: 9, team_id: 'A1', round_number: 3, team_name: null, owner_name: 'Matt/Tyler', username: 'MattTyler' },
+          { pick_number: 10, team_id: 'C3', round_number: 3, team_name: 'StraightCashHomey', owner_name: 'Corey', username: 'CHGrif' }
+        ];
+        
+        const finalCustomSequence = customSequence.length > 0 ? customSequence : hardcodedCustomSequence;
+        
+        let currentPickTeam = null;
+        
+        if (finalCustomSequence.length > 0) {
+          // Use custom sequence
+          currentPickTeam = finalCustomSequence.find(pick => pick.pick_number === pickNumber);
+        } else {
+          // Fallback to regular draft order
+          const draftOrder = await getWaiverDraftOrder(draftId);
+          currentPickTeam = draftOrder.find(team => team.draft_order === pickNumber);
+        }
         
         if (!currentPickTeam || currentPickTeam.team_id !== teamId) {
+          console.log('Validation failed:', { currentPickTeam, teamId, pickNumber });
           return NextResponse.json(
             { success: false, error: 'It is not this team\'s turn to pick' },
             { status: 400 }
@@ -127,6 +159,107 @@ export async function POST(request: NextRequest) {
             position: autoPlayer.position
           },
           message: 'Auto-pick completed successfully'
+        });
+
+      case 'undo-last-pick':
+        const { draftId: undoDraftId } = data;
+        
+        if (!undoDraftId) {
+          return NextResponse.json(
+            { success: false, error: 'Draft ID is required' },
+            { status: 400 }
+          );
+        }
+
+        // Get the last pick
+        const lastPick = await getResults({
+          sql: 'SELECT * FROM WaiverPicks WHERE draft_id = ? ORDER BY pick_number DESC LIMIT 1',
+          args: [undoDraftId]
+        });
+
+        if (!lastPick || lastPick.length === 0) {
+          return NextResponse.json(
+            { success: false, error: 'No picks to undo' },
+            { status: 404 }
+          );
+        }
+
+        const pickToUndo = lastPick[0];
+
+        // Remove the pick from WaiverPicks
+        await getResults({
+          sql: 'DELETE FROM WaiverPicks WHERE draft_id = ? AND pick_number = ?',
+          args: [undoDraftId, pickToUndo.pick_number]
+        });
+
+        // Revert player ownership to original team
+        await getResults({
+          sql: 'UPDATE Players SET owner_ID = ? WHERE player_ID = ?',
+          args: [pickToUndo.team_id, pickToUndo.player_id]
+        });
+
+        // Mark player as available again
+        await getResults({
+          sql: 'UPDATE WaiverPlayers SET status = ? WHERE player_id = ?',
+          args: ['available', pickToUndo.player_id]
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Undid pick ${pickToUndo.pick_number}: ${pickToUndo.player_id} back to team ${pickToUndo.team_id}`,
+          data: {
+            undonePick: pickToUndo
+          }
+        });
+
+      case 'clear-draft':
+        const { draftId: clearDraftId } = data;
+        
+        if (!clearDraftId) {
+          return NextResponse.json(
+            { success: false, error: 'Draft ID is required' },
+            { status: 400 }
+          );
+        }
+
+        // Get all picks for this draft
+        const allPicks = await getResults({
+          sql: 'SELECT * FROM WaiverPicks WHERE draft_id = ? ORDER BY pick_number',
+          args: [clearDraftId]
+        });
+
+        if (!allPicks || allPicks.length === 0) {
+          return NextResponse.json(
+            { success: false, error: 'No picks to clear' },
+            { status: 404 }
+          );
+        }
+
+        // Revert all player ownerships
+        for (const pick of allPicks) {
+          await getResults({
+            sql: 'UPDATE Players SET owner_ID = ? WHERE player_ID = ?',
+            args: [pick.team_id, pick.player_id]
+          });
+
+          await getResults({
+            sql: 'UPDATE WaiverPlayers SET status = ? WHERE player_id = ?',
+            args: ['available', pick.player_id]
+          });
+        }
+
+        // Clear all picks
+        await getResults({
+          sql: 'DELETE FROM WaiverPicks WHERE draft_id = ?',
+          args: [clearDraftId]
+        });
+
+        return NextResponse.json({
+          success: true,
+          message: `Cleared ${allPicks.length} picks from draft ${clearDraftId}`,
+          data: {
+            clearedPicks: allPicks.length
+          }
         });
 
       case 'get-draft-status':
