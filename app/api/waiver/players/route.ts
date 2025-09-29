@@ -17,15 +17,15 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get('teamId');
+    const currentWeek = await getCurrentWeek();
 
     if (teamId) {
-      const waivedPlayers = await getWaivedPlayersByTeam(teamId);
+      const waivedPlayers = await getWaivedPlayersByTeam(teamId, currentWeek);
       return NextResponse.json({
         success: true,
         data: waivedPlayers
       });
     } else {
-      const currentWeek = await getCurrentWeek();
       const waivedPlayers = await getWaivedPlayers(currentWeek);
       return NextResponse.json({
         success: true,
@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if deadline has passed
-        const deadline = getWaiverDeadline(currentWeek);
-        if (new Date() > deadline) {
+        const deadline = await getWaiverDeadline(currentWeek);
+        if (deadline && new Date() > deadline) {
           return NextResponse.json(
             { success: false, error: 'Waiver deadline has passed' },
             { status: 400 }
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if player is already waived by this team
-        const existingWaivedPlayers = await getWaivedPlayersByTeam(teamId);
+        const existingWaivedPlayers = await getWaivedPlayersByTeam(teamId, currentWeek);
         const alreadyWaived = existingWaivedPlayers.find(p => p.player_id === playerId);
         if (alreadyWaived) {
           return NextResponse.json(
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
 
         // Waive the player
         try {
-          await waivePlayer(playerId, teamId, waiverOrder);
+          await waivePlayer(playerId, teamId, waiverOrder, currentWeek);
           
           // Send email notification
           try {
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
             
             if (user && user.email && playerInfo && playerInfo.length > 0) {
               const player = playerInfo[0];
-              const deadline = getWaiverDeadline(currentWeek);
+              const deadline = await getWaiverDeadline(currentWeek);
               
               await NotificationService.sendPlayerWaivedNotification(
                 user.email,
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
                 player.position,
                 player.team_name,
                 waiverOrder,
-                deadline.toISOString()
+                deadline?.toISOString() || new Date().toISOString()
               );
               
               console.log(`Waiver notification sent to ${user.email} for player ${player.player_name}`);
@@ -187,8 +187,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Check if deadline has passed
-        const deadlineRemove = getWaiverDeadline(currentWeekRemove);
-        if (new Date() > deadlineRemove) {
+        const deadlineRemove = await getWaiverDeadline(currentWeekRemove);
+        if (deadlineRemove && new Date() > deadlineRemove) {
           return NextResponse.json(
             { success: false, error: 'Waiver deadline has passed' },
             { status: 400 }
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
 
         // Remove the player from waiver list
         try {
-          await removeWaivedPlayer(removePlayerId, removeTeamId);
+          await removeWaivedPlayer(removePlayerId, removeTeamId, currentWeekRemove);
           return NextResponse.json({
             success: true,
             message: 'Player removed from waiver list successfully'
@@ -212,7 +212,7 @@ export async function POST(request: NextRequest) {
       case 'check-waiver-status':
         const currentWeekCheck = await getCurrentWeek();
         const isWaiver = isWaiverWeek(currentWeekCheck);
-        const deadlineCheck = isWaiver ? getWaiverDeadline(currentWeekCheck) : null;
+        const deadlineCheck = isWaiver ? await getWaiverDeadline(currentWeekCheck) : null;
         
         return NextResponse.json({
           success: true,

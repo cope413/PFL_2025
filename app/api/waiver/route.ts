@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       case 'waiver-info':
         const weekNumber = parseInt(week || '1');
         const isWaiver = isWaiverWeek(weekNumber);
-        const deadline = isWaiver ? getWaiverDeadline(weekNumber) : null;
+        const deadline = isWaiver ? await getWaiverDeadline(weekNumber) : null;
         
         return NextResponse.json({
           success: true,
