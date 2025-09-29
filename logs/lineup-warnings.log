@@ -14,3 +14,19 @@ Using current week: 1
 ❌ Not Saturday - warnings should only be sent on Saturdays
 ⏰ Skipping warning emails due to time requirements
 💡 To override time check, run with --force flag
+[dotenv@17.2.2] injecting env (6) from .env.local -- tip: ⚙️  suppress all logs with { quiet: true }
+🚀 PFL Lineup Warning Script
+================================
+No current week found in date ranges, defaulting to week 1
+Using current week: 1
+❌ Not Saturday - warnings should only be sent on Saturdays
+⏰ Skipping warning emails due to time requirements
+💡 To override time check, run with --force flag
+[dotenv@17.2.2] injecting env (6) from .env.local -- tip: 📡 version env with Radar: https://dotenvx.com/radar
+🚀 PFL Lineup Warning Script
+================================
+No current week found in date ranges, defaulting to week 1
+Using current week: 1
+❌ Not Saturday - warnings should only be sent on Saturdays
+⏰ Skipping warning emails due to time requirements
+💡 To override time check, run with --force flag

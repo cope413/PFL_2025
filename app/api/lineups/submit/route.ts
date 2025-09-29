@@ -67,13 +67,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (lockedPlayers.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: `Cannot submit lineup: ${lockedPlayers.length} player(s) have games that have already started`,
-        lockedPlayers: lockedPlayers
-      }, { status: 400 });
-    }
+    // Note: We allow the lineup submit to proceed even with locked players
+    // The frontend should handle displaying locked players appropriately
 
     // Verify that the lineup exists in the database (must be saved first)
     try {
@@ -136,7 +131,9 @@ export async function POST(request: NextRequest) {
         success: true,
         message: 'Lineup submitted successfully',
         submissionTime: submissionTime,
-        emailSent: emailSent
+        emailSent: emailSent,
+        lockedPlayers: lockedPlayers.length > 0 ? lockedPlayers : undefined,
+        warning: lockedPlayers.length > 0 ? `${lockedPlayers.length} player(s) have games that have already started and cannot be changed` : undefined
       });
     } catch (error) {
       console.error('Error submitting lineup:', error);

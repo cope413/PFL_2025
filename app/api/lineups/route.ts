@@ -66,13 +66,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (lockedPlayers.length > 0) {
-      return NextResponse.json({
-        success: false,
-        error: `Cannot change lineup: ${lockedPlayers.length} player(s) have games that have already started`,
-        lockedPlayers: lockedPlayers
-      }, { status: 400 });
-    }
+    // Note: We allow the lineup save to proceed even with locked players
+    // The frontend should handle displaying locked players appropriately
 
     // Prepare the lineup data for the database
     const lineupData = {
@@ -107,7 +102,9 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: 'Lineup saved successfully'
+        message: 'Lineup saved successfully',
+        lockedPlayers: lockedPlayers.length > 0 ? lockedPlayers : undefined,
+        warning: lockedPlayers.length > 0 ? `${lockedPlayers.length} player(s) have games that have already started and cannot be changed` : undefined
       });
     } catch (error) {
       console.error('Error saving lineup:', error);
