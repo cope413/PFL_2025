@@ -43,8 +43,14 @@ export function useAwards() {
         const response = await fetch('/api/awards', {
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          // Add cache control to prevent unnecessary requests
+          cache: 'default'
         });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const result: ApiResponse<AwardsData> = await response.json();
 

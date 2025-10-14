@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getResults, getAllStandings, getTeamNameByTeamId, getCurrentWeek } from '@/lib/database';
+import { getResults, getAllStandings, getTeamNameByTeamId, getCurrentWeek, getTeamNameMap } from '@/lib/database';
+
+// Simple in-memory cache for awards data
+const awardsCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface TeamWeeklyResult {
   teamId: string;
@@ -73,9 +77,63 @@ async function getAllTeamsWeeklyResults(): Promise<TeamWeeklyResult[]> {
       sql: 'SELECT * FROM WeeklyMatchups ORDER BY Week'
     });
 
+    // Get team name mapping once
+    const teamNameMap = await getTeamNameMap();
+
+    // Optimized function to calculate all team scores for a week in bulk
+    const calculateAllTeamScoresForWeek = async (weekNumber: number): Promise<Map<string, number>> => {
+      try {
+        // Get all lineups for this week in one query
+        const lineups = await getResults({
+          sql: 'SELECT owner_ID, QB, RB_1, WR_1, FLEX_1, FLEX_2, TE, K, DEF FROM Lineups WHERE week = ?',
+          args: [weekNumber.toString()]
+        });
+
+        if (!lineups || lineups.length === 0) {
+          return new Map();
+        }
+
+        // Get all player points for this week in one query
+        const playerPoints = await getResults({
+          sql: `SELECT player_ID, COALESCE(week_${weekNumber}, 0) as points FROM Points`,
+          args: []
+        });
+
+        // Create a map for quick player point lookups
+        const pointsMap = new Map<string, number>();
+        playerPoints.forEach((row: any) => {
+          pointsMap.set(row.player_ID.toString(), Math.floor(row.points || 0));
+        });
+
+        // Calculate scores for all teams
+        const teamScores = new Map<string, number>();
+        const positions = ['QB', 'RB_1', 'WR_1', 'FLEX_1', 'FLEX_2', 'TE', 'K', 'DEF'];
+
+        lineups.forEach((lineup: any) => {
+          let totalScore = 0;
+          positions.forEach(pos => {
+            const playerId = lineup[pos];
+            if (playerId && pointsMap.has(playerId)) {
+              totalScore += pointsMap.get(playerId) || 0;
+            }
+          });
+          teamScores.set(lineup.owner_ID, totalScore);
+        });
+
+        return teamScores;
+      } catch (error) {
+        console.error(`Error calculating team scores for week ${weekNumber}:`, error);
+        return new Map();
+      }
+    };
+
     // Process each week's matchups to find all teams' results
     for (const weekRow of matchupsData) {
       const weekNum = weekRow.Week;
+      const isComplete = weekNum < currentWeek;
+      
+      // Calculate all team scores for this week in one go
+      const teamScoresMap = isComplete ? await calculateAllTeamScoresForWeek(weekNum) : new Map();
       
       // Process each team in this week
       for (let i = 1; i <= 16; i++) {
@@ -84,91 +142,29 @@ async function getAllTeamsWeeklyResults(): Promise<TeamWeeklyResult[]> {
         
         // Find opponent
         let opponent = null;
-        let isTeam1 = false;
         
         if (i % 2 === 1) {
           // Odd number, opponent is the next team
           opponent = weekRow[`Team_${i + 1}`];
-          isTeam1 = true;
         } else {
           // Even number, opponent is the previous team
           opponent = weekRow[`Team_${i - 1}`];
-          isTeam1 = false;
         }
 
         if (opponent) {
-          // Get team name
-          const teamData = await getTeamNameByTeamId(teamId) as any;
-          const teamName = teamData?.display_name || teamId;
-
-          // Determine if this week is complete
-          const isComplete = weekNum < currentWeek;
+          // Get team name from pre-loaded map
+          const teamName = teamNameMap.get(teamId) || teamId;
           
-          // Calculate actual scores from lineup data
-          let teamScore = 0;
-          let opponentScore = 0;
+          // Get scores from pre-calculated map
+          const teamScore = teamScoresMap.get(teamId) || 0;
+          const opponentScore = teamScoresMap.get(opponent) || 0;
+          
+          // Determine result based on scores
           let result: 'W' | 'L' | 'T' = 'L';
-          
           if (isComplete) {
-            try {
-              // Get team's lineup for this week
-              const teamLineup = await getResults({
-                sql: 'SELECT * FROM Lineups WHERE owner_ID = ? AND week = ?',
-                args: [teamId, weekNum.toString()]
-              });
-
-              const opponentLineup = await getResults({
-                sql: 'SELECT * FROM Lineups WHERE owner_ID = ? AND week = ?',
-                args: [opponent, weekNum.toString()]
-              });
-
-              if (teamLineup && teamLineup.length > 0) {
-                // Calculate team score from lineup
-                const positions = ['QB', 'RB_1', 'WR_1', 'FLEX_1', 'FLEX_2', 'TE', 'K', 'DEF'];
-                for (const pos of positions) {
-                  const playerId = teamLineup[0][pos];
-                  if (playerId) {
-                    const playerPoints = await getResults({
-                      sql: `SELECT week_${weekNum} as points FROM Points WHERE player_ID = ?`,
-                      args: [playerId]
-                    });
-                    if (playerPoints && playerPoints.length > 0) {
-                      const points = playerPoints[0].points === null ? 0 : Math.floor(playerPoints[0].points || 0);
-                      teamScore += points;
-                    }
-                  }
-                }
-              }
-
-              if (opponentLineup && opponentLineup.length > 0) {
-                // Calculate opponent score from lineup
-                const positions = ['QB', 'RB_1', 'WR_1', 'FLEX_1', 'FLEX_2', 'TE', 'K', 'DEF'];
-                for (const pos of positions) {
-                  const playerId = opponentLineup[0][pos];
-                  if (playerId) {
-                    const playerPoints = await getResults({
-                      sql: `SELECT week_${weekNum} as points FROM Points WHERE player_ID = ?`,
-                      args: [playerId]
-                    });
-                    if (playerPoints && playerPoints.length > 0) {
-                      const points = playerPoints[0].points === null ? 0 : Math.floor(playerPoints[0].points || 0);
-                      opponentScore += points;
-                    }
-                  }
-                }
-              }
-              
-              // Determine result based on scores
-              if (teamScore > opponentScore) result = 'W';
-              else if (teamScore === opponentScore) result = 'T';
-              else result = 'L';
-            } catch (error) {
-              console.error(`Error calculating actual scores for week ${weekNum}:`, error);
-              // Fallback to 0 scores if calculation fails
-              teamScore = 0;
-              opponentScore = 0;
-              result = 'L';
-            }
+            if (teamScore > opponentScore) result = 'W';
+            else if (teamScore === opponentScore) result = 'T';
+            else result = 'L';
           }
 
           allResults.push({
@@ -268,6 +264,17 @@ function calculateAwards(results: TeamWeeklyResult[], startWeek: number, endWeek
 
 export async function GET(request: NextRequest) {
   try {
+    // Check cache first
+    const cacheKey = 'awards-data';
+    const cached = awardsCache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+      return NextResponse.json({
+        success: true,
+        data: cached.data
+      });
+    }
+
     const allResults = await getAllTeamsWeeklyResults();
     
     // Calculate awards for first half (weeks 1-7) and second half (weeks 8-14)
@@ -278,6 +285,12 @@ export async function GET(request: NextRequest) {
       firstHalf: firstHalfAwards,
       secondHalf: secondHalfAwards
     };
+
+    // Cache the result
+    awardsCache.set(cacheKey, {
+      data: awardsData,
+      timestamp: Date.now()
+    });
 
     return NextResponse.json({
       success: true,
