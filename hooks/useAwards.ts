@@ -5,6 +5,7 @@ export interface Award {
   teamName: string;
   value: number;
   week?: number;
+  tiedTeams?: string[]; // Array of tied team names for display
 }
 
 export interface AwardsData {

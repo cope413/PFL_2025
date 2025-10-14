@@ -20,6 +20,7 @@ interface Award {
   teamName: string;
   value: number;
   week?: number;
+  tiedTeams?: string[]; // Array of tied team names for display
 }
 
 interface AwardsData {
@@ -195,18 +196,24 @@ function calculateAwards(results: TeamWeeklyResult[], startWeek: number, endWeek
   // Filter results for the specified week range
   const periodResults = results.filter(r => r.week >= startWeek && r.week <= endWeek && r.isComplete);
   
+  // Helper function to find all teams tied for the highest value
+  const findTiedWinners = <T>(items: T[], getValue: (item: T) => number): T[] => {
+    if (items.length === 0) return [];
+    
+    const maxValue = Math.max(...items.map(getValue));
+    return items.filter(item => getValue(item) === maxValue);
+  };
+
   // High Game Score: Highest single game score
-  const highGameScore = periodResults.reduce((max, result) => 
-    result.teamScore > max.teamScore ? result : max, 
-    { teamId: '', teamName: '', teamScore: 0, week: 0 }
-  );
+  const highGameScoreCandidates = findTiedWinners(periodResults, r => r.teamScore);
+  const highGameScore = highGameScoreCandidates.length > 0 ? highGameScoreCandidates[0] : 
+    { teamId: '', teamName: '', teamScore: 0, week: 0 };
 
   // High Losing Score: Highest score in a loss (excludes ties)
   const losingResults = periodResults.filter(r => r.result === 'L');
-  const highLosingScore = losingResults.reduce((max, result) => 
-    result.teamScore > max.teamScore ? result : max, 
-    { teamId: '', teamName: '', teamScore: 0, week: 0 }
-  );
+  const highLosingScoreCandidates = findTiedWinners(losingResults, r => r.teamScore);
+  const highLosingScore = highLosingScoreCandidates.length > 0 ? highLosingScoreCandidates[0] : 
+    { teamId: '', teamName: '', teamScore: 0, week: 0 };
 
   // Toughest Schedule: Most points scored against them
   const pointsAgainstByTeam = periodResults.reduce((acc, result) => {
@@ -217,10 +224,9 @@ function calculateAwards(results: TeamWeeklyResult[], startWeek: number, endWeek
     return acc;
   }, {} as Record<string, { teamId: string; teamName: string; total: number }>);
 
-  const toughestSchedule = Object.values(pointsAgainstByTeam).reduce((max, team) => 
-    team.total > max.total ? team : max, 
-    { teamId: '', teamName: '', total: 0 }
-  );
+  const toughestScheduleCandidates = findTiedWinners(Object.values(pointsAgainstByTeam), team => team.total);
+  const toughestSchedule = toughestScheduleCandidates.length > 0 ? toughestScheduleCandidates[0] : 
+    { teamId: '', teamName: '', total: 0 };
 
   // Best Loser: Most points scored in losses
   const pointsInLossesByTeam = losingResults.reduce((acc, result) => {
@@ -231,34 +237,45 @@ function calculateAwards(results: TeamWeeklyResult[], startWeek: number, endWeek
     return acc;
   }, {} as Record<string, { teamId: string; teamName: string; total: number }>);
 
-  const bestLoser = Object.values(pointsInLossesByTeam).reduce((max, team) => 
-    team.total > max.total ? team : max, 
-    { teamId: '', teamName: '', total: 0 }
-  );
+  const bestLoserCandidates = findTiedWinners(Object.values(pointsInLossesByTeam), team => team.total);
+  const bestLoser = bestLoserCandidates.length > 0 ? bestLoserCandidates[0] : 
+    { teamId: '', teamName: '', total: 0 };
+
+  // Helper function to create award with tied teams info
+  const createAwardWithTies = (candidates: any[], primaryAward: any, getValue: (item: any) => number, getWeek?: (item: any) => number) => {
+    const tiedTeamNames = candidates.length > 1 ? candidates.map(c => c.teamName).sort() : undefined;
+    return {
+      teamId: primaryAward.teamId,
+      teamName: primaryAward.teamName,
+      value: getValue(primaryAward),
+      week: getWeek ? getWeek(primaryAward) : undefined,
+      tiedTeams: tiedTeamNames
+    };
+  };
 
   return {
-    highGameScore: {
-      teamId: highGameScore.teamId,
-      teamName: highGameScore.teamName,
-      value: highGameScore.teamScore,
-      week: highGameScore.week
-    },
-    highLosingScore: {
-      teamId: highLosingScore.teamId,
-      teamName: highLosingScore.teamName,
-      value: highLosingScore.teamScore,
-      week: highLosingScore.week
-    },
-    toughestSchedule: {
-      teamId: toughestSchedule.teamId,
-      teamName: toughestSchedule.teamName,
-      value: toughestSchedule.total
-    },
-    bestLoser: {
-      teamId: bestLoser.teamId,
-      teamName: bestLoser.teamName,
-      value: bestLoser.total
-    }
+    highGameScore: createAwardWithTies(
+      highGameScoreCandidates, 
+      highGameScore, 
+      (r: any) => r.teamScore,
+      (r: any) => r.week
+    ),
+    highLosingScore: createAwardWithTies(
+      highLosingScoreCandidates, 
+      highLosingScore, 
+      (r: any) => r.teamScore,
+      (r: any) => r.week
+    ),
+    toughestSchedule: createAwardWithTies(
+      toughestScheduleCandidates, 
+      toughestSchedule, 
+      (t: any) => t.total
+    ),
+    bestLoser: createAwardWithTies(
+      bestLoserCandidates, 
+      bestLoser, 
+      (t: any) => t.total
+    )
   };
 }
 

@@ -444,6 +444,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.firstHalf.highGameScore.teamName}
+                                      {awards.firstHalf.highGameScore.tiedTeams && awards.firstHalf.highGameScore.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.firstHalf.highGameScore.tiedTeams.filter(name => name !== awards.firstHalf.highGameScore.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     {awards.firstHalf.highGameScore.week && (
                                       <div className="text-xs text-muted-foreground mt-1">
@@ -468,6 +473,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.firstHalf.highLosingScore.teamName}
+                                      {awards.firstHalf.highLosingScore.tiedTeams && awards.firstHalf.highLosingScore.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.firstHalf.highLosingScore.tiedTeams.filter(name => name !== awards.firstHalf.highLosingScore.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     {awards.firstHalf.highLosingScore.week && (
                                       <div className="text-xs text-muted-foreground mt-1">
@@ -492,6 +502,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.firstHalf.toughestSchedule.teamName}
+                                      {awards.firstHalf.toughestSchedule.tiedTeams && awards.firstHalf.toughestSchedule.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.firstHalf.toughestSchedule.tiedTeams.filter(name => name !== awards.firstHalf.toughestSchedule.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1">
                                       Points Against
@@ -514,6 +529,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.firstHalf.bestLoser.teamName}
+                                      {awards.firstHalf.bestLoser.tiedTeams && awards.firstHalf.bestLoser.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.firstHalf.bestLoser.tiedTeams.filter(name => name !== awards.firstHalf.bestLoser.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1">
                                       Points in Losses
@@ -545,6 +565,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.secondHalf.highGameScore.teamName}
+                                      {awards.secondHalf.highGameScore.tiedTeams && awards.secondHalf.highGameScore.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.secondHalf.highGameScore.tiedTeams.filter(name => name !== awards.secondHalf.highGameScore.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     {awards.secondHalf.highGameScore.week && (
                                       <div className="text-xs text-muted-foreground mt-1">
@@ -569,6 +594,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.secondHalf.highLosingScore.teamName}
+                                      {awards.secondHalf.highLosingScore.tiedTeams && awards.secondHalf.highLosingScore.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.secondHalf.highLosingScore.tiedTeams.filter(name => name !== awards.secondHalf.highLosingScore.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     {awards.secondHalf.highLosingScore.week && (
                                       <div className="text-xs text-muted-foreground mt-1">
@@ -593,6 +623,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.secondHalf.toughestSchedule.teamName}
+                                      {awards.secondHalf.toughestSchedule.tiedTeams && awards.secondHalf.toughestSchedule.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.secondHalf.toughestSchedule.tiedTeams.filter(name => name !== awards.secondHalf.toughestSchedule.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1">
                                       Points Against
@@ -615,6 +650,11 @@ export default function LeaguesPage() {
                                     </div>
                                     <div className="text-sm text-muted-foreground">
                                       {awards.secondHalf.bestLoser.teamName}
+                                      {awards.secondHalf.bestLoser.tiedTeams && awards.secondHalf.bestLoser.tiedTeams.length > 1 && (
+                                        <div className="text-xs text-amber-600 mt-1">
+                                          Tied with: {awards.secondHalf.bestLoser.tiedTeams.filter(name => name !== awards.secondHalf.bestLoser.teamName).join(', ')}
+                                        </div>
+                                      )}
                                     </div>
                                     <div className="text-xs text-muted-foreground mt-1">
                                       Points in Losses
