@@ -653,7 +653,17 @@ export async function getTeamRoster(teamId: string, currentWeek: number = 1) {
       LEFT JOIN NFL_Teams n ON p.team_id = n.team_id
       LEFT JOIN Points pts ON p.player_ID = pts.player_ID
       WHERE p.owner_ID = ?
-      ORDER BY p.position, p.player_name
+      ORDER BY 
+        CASE p.position
+          WHEN 'QB' THEN 1
+          WHEN 'RB' THEN 2
+          WHEN 'WR' THEN 3
+          WHEN 'TE' THEN 4
+          WHEN 'PK' THEN 5
+          WHEN 'D/ST' THEN 6
+          ELSE 7
+        END,
+        p.player_name
     `,
     args: [Math.max(1, currentWeek - 1), teamId]
   });
@@ -1235,7 +1245,17 @@ export async function getFreeAgents(currentWeek: number = 1) {
       LEFT JOIN Points pts ON p.player_ID = pts.player_ID
       WHERE p.owner_ID = 99 
         AND p.position IN ('QB', 'WR', 'TE', 'RB', 'PK')
-      ORDER BY p.position, p.player_name
+      ORDER BY 
+        CASE p.position
+          WHEN 'QB' THEN 1
+          WHEN 'RB' THEN 2
+          WHEN 'WR' THEN 3
+          WHEN 'TE' THEN 4
+          WHEN 'PK' THEN 5
+          WHEN 'D/ST' THEN 6
+          ELSE 7
+        END,
+        p.player_name
     `,
     args: [Math.max(1, currentWeek - 1)]
   });

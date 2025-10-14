@@ -118,3 +118,24 @@ body {
 .scrollbar-thick::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--foreground));
 }
+
+/* Remove focus outlines from table elements to prevent flashing cursor */
+table, th, td, tr {
+  outline: none !important;
+}
+
+table:focus, th:focus, td:focus, tr:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Remove any default cursor styling from table rows */
+.table-no-focus tr {
+  outline: none !important;
+  cursor: default !important;
+}
+
+.table-no-focus tr:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}

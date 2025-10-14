@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/auth';
-import { getTeamStanding, getAllStandings, getTeamNameByTeamId, getCurrentWeek, getResults } from '@/lib/database';
+import { getTeamStanding, getAllStandings, getTeamNameByTeamId, getCurrentWeek, getResults, getTeamNameMap } from '@/lib/database';
 import { TeamInfo, TeamWeeklyResult } from '@/lib/db-types';
+
+// Simple in-memory cache for weekly results data
+const weeklyResultsCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 // Function to get week dates from the database
 async function getWeekDate(weekNumber: number): Promise<string> {
@@ -29,11 +33,66 @@ async function getWeekDate(weekNumber: number): Promise<string> {
   return weekDate.toISOString().split('T')[0];
 }
 
+// Optimized function to calculate all team scores for a week in bulk
+async function calculateAllTeamScoresForWeek(weekNumber: number): Promise<Map<string, number>> {
+  try {
+    // Get all lineups for this week in one query
+    const lineups = await getResults({
+      sql: 'SELECT owner_ID, QB, RB_1, WR_1, FLEX_1, FLEX_2, TE, K, DEF FROM Lineups WHERE week = ?',
+      args: [weekNumber.toString()]
+    });
+
+    if (!lineups || lineups.length === 0) {
+      return new Map();
+    }
+
+    // Get all player points for this week in one query
+    const playerPoints = await getResults({
+      sql: `SELECT player_ID, COALESCE(week_${weekNumber}, 0) as points FROM Points`,
+      args: []
+    });
+
+    // Create a map for quick player point lookups
+    const pointsMap = new Map<string, number>();
+    playerPoints.forEach((row: any) => {
+      pointsMap.set(row.player_ID.toString(), Math.floor(row.points || 0));
+    });
+
+    // Calculate scores for all teams
+    const teamScores = new Map<string, number>();
+    const positions = ['QB', 'RB_1', 'WR_1', 'FLEX_1', 'FLEX_2', 'TE', 'K', 'DEF'];
+
+    lineups.forEach((lineup: any) => {
+      let totalScore = 0;
+      positions.forEach(pos => {
+        const playerId = lineup[pos];
+        if (playerId && pointsMap.has(playerId)) {
+          totalScore += pointsMap.get(playerId) || 0;
+        }
+      });
+      teamScores.set(lineup.owner_ID, totalScore);
+    });
+
+    return teamScores;
+  } catch (error) {
+    console.error(`Error calculating team scores for week ${weekNumber}:`, error);
+    return new Map();
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     let teamId = searchParams.get('teamId');
     const week = searchParams.get('week');
+
+    // Check cache first
+    const cacheKey = `weekly-results-${teamId || 'user'}-${week || 'all'}`;
+    const cached = weeklyResultsCache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
+      return NextResponse.json(cached.data);
+    }
 
     // If no teamId is provided, require authentication and use user's team
     if (!teamId) {
@@ -87,6 +146,9 @@ export async function GET(request: NextRequest) {
     const currentWeek = await getCurrentWeek();
     
     try {
+      // Get team name mapping once
+      const teamNameMap = await getTeamNameMap();
+
       // Get matchup data from WeeklyMatchups table
       const matchupsQuery = week ? 
         'SELECT * FROM WeeklyMatchups WHERE Week = ?' :
@@ -100,10 +162,13 @@ export async function GET(request: NextRequest) {
       // Process each week's matchups to find this team's results
       for (const weekRow of matchupsData) {
         const weekNum = weekRow.Week;
+        const isComplete = weekNum < currentWeek;
+        
+        // Calculate all team scores for this week in one go (only for completed weeks)
+        const teamScoresMap = isComplete ? await calculateAllTeamScoresForWeek(weekNum) : new Map();
         
         // Find which team slot this user's team is in
         let opponent = null;
-        let isTeam1 = false;
         
         for (let i = 1; i <= 16; i++) {
           if (weekRow[`Team_${i}`] === teamId) {
@@ -111,91 +176,34 @@ export async function GET(request: NextRequest) {
             if (i % 2 === 1) {
               // Odd number, opponent is the next team
               opponent = weekRow[`Team_${i + 1}`];
-              isTeam1 = true;
             } else {
               // Even number, opponent is the previous team
               opponent = weekRow[`Team_${i - 1}`];
-              isTeam1 = false;
             }
             break;
           }
         }
 
         if (opponent) {
-          // Get opponent name
-          const opponentData = await getTeamNameByTeamId(opponent) as any;
-          const opponentName = opponentData?.display_name || opponent;
+          // Get opponent name from pre-loaded map
+          const opponentName = teamNameMap.get(opponent) || opponent;
 
           // Determine if this week is complete or upcoming
-          const isComplete = weekNum < currentWeek;
           const isCurrentWeek = weekNum === currentWeek;
           
-          // Generate realistic but placeholder scores/results
+          // Get scores from pre-calculated map
           let teamScore = 0;
           let opponentScore = 0;
           let result: 'W' | 'L' | 'T' = 'L';
           
           if (isComplete) {
-            // Calculate actual scores from lineup data
-            try {
-              // Get team's lineup for this week
-              const teamLineup = await getResults({
-                sql: 'SELECT * FROM Lineups WHERE owner_ID = ? AND week = ?',
-                args: [teamId, weekNum.toString()]
-              });
-
-              const opponentLineup = await getResults({
-                sql: 'SELECT * FROM Lineups WHERE owner_ID = ? AND week = ?',
-                args: [opponent, weekNum.toString()]
-              });
-
-              if (teamLineup && teamLineup.length > 0) {
-                // Calculate team score from lineup
-                const positions = ['QB', 'RB_1', 'WR_1', 'FLEX_1', 'FLEX_2', 'TE', 'K', 'DEF'];
-                for (const pos of positions) {
-                  const playerId = teamLineup[0][pos];
-                  if (playerId) {
-                    const playerPoints = await getResults({
-                      sql: `SELECT week_${weekNum} as points FROM Points WHERE player_ID = ?`,
-                      args: [playerId]
-                    });
-                    if (playerPoints && playerPoints.length > 0) {
-                      const points = playerPoints[0].points === null ? 0 : Math.floor(playerPoints[0].points || 0);
-                      teamScore += points;
-                    }
-                  }
-                }
-              }
-
-              if (opponentLineup && opponentLineup.length > 0) {
-                // Calculate opponent score from lineup
-                const positions = ['QB', 'RB_1', 'WR_1', 'FLEX_1', 'FLEX_2', 'TE', 'K', 'DEF'];
-                for (const pos of positions) {
-                  const playerId = opponentLineup[0][pos];
-                  if (playerId) {
-                    const playerPoints = await getResults({
-                      sql: `SELECT week_${weekNum} as points FROM Points WHERE player_ID = ?`,
-                      args: [playerId]
-                    });
-                    if (playerPoints && playerPoints.length > 0) {
-                      const points = playerPoints[0].points === null ? 0 : Math.floor(playerPoints[0].points || 0);
-                      opponentScore += points;
-                    }
-                  }
-                }
-              }
-              
-              // Determine result based on scores
-              if (teamScore > opponentScore) result = 'W';
-              else if (teamScore === opponentScore) result = 'T';
-              else result = 'L';
-            } catch (error) {
-              console.error(`Error calculating actual scores for week ${weekNum}:`, error);
-              // Fallback to 0 scores if calculation fails
-              teamScore = 0;
-              opponentScore = 0;
-              result = 'L';
-            }
+            teamScore = teamScoresMap.get(teamId) || 0;
+            opponentScore = teamScoresMap.get(opponent) || 0;
+            
+            // Determine result based on scores
+            if (teamScore > opponentScore) result = 'W';
+            else if (teamScore === opponentScore) result = 'T';
+            else result = 'L';
           } else if (isCurrentWeek) {
             // Current week - might be in progress
             teamScore = 0;
@@ -238,22 +246,38 @@ export async function GET(request: NextRequest) {
         }, { status: 404 });
       }
 
-      return NextResponse.json({
+      const responseData = {
         success: true,
         data: {
           teamInfo,
           weeklyResult: weekResult
         }
+      };
+
+      // Cache the result
+      weeklyResultsCache.set(cacheKey, {
+        data: responseData,
+        timestamp: Date.now()
       });
+
+      return NextResponse.json(responseData);
     }
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: {
         teamInfo,
         weeklyResults
       }
+    };
+
+    // Cache the result
+    weeklyResultsCache.set(cacheKey, {
+      data: responseData,
+      timestamp: Date.now()
     });
+
+    return NextResponse.json(responseData);
 
   } catch (error) {
     console.error('Get Team Weekly Results Error:', error);
