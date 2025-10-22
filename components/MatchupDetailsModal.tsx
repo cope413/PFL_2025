@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Trophy, Calendar, Users, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { MatchupDetails, PlayerScore } from '@/hooks/useMatchupDetails';
+import { PlayerBreakdownModal } from './PlayerBreakdownModal';
 
 interface MatchupDetailsModalProps {
   isOpen: boolean;
@@ -24,6 +25,12 @@ export function MatchupDetailsModal({
   error 
 }: MatchupDetailsModalProps) {
   const [selectedTeam, setSelectedTeam] = useState<'team1' | 'team2'>('team1');
+  const [selectedPlayer, setSelectedPlayer] = useState<{
+    playerId: string;
+    playerName: string;
+    position: string;
+    week: number;
+  } | null>(null);
 
   const getResultColor = (result: 'W' | 'L' | 'T') => {
     switch (result) {
@@ -57,8 +64,21 @@ export function MatchupDetailsModal({
     }
   }
 
+  const handlePlayerClick = (player: PlayerScore) => {
+    setSelectedPlayer({
+      playerId: player.playerId,
+      playerName: player.playerName,
+      position: player.position,
+      week: matchupDetails?.week || 1
+    });
+  };
+
   const renderPlayerRow = (player: PlayerScore, isUserTeam: boolean) => (
-    <div key={player.playerId} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+    <div 
+      key={player.playerId} 
+      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors cursor-pointer"
+      onClick={() => handlePlayerClick(player)}
+    >
       <div className="flex items-center gap-3">
         <Avatar className="h-8 w-8">
           <AvatarFallback>
@@ -256,6 +276,18 @@ export function MatchupDetailsModal({
             </div>
           </CardContent>
         </Card>
+
+        {/* Player Breakdown Modal */}
+        {selectedPlayer && (
+          <PlayerBreakdownModal
+            isOpen={!!selectedPlayer}
+            onClose={() => setSelectedPlayer(null)}
+            playerId={selectedPlayer.playerId}
+            playerName={selectedPlayer.playerName}
+            position={selectedPlayer.position}
+            week={selectedPlayer.week}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
