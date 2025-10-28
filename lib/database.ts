@@ -1917,13 +1917,13 @@ export async function removeWaivedPlayer4(playerId: string, teamId: string) {
 export function getWaiverTableForWeek(week: number): 'WaiverPlayers' | 'WaiverPlayers2' | 'WaiverPlayers3' | 'WaiverPlayers4' {
   // Weeks 2-3: WaiverPlayers (1st waiver draft)
   // Weeks 4-5: WaiverPlayers2 (2nd waiver draft)  
-  // Weeks 7-8: WaiverPlayers3 (3rd waiver draft)
+  // Weeks 7-9: WaiverPlayers3 (3rd waiver draft)
   // Weeks 10-11: WaiverPlayers4 (4th waiver draft)
   if (week >= 2 && week <= 3) {
     return 'WaiverPlayers';
   } else if (week >= 4 && week <= 5) {
     return 'WaiverPlayers2';
-  } else if (week >= 7 && week <= 8) {
+  } else if (week >= 7 && week <= 9) {
     return 'WaiverPlayers3';
   } else if (week >= 10 && week <= 11) {
     return 'WaiverPlayers4';
@@ -1935,7 +1935,7 @@ export function getWaiverTableForWeek(week: number): 'WaiverPlayers' | 'WaiverPl
 
 // Helper function to check if it's a waiver week
 export function isWaiverWeek(week: number): boolean {
-  return (week >= 2 && week <= 3) || (week >= 4 && week <= 5) || (week >= 7 && week <= 8) || (week >= 10 && week <= 11);
+  return (week >= 2 && week <= 3) || (week >= 4 && week <= 5) || (week >= 7 && week <= 9) || (week >= 10 && week <= 11);
 }
 
 // Helper function to get waiver deadline for a week
