@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { DEFAULT_SCORING_RULES, getFieldGoalPoints, getYardsAllowedPoints, getPassYardPoints, getRushingYardPoints, getReceivingYardPoints } from '@/lib/scoring-rules';
+import { DEFAULT_SCORING_RULES, getFieldGoalPoints, getYardsAllowedPoints, getPassYardPoints, getRushingYardPoints, getReceivingYardPoints, getReceptionPoints, getCarryPoints, getTouchdownPoints, getBonusPoints } from '@/lib/scoring-rules';
 
 interface PlayerStats {
   player_id: number;
@@ -95,55 +95,141 @@ export function PlayerBreakdownModal({
     }
   };
 
+  // Helper function to calculate touchdown points from distance array
+  const calculateTouchdownPointsFromDistances = (distances: string | null, label: string) => {
+    if (!distances || distances === '[]' || distances === 'null') return null;
+    try {
+      const tdLengths = JSON.parse(distances);
+      if (Array.isArray(tdLengths) && tdLengths.length > 0) {
+        let totalPoints = 0;
+        tdLengths.forEach((distance: number) => {
+          totalPoints += getTouchdownPoints(distance);
+        });
+        return {
+          label,
+          value: `${tdLengths.length} (${tdLengths.join(', ')} yds)` as any,
+          points: totalPoints
+        };
+      }
+    } catch (e) {
+      console.error(`Error parsing TD distances for ${label}:`, e);
+    }
+    return null;
+  };
+
   const calculatePoints = (stats: PlayerStats, pos: string) => {
     const rules = SCORING_RULES[pos as keyof typeof SCORING_RULES];
     if (!rules || !stats) return [];
 
-    const breakdown: Array<{ label: string; value: number; points: number }> = [];
+    const breakdown: Array<{ label: string; value: number | string; points: number; isPrimary?: boolean }> = [];
 
     switch (pos) {
       case 'QB':
         const qbPassYardPoints = getPassYardPoints(stats.pass_yards);
-        const qbPassTdPoints = stats.pass_touchdowns * rules.passTdPoints;
         const qbRushYardPoints = getRushingYardPoints(stats.rush_yards);
-        const qbRushTdPoints = stats.rush_touchdowns * rules.rushTdPoints;
         const qbTwoPtPoints = (stats.pass_two_pt + stats.rush_two_pt) * rules.twoPointConversion;
 
         if (stats.pass_yards > 0) breakdown.push({ label: 'Pass Yards', value: stats.pass_yards, points: qbPassYardPoints });
-        if (stats.pass_touchdowns > 0) breakdown.push({ label: 'Pass TDs', value: stats.pass_touchdowns, points: qbPassTdPoints });
         if (stats.rush_yards > 0) breakdown.push({ label: 'Rush Yards', value: stats.rush_yards, points: qbRushYardPoints });
-        if (stats.rush_touchdowns > 0) breakdown.push({ label: 'Rush TDs', value: stats.rush_touchdowns, points: qbRushTdPoints });
         if ((stats.pass_two_pt + stats.rush_two_pt) > 0) breakdown.push({ label: '2-Point Conversions', value: stats.pass_two_pt + stats.rush_two_pt, points: qbTwoPtPoints });
+
+        // Handle touchdown distances
+        const qbPassTdBreakdown = calculateTouchdownPointsFromDistances(stats.pass_td_distances, 'Pass TDs');
+        if (qbPassTdBreakdown) {
+          breakdown.push(qbPassTdBreakdown);
+        } else if (stats.pass_touchdowns > 0) {
+          const fallbackPoints = stats.pass_touchdowns * rules.passTdPoints;
+          breakdown.push({ label: 'Pass TDs', value: stats.pass_touchdowns, points: fallbackPoints });
+        }
+
+        const qbRushTdBreakdown = calculateTouchdownPointsFromDistances(stats.rush_td_distances, 'Rush TDs');
+        if (qbRushTdBreakdown) {
+          breakdown.push(qbRushTdBreakdown);
+        } else if (stats.rush_touchdowns > 0) {
+          const fallbackPoints = stats.rush_touchdowns * rules.rushTdPoints;
+          breakdown.push({ label: 'Rush TDs', value: stats.rush_touchdowns, points: fallbackPoints });
+        }
+
+        // Calculate bonus points (QB can have passing + rushing, or passing + receiving if they somehow catch a pass)
+        const qbBonusPoints = getBonusPoints(stats.pass_yards, stats.rush_yards, stats.receiving_yards);
+        if (qbBonusPoints > 0) {
+          breakdown.push({ label: 'Bonus Points', value: 'Yardage Bonus', points: qbBonusPoints });
+        }
         break;
 
       case 'RB':
       case 'WR':
       case 'TE':
-        const skillRecPoints = stats.receptions * rules.receptions;
-        const skillRecYardPoints = getReceivingYardPoints(stats.receiving_yards);
+        // Calculate rushing points
         const skillRushYardPoints = getRushingYardPoints(stats.rush_yards);
+        const skillRushPoints = getCarryPoints(stats.total_rushes);
+        const skillRushMax = Math.max(skillRushYardPoints, skillRushPoints);
+
+        // Calculate receiving points
+        const skillRecYardPoints = getReceivingYardPoints(stats.receiving_yards);
+        const skillRecPoints = getReceptionPoints(stats.receptions);
+        const skillRecMax = Math.max(skillRecYardPoints, skillRecPoints);
+
         const skillRecTdPoints = stats.rec_touchdowns * rules.recTdPoints;
         const skillRushTdPoints = stats.rush_touchdowns * rules.rushTdPoints;
         const skillTwoPtPoints = (stats.rec_two_pt + stats.rush_two_pt) * rules.twoPointConversion;
 
-        if (stats.receptions > 0) breakdown.push({ label: 'Receptions', value: stats.receptions, points: skillRecPoints });
-        if (stats.receiving_yards > 0) breakdown.push({ label: 'Rec. Yards', value: stats.receiving_yards, points: skillRecYardPoints });
-        if (stats.total_rushes > 0) breakdown.push({ label: 'Rushes', value: stats.total_rushes, points: 0 });
-        if (stats.rush_yards > 0) breakdown.push({ label: 'Rush Yards', value: stats.rush_yards, points: skillRushYardPoints });
-        if (stats.rec_touchdowns > 0) breakdown.push({ label: 'Rec. TDs', value: stats.rec_touchdowns, points: skillRecTdPoints });
-        if (stats.rush_touchdowns > 0) breakdown.push({ label: 'Rush TDs', value: stats.rush_touchdowns, points: skillRushTdPoints });
+        // Show rushing breakdown - calculate which gives more points
+        if (stats.rush_yards > 0 || stats.total_rushes > 0) {
+          if (skillRushYardPoints >= skillRushPoints) {
+            // Yards are greater or equal
+            if (stats.rush_yards > 0) breakdown.push({ label: 'Rush Yards', value: stats.rush_yards, points: skillRushYardPoints, isPrimary: true });
+            if (stats.total_rushes > 0) breakdown.push({ label: 'Rushes', value: stats.total_rushes, points: skillRushPoints, isPrimary: false });
+          } else {
+            // Carries are greater
+            if (stats.total_rushes > 0) breakdown.push({ label: 'Rushes', value: stats.total_rushes, points: skillRushPoints, isPrimary: true });
+            if (stats.rush_yards > 0) breakdown.push({ label: 'Rush Yards', value: stats.rush_yards, points: skillRushYardPoints, isPrimary: false });
+          }
+        }
+
+        // Show receiving breakdown - calculate which gives more points
+        if (stats.receiving_yards > 0 || stats.receptions > 0) {
+          if (skillRecYardPoints >= skillRecPoints) {
+            // Yards are greater or equal
+            if (stats.receiving_yards > 0) breakdown.push({ label: 'Rec. Yards', value: stats.receiving_yards, points: skillRecYardPoints, isPrimary: true });
+            if (stats.receptions > 0) breakdown.push({ label: 'Receptions', value: stats.receptions, points: skillRecPoints, isPrimary: false });
+          } else {
+            // Receptions are greater
+            if (stats.receptions > 0) breakdown.push({ label: 'Receptions', value: stats.receptions, points: skillRecPoints, isPrimary: true });
+            if (stats.receiving_yards > 0) breakdown.push({ label: 'Rec. Yards', value: stats.receiving_yards, points: skillRecYardPoints, isPrimary: false });
+          }
+        }
+
         if ((stats.rec_two_pt + stats.rush_two_pt) > 0) breakdown.push({ label: '2-Point Conversions', value: stats.rec_two_pt + stats.rush_two_pt, points: skillTwoPtPoints });
+
+        // Handle touchdown distances
+        const skillRecTdBreakdown = calculateTouchdownPointsFromDistances(stats.rec_td_distances, 'Rec. TDs');
+        if (skillRecTdBreakdown) {
+          breakdown.push(skillRecTdBreakdown);
+        } else if (stats.rec_touchdowns > 0) {
+          breakdown.push({ label: 'Rec. TDs', value: stats.rec_touchdowns, points: skillRecTdPoints });
+        }
+
+        const skillRushTdBreakdown = calculateTouchdownPointsFromDistances(stats.rush_td_distances, 'Rush TDs');
+        if (skillRushTdBreakdown) {
+          breakdown.push(skillRushTdBreakdown);
+        } else if (stats.rush_touchdowns > 0) {
+          breakdown.push({ label: 'Rush TDs', value: stats.rush_touchdowns, points: skillRushTdPoints });
+        }
+
+        // Calculate bonus points (RB/WR/TE can have rushing + receiving, or passing + rushing/receiving)
+        const skillBonusPoints = getBonusPoints(stats.pass_yards, stats.rush_yards, stats.receiving_yards);
+        if (skillBonusPoints > 0) {
+          breakdown.push({ label: 'Bonus Points', value: 'Yardage Bonus', points: skillBonusPoints });
+        }
         break;
 
       case 'PK':
         const extraPointPoints = stats.extra_point * rules.extraPoint;
         if (stats.extra_point > 0) breakdown.push({ label: 'Extra Points', value: stats.extra_point, points: extraPointPoints });
-        // Note: Field goal distances would need to be parsed from a separate field or calculated differently
         break;
 
       case 'D/ST':
-        // Note: D/ST stats would need additional fields for sacks, takeaways, safeties, etc.
-        // This is a placeholder for the structure
         break;
     }
 
@@ -210,7 +296,16 @@ export function PlayerBreakdownModal({
   }
 
   const breakdown = calculatePoints(playerStats, position);
-  const totalPoints = breakdown.reduce((sum, item) => sum + item.points, 0);
+  
+  // Only count primary stats in the total (for RB/WR/TE, only the greater of yards or carries/receptions)
+  const totalPoints = breakdown.reduce((sum, item) => {
+    // For RB/WR/TE stats where we show both, only count if it's the primary
+    if (item.isPrimary !== undefined) {
+      return sum + (item.isPrimary ? item.points : 0);
+    }
+    // For other stats (like TDs, 2-point conversions, etc.), always count them
+    return sum + item.points;
+  }, 0);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -246,11 +341,11 @@ export function PlayerBreakdownModal({
               {breakdown.length > 0 ? (
                 <>
                   {breakdown.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                      <span className="text-sm font-medium">{item.label}:</span>
+                    <div key={index} className={`flex items-center justify-between py-2 border-b last:border-b-0 ${item.isPrimary ? 'bg-green-50 rounded px-2' : ''}`}>
+                      <span className={`text-sm ${item.isPrimary ? 'font-bold' : 'font-medium'}`}>{item.label}:</span>
                       <div className="text-sm">
                         <span className="text-muted-foreground">{item.value}</span>
-                        <span className="ml-2 font-medium text-green-600">
+                        <span className={`ml-2 font-medium ${item.isPrimary ? 'text-green-700 font-bold' : 'text-green-600'}`}>
                           = {item.points} pts
                         </span>
                       </div>

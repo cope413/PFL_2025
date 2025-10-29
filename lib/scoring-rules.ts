@@ -187,3 +187,66 @@ export function getYardsAllowedPoints(yardsAllowed: number, rules: ScoringRules[
   if (yardsAllowed <= 499) return rules.yardsAllowedPoints['400-499'];
   return rules.yardsAllowedPoints['500+'];
 }
+
+// Helper function to get touchdown points based on distance
+export function getTouchdownPoints(distance: number): number {
+  if (distance < 20) return 6;
+  if (distance < 50) return 9;
+  if (distance < 80) return 12;
+  return 15;
+}
+
+// Helper function to get carry/rush points based on tiered scoring
+export function getCarryPoints(carries: number): number {
+  if (carries < 12) return 0;
+  if (carries < 18) return 1;
+  if (carries < 24) return 3;
+  if (carries < 30) return 6;
+  if (carries < 36) return 9;
+  if (carries < 42) return 12;
+  if (carries < 48) return 15;
+  if (carries < 54) return 18;
+  return 21;
+}
+
+// Helper function to get reception points based on tiered scoring
+export function getReceptionPoints(receptions: number): number {
+  if (receptions < 3) return 0;
+  if (receptions < 6) return 1;
+  if (receptions < 9) return 3;
+  if (receptions < 12) return 6;
+  if (receptions < 15) return 9;
+  if (receptions < 18) return 12;
+  if (receptions < 21) return 15;
+  if (receptions < 24) return 18;
+  return 21;
+}
+
+// Helper function to calculate bonus points based on combined yardage tiers
+export function getBonusPoints(passYards: number, rushYards: number, recYards: number): number {
+  let bonusPoints = 0;
+  
+  // Rushing + Receiving yards bonus
+  if (rushYards >= 50 && recYards >= 50) {
+    if (rushYards >= 100 && recYards >= 100) {
+      bonusPoints += 6;
+    } else if (rushYards >= 75 && recYards >= 75) {
+      bonusPoints += 4;
+    } else {
+      bonusPoints += 2;
+    }
+  }
+  
+  // Passing + (Rushing OR Receiving) yards bonus
+  if ((rushYards >= 50 || recYards >= 50) && passYards >= 200) {
+    if ((rushYards >= 100 || recYards >= 100) && passYards >= 300) {
+      bonusPoints += 6;
+    } else if ((rushYards >= 75 || recYards >= 75) && passYards >= 250) {
+      bonusPoints += 4;
+    } else {
+      bonusPoints += 2;
+    }
+  }
+  
+  return bonusPoints;
+}
