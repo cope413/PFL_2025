@@ -170,12 +170,13 @@ export function getReceivingYardPoints(yards: number): number {
 }
 
 // Helper function to get field goal points based on distance
-export function getFieldGoalPoints(distance: number, rules: ScoringRules['PK']): number {
-  if (distance <= 19) return rules.fieldGoalRanges['0-19'];
-  if (distance <= 29) return rules.fieldGoalRanges['20-29'];
-  if (distance <= 39) return rules.fieldGoalRanges['30-39'];
-  if (distance <= 49) return rules.fieldGoalRanges['40-49'];
-  return rules.fieldGoalRanges['50+'];
+// Uses distance-based scoring where points increase with field goal distance
+export function getFieldGoalPoints(distance: number, rules?: ScoringRules['PK']): number {
+  if (distance <= 39) return 3;
+  if (distance <= 49) return 6;
+  if (distance <= 59) return 9;
+  if (distance <= 69) return 12;
+  return 15;
 }
 
 // Helper function to get yards allowed points for D/ST

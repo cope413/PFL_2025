@@ -30,6 +30,7 @@ interface PlayerStats {
   pass_td_distances: string;
   rush_td_distances: string;
   rec_td_distances: string;
+  FG_length: string;
 }
 
 interface PlayerBreakdownModalProps {
@@ -113,6 +114,28 @@ export function PlayerBreakdownModal({
       }
     } catch (e) {
       console.error(`Error parsing TD distances for ${label}:`, e);
+    }
+    return null;
+  };
+
+  // Helper function to calculate field goal points from distance array
+  const calculateFieldGoalPointsFromDistances = (distances: string | null, label: string) => {
+    if (!distances || distances === '[]' || distances === 'null') return null;
+    try {
+      const fgLengths = JSON.parse(distances);
+      if (Array.isArray(fgLengths) && fgLengths.length > 0) {
+        let totalPoints = 0;
+        fgLengths.forEach((distance: number) => {
+          totalPoints += getFieldGoalPoints(distance);
+        });
+        return {
+          label,
+          value: `${fgLengths.length} (${fgLengths.join(', ')} yds)` as any,
+          points: totalPoints
+        };
+      }
+    } catch (e) {
+      console.error(`Error parsing FG distances for ${label}:`, e);
     }
     return null;
   };
@@ -227,6 +250,12 @@ export function PlayerBreakdownModal({
       case 'PK':
         const extraPointPoints = stats.extra_point * rules.extraPoint;
         if (stats.extra_point > 0) breakdown.push({ label: 'Extra Points', value: stats.extra_point, points: extraPointPoints });
+        
+        // Handle field goal distances
+        const fgBreakdown = calculateFieldGoalPointsFromDistances(stats.FG_length, 'Field Goals');
+        if (fgBreakdown) {
+          breakdown.push(fgBreakdown);
+        }
         break;
 
       case 'D/ST':

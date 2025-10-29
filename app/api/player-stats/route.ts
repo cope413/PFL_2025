@@ -67,7 +67,8 @@ export async function GET(request: NextRequest) {
           two_point_conversions,
           pass_td_distances,
           rush_td_distances,
-          rec_td_distances
+          rec_td_distances,
+          FG_length
         FROM player_stats 
         WHERE player_id = ? AND week = ?
         ORDER BY game_id DESC
