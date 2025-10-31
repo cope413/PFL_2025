@@ -871,6 +871,9 @@ export default function TeamDashboard() {
             >
               Draft
             </Link>
+            <Link href="/rules" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Rules
+            </Link>
             {user?.is_admin && (
               <Link
                 href="/admin"
@@ -959,6 +962,13 @@ export default function TeamDashboard() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Draft
+              </Link>
+              <Link
+                href="/rules"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Rules
               </Link>
               {user?.is_admin && (
                 <Link

@@ -166,6 +166,9 @@ export default function Home() {
             >
               Draft
             </Link>
+            <Link href="/rules" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Rules
+            </Link>
             {user?.is_admin && (
               <Link
                 href="/admin"
@@ -276,6 +279,13 @@ export default function Home() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Draft
+              </Link>
+              <Link
+                href="/rules"
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Rules
               </Link>
               {user?.is_admin && (
                 <Link
@@ -414,7 +424,6 @@ export default function Home() {
                       <div key={player.id} className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={`/players/${player.id}.jpg`} alt={player.name} />
                             <AvatarFallback>{player.name.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <div>

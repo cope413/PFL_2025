@@ -5,32 +5,42 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { DEFAULT_SCORING_RULES, getFieldGoalPoints, getYardsAllowedPoints, getPassYardPoints, getRushingYardPoints, getReceivingYardPoints, getReceptionPoints, getCarryPoints, getTouchdownPoints, getBonusPoints } from '@/lib/scoring-rules';
+import { DEFAULT_SCORING_RULES, getFieldGoalPoints, getYardsAllowedPoints, getPassYardPoints, getRushingYardPoints, getReceivingYardPoints, getReceptionPoints, getCarryPoints, getTouchdownPoints, getBonusPoints, calculateDstPoints, ScoringRules } from '@/lib/scoring-rules';
 
 interface PlayerStats {
   player_id: number;
   player_name: string;
   team_id: number;
-  season_id: number;
+  season_id?: number;
   game_id: number;
   week: number;
-  pass_yards: number;
-  pass_touchdowns: number;
-  pass_two_pt: number;
-  total_rushes: number;
-  rush_yards: number;
-  rush_touchdowns: number;
-  rush_two_pt: number;
-  receptions: number;
-  receiving_yards: number;
-  rec_touchdowns: number;
-  rec_two_pt: number;
-  extra_point: number;
-  two_point_conversions: number;
-  pass_td_distances: string;
-  rush_td_distances: string;
-  rec_td_distances: string;
-  FG_length: string;
+  position?: string;
+  // Offensive stats
+  pass_yards?: number;
+  pass_touchdowns?: number;
+  pass_two_pt?: number;
+  total_rushes?: number;
+  rush_yards?: number;
+  rush_touchdowns?: number;
+  rush_two_pt?: number;
+  receptions?: number;
+  receiving_yards?: number;
+  rec_touchdowns?: number;
+  rec_two_pt?: number;
+  extra_point?: number;
+  two_point_conversions?: number;
+  pass_td_distances?: string;
+  rush_td_distances?: string;
+  rec_td_distances?: string;
+  FG_length?: string;
+  // D/ST stats
+  sacks?: number;
+  turnovers?: number;
+  safeties?: number;
+  two_point_returns?: number;
+  yards_allowed?: number;
+  defensive_tds?: number;
+  points_allowed?: number;
 }
 
 interface PlayerBreakdownModalProps {
@@ -259,6 +269,48 @@ export function PlayerBreakdownModal({
         break;
 
       case 'D/ST':
+        const dstRules = rules as ScoringRules['D/ST'];
+        
+        // Sacks
+        if (stats.sacks && stats.sacks > 0) {
+          const sackPoints = stats.sacks * dstRules.sackPoints;
+          breakdown.push({ label: 'Sacks', value: stats.sacks, points: sackPoints });
+        }
+        
+        // Turnovers
+        if (stats.turnovers && stats.turnovers > 0) {
+          const turnoverPoints = stats.turnovers * dstRules.turnoverPoints;
+          breakdown.push({ label: 'Turnovers', value: stats.turnovers, points: turnoverPoints });
+        }
+        
+        // Safeties
+        if (stats.safeties && stats.safeties > 0) {
+          const safetyPoints = stats.safeties * dstRules.safetyPoints;
+          breakdown.push({ label: 'Safeties', value: stats.safeties, points: safetyPoints });
+        }
+        
+        // 2-Point Returns
+        if (stats.two_point_returns && stats.two_point_returns > 0) {
+          const twoPtReturnPoints = stats.two_point_returns * dstRules.twoPointReturnPoints;
+          breakdown.push({ label: '2-Point Returns', value: stats.two_point_returns, points: twoPtReturnPoints });
+        }
+        
+        // Yards Allowed
+        if (stats.yards_allowed !== undefined && stats.yards_allowed !== null) {
+          const yardsAllowedPoints = getYardsAllowedPoints(stats.yards_allowed, dstRules);
+          breakdown.push({ label: 'Yards Allowed', value: stats.yards_allowed, points: yardsAllowedPoints });
+        }
+        
+        // Defensive TDs
+        if (stats.defensive_tds && stats.defensive_tds > 0) {
+          const defensiveTdPoints = stats.defensive_tds * dstRules.defensiveTdPoints;
+          breakdown.push({ label: 'D/ST Touchdowns', value: stats.defensive_tds, points: defensiveTdPoints });
+        }
+        
+        // Points Allowed (display only, scoring logic will be added later)
+        if (stats.points_allowed !== undefined && stats.points_allowed !== null) {
+          breakdown.push({ label: 'Points Allowed', value: stats.points_allowed, points: 0 });
+        }
         break;
     }
 

@@ -46,16 +46,14 @@ export interface ScoringRules {
   };
   'D/ST': {
     yardsAllowedPoints: {
-      '0-99': number;
-      '100-199': number;
-      '200-299': number;
-      '300-399': number;
-      '400-499': number;
-      '500+': number;
+      '<200': number; // Points for allowing less than 200 yards
+      '<240': number; // Points for allowing less than 240 yards
+      '<280': number; // Points for allowing less than 280 yards
     };
     sackPoints: number; // Points per sack
-    takeawayPoints: number; // Points per takeaway (interception or fumble recovery)
+    turnoverPoints: number; // Points per turnover
     safetyPoints: number; // Points per safety
+    twoPointReturnPoints: number; // Points per 2-point return
     defensiveTdPoints: number; // Points per defensive TD
   };
 }
@@ -104,16 +102,14 @@ export const DEFAULT_SCORING_RULES: ScoringRules = {
   },
   'D/ST': {
     yardsAllowedPoints: {
-      '0-99': 10, // 10 points for allowing 0-99 yards
-      '100-199': 7, // 7 points for allowing 100-199 yards
-      '200-299': 4, // 4 points for allowing 200-299 yards
-      '300-399': 1, // 1 point for allowing 300-399 yards
-      '400-499': 0, // 0 points for allowing 400-499 yards
-      '500+': -3, // -3 points for allowing 500+ yards
+      '<200': 6, // 6 points for allowing less than 200 yards
+      '<240': 4, // 4 points for allowing less than 240 yards
+      '<280': 2, // 2 points for allowing less than 280 yards
     },
     sackPoints: 1, // 1 point per sack
-    takeawayPoints: 2, // 2 points per takeaway
-    safetyPoints: 2, // 2 points per safety
+    turnoverPoints: 1, // 1 point per turnover
+    safetyPoints: 6, // 6 points per safety
+    twoPointReturnPoints: 6, // 6 points per 2-point return
     defensiveTdPoints: 6, // 6 points per defensive TD
   },
 };
@@ -181,12 +177,10 @@ export function getFieldGoalPoints(distance: number, rules?: ScoringRules['PK'])
 
 // Helper function to get yards allowed points for D/ST
 export function getYardsAllowedPoints(yardsAllowed: number, rules: ScoringRules['D/ST']): number {
-  if (yardsAllowed <= 99) return rules.yardsAllowedPoints['0-99'];
-  if (yardsAllowed <= 199) return rules.yardsAllowedPoints['100-199'];
-  if (yardsAllowed <= 299) return rules.yardsAllowedPoints['200-299'];
-  if (yardsAllowed <= 399) return rules.yardsAllowedPoints['300-399'];
-  if (yardsAllowed <= 499) return rules.yardsAllowedPoints['400-499'];
-  return rules.yardsAllowedPoints['500+'];
+  if (yardsAllowed < 200) return rules.yardsAllowedPoints['<200'];
+  if (yardsAllowed < 240) return rules.yardsAllowedPoints['<240'];
+  if (yardsAllowed < 280) return rules.yardsAllowedPoints['<280'];
+  return 0; // 0 points for 280+ yards allowed
 }
 
 // Helper function to get touchdown points based on distance
@@ -250,4 +244,37 @@ export function getBonusPoints(passYards: number, rushYards: number, recYards: n
   }
   
   return bonusPoints;
+}
+
+// Helper function to calculate D/ST points
+export function calculateDstPoints(
+  sacks: number,
+  turnovers: number,
+  safeties: number,
+  twoPointReturns: number,
+  yardsAllowed: number,
+  defensiveTds: number,
+  rules: ScoringRules['D/ST']
+): number {
+  let totalPoints = 0;
+  
+  // Sacks
+  totalPoints += sacks * rules.sackPoints;
+  
+  // Turnovers
+  totalPoints += turnovers * rules.turnoverPoints;
+  
+  // Safeties
+  totalPoints += safeties * rules.safetyPoints;
+  
+  // 2-Point Returns
+  totalPoints += twoPointReturns * rules.twoPointReturnPoints;
+  
+  // Yards Allowed (tiered)
+  totalPoints += getYardsAllowedPoints(yardsAllowed, rules);
+  
+  // Defensive TDs
+  totalPoints += defensiveTds * rules.defensiveTdPoints;
+  
+  return totalPoints;
 }

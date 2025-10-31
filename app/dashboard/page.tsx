@@ -167,6 +167,9 @@ export default function DashboardPage() {
             >
               Draft
             </Link>
+            <Link href="/rules" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Rules
+            </Link>
             {user?.is_admin && (
               <Link
                 href="/admin"
