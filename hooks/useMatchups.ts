@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export interface Matchup {
   id: string;
@@ -26,9 +26,16 @@ export function useMatchups(week?: number, leagueId?: string) {
   const [matchups, setMatchups] = useState<Matchup[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    console.log('useMatchups hook called with:', { week, leagueId });
+    // Cancel any in-flight requests
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    abortControllerRef.current = new AbortController();
     
     const fetchMatchups = async () => {
       try {
@@ -40,27 +47,40 @@ export function useMatchups(week?: number, leagueId?: string) {
         if (leagueId) params.append('leagueId', leagueId);
 
         const url = `/api/leagues/matchups?${params}`;
-        console.log('Fetching matchups from:', url);
 
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          signal: abortControllerRef.current.signal
+        });
         const result: ApiResponse<Matchup[]> = await response.json();
-
-        console.log('Matchups API response:', result);
 
         if (result.success && result.data) {
           setMatchups(result.data);
         } else {
           setError(result.error || 'Failed to fetch matchups');
         }
-      } catch (err) {
+      } catch (err: any) {
+        // Ignore abort errors
+        if (err.name === 'AbortError') {
+          return;
+        }
         setError('Failed to fetch matchups');
         console.error('Error fetching matchups:', err);
       } finally {
-        setLoading(false);
+        // Only update loading state if request wasn't aborted
+        if (!abortControllerRef.current.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchMatchups();
+
+    // Cleanup: abort request on unmount or dependency change
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [week, leagueId]);
 
   return { matchups, loading, error };

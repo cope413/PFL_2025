@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { DEFAULT_SCORING_RULES, getFieldGoalPoints, getYardsAllowedPoints, getPassYardPoints, getRushingYardPoints, getReceivingYardPoints, getReceptionPoints, getCarryPoints, getTouchdownPoints, getBonusPoints, calculateDstPoints, ScoringRules } from '@/lib/scoring-rules';
+import { DEFAULT_SCORING_RULES, getFieldGoalPoints, getYardsAllowedPoints, getPassYardPoints, getRushingYardPoints, getReceivingYardPoints, getReceptionPoints, getCarryPoints, getTouchdownPoints, getBonusPoints, calculateDstPoints, getPointsAllowedPoints, ScoringRules } from '@/lib/scoring-rules';
 
 interface PlayerStats {
   player_id: number;
@@ -40,7 +40,13 @@ interface PlayerStats {
   two_point_returns?: number;
   yards_allowed?: number;
   defensive_tds?: number;
+  defensive_td_distances?: string;
   points_allowed?: number;
+  qtr1_points?: number;
+  qtr2_points?: number;
+  qtr3_points?: number;
+  qtr4_points?: number;
+  overtime_points?: number;
 }
 
 interface PlayerBreakdownModalProps {
@@ -301,15 +307,44 @@ export function PlayerBreakdownModal({
           breakdown.push({ label: 'Yards Allowed', value: stats.yards_allowed, points: yardsAllowedPoints });
         }
         
-        // Defensive TDs
-        if (stats.defensive_tds && stats.defensive_tds > 0) {
+        // Defensive TDs (using distance-based scoring like other TDs)
+        const defensiveTdBreakdown = calculateTouchdownPointsFromDistances(stats.defensive_td_distances, 'D/ST Touchdowns');
+        if (defensiveTdBreakdown) {
+          breakdown.push(defensiveTdBreakdown);
+        } else if (stats.defensive_tds && stats.defensive_tds > 0) {
+          // Fallback if distances not available, use simple count * 6
           const defensiveTdPoints = stats.defensive_tds * dstRules.defensiveTdPoints;
           breakdown.push({ label: 'D/ST Touchdowns', value: stats.defensive_tds, points: defensiveTdPoints });
         }
         
-        // Points Allowed (display only, scoring logic will be added later)
-        if (stats.points_allowed !== undefined && stats.points_allowed !== null) {
-          breakdown.push({ label: 'Points Allowed', value: stats.points_allowed, points: 0 });
+        // Points Allowed
+        if (stats.qtr1_points !== undefined && stats.qtr2_points !== undefined && 
+            stats.qtr3_points !== undefined && stats.qtr4_points !== undefined) {
+          const quarterPoints = [
+            stats.qtr1_points || 0,
+            stats.qtr2_points || 0,
+            stats.qtr3_points || 0,
+            stats.qtr4_points || 0
+          ];
+          const overtimePoints = stats.overtime_points || 0;
+          const pointsAllowedResult = getPointsAllowedPoints(quarterPoints, overtimePoints, dstRules);
+          
+          // Add breakdown for each quarter or shutout
+          if (pointsAllowedResult.breakdown.length > 0) {
+            pointsAllowedResult.breakdown.forEach(item => {
+              breakdown.push({ 
+                label: `Points Allowed (${item.quarter})`, 
+                value: item.description, 
+                points: item.points 
+              });
+            });
+          }
+          
+          // Also show total points allowed for reference
+          if (stats.points_allowed !== undefined && stats.points_allowed !== null) {
+            // Don't add as a breakdown item if we already have quarter breakdowns
+            // This is just for display context
+          }
         }
         break;
     }
@@ -335,6 +370,7 @@ export function PlayerBreakdownModal({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Player Breakdown</DialogTitle>
+            <DialogDescription>Loading player statistics...</DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
@@ -353,6 +389,7 @@ export function PlayerBreakdownModal({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Player Breakdown</DialogTitle>
+            <DialogDescription>An error occurred while loading player statistics.</DialogDescription>
           </DialogHeader>
           <Alert>
             <AlertTriangle className="h-4 w-4" />
@@ -369,6 +406,7 @@ export function PlayerBreakdownModal({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Player Breakdown</DialogTitle>
+            <DialogDescription>No statistics available for this player.</DialogDescription>
           </DialogHeader>
           <p className="text-muted-foreground">No stats available for this player.</p>
         </DialogContent>
@@ -406,6 +444,7 @@ export function PlayerBreakdownModal({
               <div className="text-sm text-muted-foreground">Week {week}</div>
             </div>
           </DialogTitle>
+          <DialogDescription>Detailed point breakdown for Week {week}</DialogDescription>
         </DialogHeader>
 
         <Card>

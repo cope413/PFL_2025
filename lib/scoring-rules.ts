@@ -55,6 +55,11 @@ export interface ScoringRules {
     safetyPoints: number; // Points per safety
     twoPointReturnPoints: number; // Points per 2-point return
     defensiveTdPoints: number; // Points per defensive TD
+    pointsAllowedPoints: {
+      shutoutPoints: number; // Points for shutout (entire game including OT)
+      noPointsPerQuarter: number; // Points for no points allowed per quarter (excludes OT)
+      lessThan7PerQuarter: number; // Points for less than 7 points allowed per quarter (excludes OT)
+    };
   };
 }
 
@@ -111,6 +116,11 @@ export const DEFAULT_SCORING_RULES: ScoringRules = {
     safetyPoints: 6, // 6 points per safety
     twoPointReturnPoints: 6, // 6 points per 2-point return
     defensiveTdPoints: 6, // 6 points per defensive TD
+    pointsAllowedPoints: {
+      shutoutPoints: 12, // 12 points for shutout (entire game including OT)
+      noPointsPerQuarter: 2, // 2 points for no points allowed per quarter (excludes OT)
+      lessThan7PerQuarter: 1, // 1 point for less than 7 points allowed per quarter (excludes OT)
+    },
   },
 };
 
@@ -181,6 +191,59 @@ export function getYardsAllowedPoints(yardsAllowed: number, rules: ScoringRules[
   if (yardsAllowed < 240) return rules.yardsAllowedPoints['<240'];
   if (yardsAllowed < 280) return rules.yardsAllowedPoints['<280'];
   return 0; // 0 points for 280+ yards allowed
+}
+
+// Helper function to calculate points allowed points for D/ST
+// quarterPoints should be an array of 4 quarter scores (excluding OT)
+// overtimePoints is the total points scored in overtime
+// Returns an object with total points and breakdown details
+export function getPointsAllowedPoints(
+  quarterPoints: number[],
+  overtimePoints: number,
+  rules: ScoringRules['D/ST']
+): { totalPoints: number; breakdown: Array<{ quarter: string; points: number; description: string }> } {
+  let totalPoints = 0;
+  const breakdown: Array<{ quarter: string; points: number; description: string }> = [];
+  
+  // Check for shutout first (entire game including OT)
+  const totalGamePoints = quarterPoints.reduce((sum, pts) => sum + pts, 0) + overtimePoints;
+  if (totalGamePoints === 0) {
+    totalPoints = rules.pointsAllowedPoints.shutoutPoints;
+    breakdown.push({
+      quarter: 'Game',
+      points: rules.pointsAllowedPoints.shutoutPoints,
+      description: 'Shutout (entire game including OT)'
+    });
+    return { totalPoints, breakdown };
+  }
+  
+  // Per-quarter scoring (excludes OT)
+  quarterPoints.forEach((points, index) => {
+    let quarterPoints = 0;
+    let description = '';
+    
+    if (points === 0) {
+      quarterPoints = rules.pointsAllowedPoints.noPointsPerQuarter;
+      description = 'No points allowed';
+    } else if (points < 7) {
+      quarterPoints = rules.pointsAllowedPoints.lessThan7PerQuarter;
+      description = 'Less than 7 points allowed';
+    } else {
+      quarterPoints = 0;
+      description = `${points} points allowed`;
+    }
+    
+    if (quarterPoints > 0) {
+      totalPoints += quarterPoints;
+      breakdown.push({
+        quarter: `Q${index + 1}`,
+        points: quarterPoints,
+        description
+      });
+    }
+  });
+  
+  return { totalPoints, breakdown };
 }
 
 // Helper function to get touchdown points based on distance
@@ -254,6 +317,8 @@ export function calculateDstPoints(
   twoPointReturns: number,
   yardsAllowed: number,
   defensiveTds: number,
+  quarterPoints: number[], // Array of 4 quarter scores
+  overtimePoints: number, // Points scored in overtime
   rules: ScoringRules['D/ST']
 ): number {
   let totalPoints = 0;
@@ -275,6 +340,10 @@ export function calculateDstPoints(
   
   // Defensive TDs
   totalPoints += defensiveTds * rules.defensiveTdPoints;
+  
+  // Points Allowed
+  const pointsAllowedResult = getPointsAllowedPoints(quarterPoints, overtimePoints, rules);
+  totalPoints += pointsAllowedResult.totalPoints;
   
   return totalPoints;
 }

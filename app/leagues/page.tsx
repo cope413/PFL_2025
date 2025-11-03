@@ -61,9 +61,6 @@ export default function LeaguesPage() {
 
   // Get current week from matchups data
   const currentWeekFromMatchups = matchups.length > 0 ? matchups[0].week : 1;
-  
-  // Add debugging
-  console.log('LeaguesPage render:', { matchups, loading, error, currentWeekFromMatchups });
 
   return (
     <div className="min-h-screen bg-background">
