@@ -64,7 +64,7 @@ export const DEFAULT_SCORING_RULES: ScoringRules = {
     passTdPoints: 4, // 4 points per passing TD
     rushYardsPerPoint: 10, // 1 point per 10 rushing yards
     rushTdPoints: 6, // 6 points per rushing TD
-    twoPointConversion: 2, // 2 points per 2-point conversion
+    twoPointConversion: 3, // 2 points per 2-point conversion
   },
   RB: {
     receptions: 1, // 1 point per reception (PPR)
@@ -72,7 +72,7 @@ export const DEFAULT_SCORING_RULES: ScoringRules = {
     rushYardsPerPoint: 10, // 1 point per 10 rushing yards
     recTdPoints: 6, // 6 points per receiving TD
     rushTdPoints: 6, // 6 points per rushing TD
-    twoPointConversion: 2, // 2 points per 2-point conversion
+    twoPointConversion: 3, // 2 points per 2-point conversion
   },
   WR: {
     receptions: 1, // 1 point per reception (PPR)
@@ -80,7 +80,7 @@ export const DEFAULT_SCORING_RULES: ScoringRules = {
     rushYardsPerPoint: 10, // 1 point per 10 rushing yards
     recTdPoints: 6, // 6 points per receiving TD
     rushTdPoints: 6, // 6 points per rushing TD
-    twoPointConversion: 2, // 2 points per 2-point conversion
+    twoPointConversion: 3, // 2 points per 2-point conversion
   },
   TE: {
     receptions: 1, // 1 point per reception (PPR)
@@ -88,7 +88,7 @@ export const DEFAULT_SCORING_RULES: ScoringRules = {
     rushYardsPerPoint: 10, // 1 point per 10 rushing yards
     recTdPoints: 6, // 6 points per receiving TD
     rushTdPoints: 6, // 6 points per rushing TD
-    twoPointConversion: 2, // 2 points per 2-point conversion
+    twoPointConversion: 3, // 2 points per 2-point conversion
   },
   PK: {
     extraPoint: 1, // 1 point per extra point
