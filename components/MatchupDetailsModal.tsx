@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -121,6 +121,7 @@ export function MatchupDetailsModal({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Matchup Details</DialogTitle>
+            <DialogDescription>Loading matchup information...</DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
@@ -139,6 +140,7 @@ export function MatchupDetailsModal({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Matchup Details</DialogTitle>
+            <DialogDescription>An error occurred while loading matchup information.</DialogDescription>
           </DialogHeader>
           <Alert>
             <AlertTriangle className="h-4 w-4" />
@@ -167,6 +169,9 @@ export function MatchupDetailsModal({
             <Calendar className="h-5 w-5" />
             Week {matchupDetails.week} Matchup Details
           </DialogTitle>
+          <DialogDescription>
+            View detailed scoring breakdown and player performances for {team1.teamName} vs {team2.teamName}
+          </DialogDescription>
         </DialogHeader>
 
         {/* Matchup Summary */}

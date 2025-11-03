@@ -153,7 +153,40 @@ export async function GET(request: NextRequest) {
               WHEN home_team_id = ? THEN COALESCE(home_team_safeties, 0)
               WHEN away_team_id = ? THEN COALESCE(away_team_safeties, 0)
               ELSE 0
-            END as safeties
+            END as safeties,
+            -- Quarter points: Home team gets points based on away team's quarter scores
+            CASE 
+              WHEN home_team_id = ? THEN COALESCE(away_qtr1, 0)
+              WHEN away_team_id = ? THEN COALESCE(home_qtr1, 0)
+              ELSE 0
+            END as qtr1,
+            CASE 
+              WHEN home_team_id = ? THEN COALESCE(away_qtr2, 0)
+              WHEN away_team_id = ? THEN COALESCE(home_qtr2, 0)
+              ELSE 0
+            END as qtr2,
+            CASE 
+              WHEN home_team_id = ? THEN COALESCE(away_qtr3, 0)
+              WHEN away_team_id = ? THEN COALESCE(home_qtr3, 0)
+              ELSE 0
+            END as qtr3,
+            CASE 
+              WHEN home_team_id = ? THEN COALESCE(away_qtr4, 0)
+              WHEN away_team_id = ? THEN COALESCE(home_qtr4, 0)
+              ELSE 0
+            END as qtr4,
+            -- Overtime points
+            CASE 
+              WHEN home_team_id = ? THEN COALESCE(away_overtime, 0)
+              WHEN away_team_id = ? THEN COALESCE(home_overtime, 0)
+              ELSE 0
+            END as overtime,
+            -- Defensive TD distances: Home team gets their TD distances, away team gets their TD distances
+            CASE 
+              WHEN home_team_id = ? THEN home_team_TD_distances
+              WHEN away_team_id = ? THEN away_team_TD_distances
+              ELSE NULL
+            END as defensive_td_distances
           FROM Games
           WHERE week = ?
             AND (home_team_id = ? OR away_team_id = ?)
@@ -164,6 +197,12 @@ export async function GET(request: NextRequest) {
           teamNumber, teamNumber, // sacks
           teamNumber, teamNumber, // turnovers
           teamNumber, teamNumber, // safeties
+          teamNumber, teamNumber, // qtr1
+          teamNumber, teamNumber, // qtr2
+          teamNumber, teamNumber, // qtr3
+          teamNumber, teamNumber, // qtr4
+          teamNumber, teamNumber, // overtime
+          teamNumber, teamNumber, // defensive_td_distances
           weekNum, // Week filter
           teamNumber, teamNumber  // team_id check (home or away)
         ]
@@ -187,6 +226,9 @@ export async function GET(request: NextRequest) {
       console.log(`Found game stats for ${teamName}:`, gameStats[0]);
 
       const stats = gameStats[0];
+      // Calculate total points allowed for display
+      const totalPointsAllowed = (stats.qtr1 || 0) + (stats.qtr2 || 0) + (stats.qtr3 || 0) + (stats.qtr4 || 0) + (stats.overtime || 0);
+      
       return NextResponse.json({
         success: true,
         data: {
@@ -201,8 +243,15 @@ export async function GET(request: NextRequest) {
           safeties: stats.safeties || 0,
           two_point_returns: 0,
           yards_allowed: stats.yards_allowed || 0,
-          defensive_tds: 0,
-          points_allowed: 0,
+          defensive_tds: 0, // Will be calculated from distances if available
+          defensive_td_distances: stats.defensive_td_distances || null,
+          points_allowed: totalPointsAllowed,
+          // Quarter points for points allowed scoring
+          qtr1_points: stats.qtr1 || 0,
+          qtr2_points: stats.qtr2 || 0,
+          qtr3_points: stats.qtr3 || 0,
+          qtr4_points: stats.qtr4 || 0,
+          overtime_points: stats.overtime || 0,
           position: 'D/ST'
         }
       });

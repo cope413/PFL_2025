@@ -1,6 +1,6 @@
 "use client"
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -42,6 +42,7 @@ export function AllLineupsModal({ isOpen, onClose, data, loading, error }: AllLi
         <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
           <DialogHeader className="pb-4">
             <DialogTitle>All Lineups - Week {data?.week || '...'}</DialogTitle>
+            <DialogDescription>Loading lineup information...</DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-8">
             <div className="text-center">
@@ -60,6 +61,7 @@ export function AllLineupsModal({ isOpen, onClose, data, loading, error }: AllLi
         <DialogContent className="max-w-7xl max-h-[95vh] overflow-y-auto">
           <DialogHeader className="pb-4">
             <DialogTitle>All Lineups - Week {data?.week || '...'}</DialogTitle>
+            <DialogDescription>An error occurred while loading lineup information.</DialogDescription>
           </DialogHeader>
           <Alert>
             <AlertTriangle className="h-4 w-4" />
@@ -84,6 +86,7 @@ export function AllLineupsModal({ isOpen, onClose, data, loading, error }: AllLi
             <Users className="h-5 w-5" />
             All Lineups - Week {week}
           </DialogTitle>
+          <DialogDescription>View all submitted lineups for Week {week}</DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">
