@@ -1,4 +1,5 @@
 import { createClient } from "@libsql/client";
+import type { Trade, TradePlayerItem } from "./db-types";
 import { User } from "./types";
 
 
@@ -6,6 +7,47 @@ const db = createClient({
   url: process.env.TURSO_URL as string,
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
+
+let tradeTablesInitialized = false;
+
+async function ensureTradeTables() {
+  if (tradeTablesInitialized) return;
+
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS Trades (
+        id TEXT PRIMARY KEY,
+        proposer_user_id TEXT NOT NULL,
+        proposer_team_id TEXT NOT NULL,
+        recipient_user_id TEXT NOT NULL,
+        recipient_team_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        proposer_message TEXT,
+        response_message TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        resolved_at TEXT,
+        resolved_by_user_id TEXT
+      )
+    `);
+
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS TradeItems (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trade_id TEXT NOT NULL,
+        player_id TEXT NOT NULL,
+        from_team_id TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(trade_id) REFERENCES Trades(id)
+      )
+    `);
+
+    tradeTablesInitialized = true;
+  } catch (error) {
+    console.error('Failed to ensure trade tables:', error);
+    throw error;
+  }
+}
 
 function mapToUser(row: any): User {
   return {
@@ -1127,6 +1169,421 @@ export async function getLockedPlayersForWeek(week: number, season: number = 202
   });
   
   return lockedPlayers.map(player => player.player_ID);
+}
+
+// Trade System Database Functions
+type TradeStatus = 'pending' | 'accepted' | 'approved' | 'declined' | 'cancelled';
+
+async function getTradeItemsByTradeIds(tradeIds: string[]) {
+  if (!tradeIds || tradeIds.length === 0) {
+    return [];
+  }
+
+  const placeholders = tradeIds.map(() => '?').join(', ');
+  return await getResults({
+    sql: `
+      SELECT 
+        ti.id,
+        ti.trade_id,
+        ti.player_id,
+        ti.from_team_id,
+        p.player_name,
+        p.position,
+        p.team_name as nfl_team,
+        p.owner_ID as current_owner_id
+      FROM TradeItems ti
+      LEFT JOIN Players p ON ti.player_id = p.player_ID
+      WHERE ti.trade_id IN (${placeholders})
+    `,
+    args: tradeIds,
+  });
+}
+
+function mapTradeItem(item: any): TradePlayerItem | null {
+  if (!item) return null;
+
+  return {
+    id: item.id,
+    tradeId: item.trade_id,
+    playerId: item.player_id,
+    fromTeamId: item.from_team_id,
+    playerName: item.player_name,
+    position: item.position,
+    nflTeam: item.nfl_team,
+    currentOwnerId: item.current_owner_id,
+  };
+}
+
+async function mapTradesWithItems(tradeRows: any[]): Promise<Trade[]> {
+  if (!tradeRows || tradeRows.length === 0) {
+    return [];
+  }
+
+  const tradeIds = tradeRows.map((trade) => trade.id);
+  const items = await getTradeItemsByTradeIds(tradeIds);
+  const itemsByTrade = new Map<string, any[]>();
+
+  items.forEach((item) => {
+    if (!itemsByTrade.has(item.trade_id)) {
+      itemsByTrade.set(item.trade_id, []);
+    }
+    itemsByTrade.get(item.trade_id)!.push(item);
+  });
+
+  return tradeRows.map((trade) => {
+    const tradeItems = itemsByTrade.get(trade.id) || [];
+    const allItems = tradeItems
+      .map(mapTradeItem)
+      .filter((item): item is TradePlayerItem => item !== null);
+    const offeredPlayers = allItems.filter((item) => item.fromTeamId === trade.proposer_team_id);
+    const requestedPlayers = allItems.filter((item) => item.fromTeamId === trade.recipient_team_id);
+
+    return {
+      id: trade.id,
+      proposerUserId: trade.proposer_user_id,
+      proposerTeamId: trade.proposer_team_id,
+      recipientUserId: trade.recipient_user_id,
+      recipientTeamId: trade.recipient_team_id,
+      status: trade.status,
+      proposerMessage: trade.proposer_message,
+      responseMessage: trade.response_message,
+      createdAt: trade.created_at,
+      updatedAt: trade.updated_at,
+      resolvedAt: trade.resolved_at,
+      resolvedByUserId: trade.resolved_by_user_id,
+      proposerUsername: trade.proposer_username,
+      proposerTeamName: trade.proposer_team_name,
+      recipientUsername: trade.recipient_username,
+      recipientTeamName: trade.recipient_team_name,
+      items: allItems,
+      offeredPlayers,
+      requestedPlayers,
+    };
+  });
+}
+
+export async function createTradeProposal(
+  proposerUserId: string,
+  proposerTeamId: string,
+  recipientTeamId: string,
+  offeredPlayerIds: string[],
+  requestedPlayerIds: string[],
+  message?: string,
+): Promise<Trade> {
+  await ensureTradeTables();
+
+  const proposer = await getUserById(proposerUserId) as any;
+  if (!proposer) {
+    throw new Error('Proposer not found');
+  }
+
+  if (proposer.team !== proposerTeamId) {
+    throw new Error('User is not authorized to propose trades for this team');
+  }
+
+  const recipient = await getUserByTeamId(recipientTeamId) as any;
+  if (!recipient) {
+    throw new Error('Recipient team not found');
+  }
+
+  if (!Array.isArray(offeredPlayerIds) || !Array.isArray(requestedPlayerIds)) {
+    throw new Error('Invalid player lists');
+  }
+
+  if (offeredPlayerIds.length === 0 && requestedPlayerIds.length === 0) {
+    throw new Error('Cannot create an empty trade proposal');
+  }
+
+  const tradeId = generateId('TR');
+
+  await db.execute({
+    sql: `
+      INSERT INTO Trades (
+        id,
+        proposer_user_id,
+        proposer_team_id,
+        recipient_user_id,
+        recipient_team_id,
+        status,
+        proposer_message,
+        created_at,
+        updated_at
+      ) VALUES (?, ?, ?, ?, ?, 'pending', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `,
+    args: [
+      tradeId,
+      proposerUserId,
+      proposerTeamId,
+      recipient.id,
+      recipientTeamId,
+      message || null,
+    ],
+  });
+
+  const insertItems = async (playerIds: string[], fromTeamId: string) => {
+    for (const playerId of playerIds) {
+      await db.execute({
+        sql: `
+          INSERT INTO TradeItems (trade_id, player_id, from_team_id)
+          VALUES (?, ?, ?)
+        `,
+        args: [tradeId, playerId, fromTeamId],
+      });
+    }
+  };
+
+  await insertItems(offeredPlayerIds, proposerTeamId);
+  await insertItems(requestedPlayerIds, recipientTeamId);
+
+  const tradeRow = await getFirstResult({
+    sql: `
+      SELECT 
+        t.*,
+        proposer.username as proposer_username,
+        proposer.team_name as proposer_team_name,
+        recipient.username as recipient_username,
+        recipient.team_name as recipient_team_name
+      FROM Trades t
+      LEFT JOIN user proposer ON t.proposer_user_id = proposer.id
+      LEFT JOIN user recipient ON t.recipient_user_id = recipient.id
+      WHERE t.id = ?
+    `,
+    args: [tradeId],
+  });
+
+  if (!tradeRow) {
+    return null;
+  }
+
+  const [trade] = await mapTradesWithItems([tradeRow]);
+  if (!trade) {
+    throw new Error('Failed to load created trade');
+  }
+
+  return trade;
+}
+
+export async function getTradesForTeam(teamId: string): Promise<Trade[]> {
+  await ensureTradeTables();
+
+  if (teamId === 'all') {
+    const trades = await getResults({
+      sql: `
+        SELECT 
+          t.*,
+          proposer.username as proposer_username,
+          proposer.team_name as proposer_team_name,
+          recipient.username as recipient_username,
+          recipient.team_name as recipient_team_name
+        FROM Trades t
+        LEFT JOIN user proposer ON t.proposer_user_id = proposer.id
+        LEFT JOIN user recipient ON t.recipient_user_id = recipient.id
+        ORDER BY datetime(t.created_at) DESC
+      `,
+      args: [],
+    });
+
+    return await mapTradesWithItems(trades as any[]);
+  }
+
+  const trades = await getResults({
+    sql: `
+      SELECT 
+        t.*,
+        proposer.username as proposer_username,
+        proposer.team_name as proposer_team_name,
+        recipient.username as recipient_username,
+        recipient.team_name as recipient_team_name
+      FROM Trades t
+      LEFT JOIN user proposer ON t.proposer_user_id = proposer.id
+      LEFT JOIN user recipient ON t.recipient_user_id = recipient.id
+      WHERE t.proposer_team_id = ? OR t.recipient_team_id = ?
+      ORDER BY datetime(t.created_at) DESC
+    `,
+    args: [teamId, teamId],
+  });
+
+  return await mapTradesWithItems(trades as any[]);
+}
+
+export async function getTradeById(tradeId: string): Promise<Trade | null> {
+  await ensureTradeTables();
+
+  const trade = await getFirstResult({
+    sql: `
+      SELECT 
+        t.*,
+        proposer.username as proposer_username,
+        proposer.team_name as proposer_team_name,
+        recipient.username as recipient_username,
+        recipient.team_name as recipient_team_name
+      FROM Trades t
+      LEFT JOIN user proposer ON t.proposer_user_id = proposer.id
+      LEFT JOIN user recipient ON t.recipient_user_id = recipient.id
+      WHERE t.id = ?
+    `,
+    args: [tradeId],
+  });
+
+  if (!trade) {
+    return null;
+  }
+
+  const mappedTrades = await mapTradesWithItems([trade]);
+  return mappedTrades[0] || null;
+}
+
+async function markTradeAccepted(
+  tradeId: string,
+  responseMessage: string | null,
+) {
+  await db.execute({
+    sql: `
+      UPDATE Trades
+      SET 
+        status = 'accepted',
+        response_message = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    args: [responseMessage, tradeId],
+  });
+}
+
+async function updateTradeStatus(
+  tradeId: string,
+  status: TradeStatus,
+  responseMessage: string | null,
+  resolvedByUserId: string | null,
+) {
+  await db.execute({
+    sql: `
+      UPDATE Trades
+      SET 
+        status = ?,
+        response_message = ?,
+        resolved_by_user_id = ?,
+        resolved_at = CASE WHEN ? IS NOT NULL THEN CURRENT_TIMESTAMP ELSE resolved_at END,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    args: [status, responseMessage, resolvedByUserId, resolvedByUserId, tradeId],
+  });
+}
+
+export async function acceptTrade(
+  tradeId: string,
+  recipientUserId: string,
+  responseMessage?: string,
+): Promise<Trade | null> {
+  await ensureTradeTables();
+
+  const trade = await getTradeById(tradeId) as any;
+  if (!trade) {
+    throw new Error('Trade not found');
+  }
+
+  if (trade.status !== 'pending') {
+    throw new Error('Only pending trades can be accepted');
+  }
+
+  if (trade.recipient_user_id !== recipientUserId) {
+    throw new Error('Only the recipient team can accept this trade');
+  }
+
+  await markTradeAccepted(tradeId, responseMessage || null);
+
+  return await getTradeById(tradeId);
+}
+
+export async function declineTrade(
+  tradeId: string,
+  recipientUserId: string,
+  responseMessage?: string,
+): Promise<Trade | null> {
+  await ensureTradeTables();
+
+  const trade = await getTradeById(tradeId) as any;
+  if (!trade) {
+    throw new Error('Trade not found');
+  }
+
+  if (trade.status !== 'pending') {
+    throw new Error('Only pending trades can be declined');
+  }
+
+  if (trade.recipient_user_id !== recipientUserId) {
+    throw new Error('Only the recipient team can decline this trade');
+  }
+
+  await updateTradeStatus(tradeId, 'declined', responseMessage || null, recipientUserId);
+  return await getTradeById(tradeId);
+}
+
+export async function cancelTrade(
+  tradeId: string,
+  userId: string,
+  responseMessage?: string,
+): Promise<Trade | null> {
+  await ensureTradeTables();
+
+  const trade = await getTradeById(tradeId) as any;
+  if (!trade) {
+    throw new Error('Trade not found');
+  }
+
+  if (trade.status !== 'pending') {
+    throw new Error('Only pending trades can be cancelled');
+  }
+
+  if (trade.proposer_user_id !== userId) {
+    throw new Error('Only the proposing team can cancel this trade');
+  }
+
+  await updateTradeStatus(tradeId, 'cancelled', responseMessage || null, userId);
+  return await getTradeById(tradeId);
+}
+
+export async function approveTrade(
+  tradeId: string,
+  adminUserId: string,
+  responseMessage?: string,
+): Promise<Trade | null> {
+  await ensureTradeTables();
+
+  const trade = await getTradeById(tradeId) as any;
+  if (!trade) {
+    throw new Error('Trade not found');
+  }
+
+  if (trade.status !== 'accepted') {
+    throw new Error('Only accepted trades can be approved');
+  }
+
+  await db.execute('BEGIN TRANSACTION');
+
+  try {
+    const tradeItems = trade.items || [];
+    for (const item of tradeItems) {
+      const newOwner = item.fromTeamId === trade.proposerTeamId
+        ? trade.recipientTeamId
+        : trade.proposerTeamId;
+
+      await db.execute({
+        sql: 'UPDATE Players SET owner_ID = ? WHERE player_ID = ?',
+        args: [newOwner, item.playerId],
+      });
+    }
+
+    await updateTradeStatus(tradeId, 'approved', responseMessage || null, adminUserId);
+    await db.execute('COMMIT');
+  } catch (error) {
+    await db.execute('ROLLBACK');
+    console.error('Failed to approve trade:', error);
+    throw error;
+  }
+
+  return await getTradeById(tradeId);
 }
 
 // Waiver System Database Functions

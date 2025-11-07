@@ -79,3 +79,21 @@ export function useLeagues() {
 export function useLeague(leagueId: string) {
   return useApi(() => apiService.getLeague(leagueId), [leagueId]);
 } 
+
+export function useTrades(teamId?: string, enabled: boolean = true) {
+  return useApi(() => {
+    if (!enabled) {
+      return Promise.resolve([] as any);
+    }
+    return apiService.getTrades(teamId);
+  }, [teamId, enabled]);
+}
+
+export function useTrade(tradeId: string | null) {
+  return useApi(() => {
+    if (!tradeId) {
+      return Promise.resolve(null as any);
+    }
+    return apiService.getTrade(tradeId);
+  }, [tradeId]);
+}

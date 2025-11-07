@@ -865,6 +865,9 @@ export default function TeamDashboard() {
             <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Teams
             </Link>
+            <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Trades
+            </Link>
             <Link
               href="/draft"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
@@ -955,6 +958,13 @@ export default function TeamDashboard() {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Teams
+              </Link>
+              <Link 
+                href="/trades" 
+                className="block py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Trades
               </Link>
               <Link
                 href="/draft"

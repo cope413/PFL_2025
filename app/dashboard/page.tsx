@@ -161,6 +161,9 @@ export default function DashboardPage() {
             <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Teams
             </Link>
+            <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+              Trades
+            </Link>
             <Link
               href="/draft"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"

@@ -92,6 +92,39 @@ class ApiService {
     });
   }
 
+  // Trades API
+  async getTrades(teamId?: string) {
+    const params = new URLSearchParams();
+    if (teamId) {
+      params.append('teamId', teamId);
+    }
+    const endpoint = params.toString() ? `/trades?${params.toString()}` : '/trades';
+    return this.fetchApi(endpoint);
+  }
+
+  async getTrade(tradeId: string) {
+    return this.fetchApi(`/trades?tradeId=${tradeId}`);
+  }
+
+  async proposeTrade(payload: {
+    recipientTeamId: string;
+    offeredPlayerIds: string[];
+    requestedPlayerIds: string[];
+    message?: string;
+  }) {
+    return this.fetchApi('/trades', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+  }
+
+  async updateTrade(tradeId: string, action: 'accept' | 'decline' | 'cancel' | 'approve', message?: string) {
+    return this.fetchApi('/trades', {
+      method: 'PATCH',
+      body: JSON.stringify({ tradeId, action, message })
+    });
+  }
+
   // Players API
   async getPlayers(filters?: { position?: string; team?: string }) {
     const params = new URLSearchParams();

@@ -167,3 +167,38 @@ export interface WaiverDraftInfo {
   isActive: boolean;
 }
 
+export type TradeStatus = 'pending' | 'accepted' | 'approved' | 'declined' | 'cancelled';
+
+export interface TradePlayerItem {
+  id: number;
+  tradeId: string;
+  playerId: string;
+  fromTeamId: string;
+  playerName?: string;
+  position?: string;
+  nflTeam?: string;
+  currentOwnerId?: string;
+}
+
+export interface Trade {
+  id: string;
+  proposerUserId: string;
+  proposerTeamId: string;
+  recipientUserId: string;
+  recipientTeamId: string;
+  status: TradeStatus;
+  proposerMessage?: string | null;
+  responseMessage?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  resolvedAt?: string | null;
+  resolvedByUserId?: string | null;
+  proposerUsername?: string | null;
+  proposerTeamName?: string | null;
+  recipientUsername?: string | null;
+  recipientTeamName?: string | null;
+  items: TradePlayerItem[];
+  offeredPlayers: TradePlayerItem[];
+  requestedPlayers: TradePlayerItem[];
+}
+
