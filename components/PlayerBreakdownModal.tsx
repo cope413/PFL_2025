@@ -8,6 +8,15 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { DEFAULT_SCORING_RULES, getFieldGoalPoints, getYardsAllowedPoints, getPassYardPoints, getRushingYardPoints, getReceivingYardPoints, getReceptionPoints, getCarryPoints, getTouchdownPoints, getBonusPoints, calculateDstPoints, getPointsAllowedPoints, ScoringRules } from '@/lib/scoring-rules';
 
+interface ScoringEventComment {
+  id: number;
+  week?: number;
+  quarter?: string | null;
+  minute?: string | null;
+  team_name?: string | null;
+  comment: string;
+}
+
 interface PlayerStats {
   player_id: number;
   player_name: string;
@@ -48,6 +57,7 @@ interface PlayerStats {
   qtr3_points?: number;
   qtr4_points?: number;
   overtime_points?: number;
+  comments?: ScoringEventComment[];
 }
 
 interface PlayerBreakdownModalProps {
@@ -353,6 +363,27 @@ export function PlayerBreakdownModal({
     return breakdown;
   };
 
+  const formatEventMeta = (event: ScoringEventComment) => {
+    const parts: string[] = [];
+
+    if (event.quarter) {
+      const quarter = event.quarter.toString().toUpperCase().startsWith('Q')
+        ? event.quarter.toString().toUpperCase()
+        : `Q${event.quarter}`;
+      parts.push(quarter);
+    }
+
+    if (event.minute) {
+      parts.push(event.minute.toString());
+    }
+
+    if (event.team_name) {
+      parts.push(event.team_name);
+    }
+
+    return parts.join(' • ');
+  };
+
   const getPositionColor = (position: string) => {
     switch (position) {
       case 'QB': return 'bg-blue-100 text-blue-800';
@@ -476,6 +507,28 @@ export function PlayerBreakdownModal({
                     <span>Total:</span>
                     <span className="text-green-600">{totalPoints} pts</span>
                   </div>
+                  {playerStats?.comments && playerStats.comments.length > 0 && (
+                    <div className="pt-3 border-t">
+                      <h4 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+                        Scoring Notes
+                      </h4>
+                      <ul className="space-y-2">
+                        {playerStats.comments.map((event) => {
+                          const meta = formatEventMeta(event);
+                          return (
+                            <li key={event.id} className="rounded-md bg-muted/40 p-2 text-sm">
+                              {meta && (
+                                <div className="text-xs font-medium text-muted-foreground mb-1">
+                                  {meta}
+                                </div>
+                              )}
+                              <div className="text-foreground">{event.comment}</div>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                  )}
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">

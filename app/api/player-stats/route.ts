@@ -99,6 +99,31 @@ export async function GET(request: NextRequest) {
     const player = playerInfo[0];
     const isDst = player.position === 'D/ST';
 
+    const getScoringComments = async (name: string) => {
+      if (!name) return [];
+      const lowerPattern = `%${name.toLowerCase()}%`;
+      const comments = await getResults({
+        sql: `
+          SELECT
+            id,
+            week,
+            quarter,
+            minute,
+            team_name,
+            comment
+          FROM scoring_events
+          WHERE week = ?
+            AND (
+              (player_name IS NOT NULL AND LOWER(player_name) = LOWER(?))
+              OR (comment IS NOT NULL AND LOWER(comment) LIKE ?)
+            )
+          ORDER BY id
+        `,
+        args: [weekNum, name, lowerPattern],
+      });
+      return comments || [];
+    };
+
     if (isDst) {
       // Optional: Inspect Games table schema when debug is set
       if (debug === '1') {
@@ -229,6 +254,8 @@ export async function GET(request: NextRequest) {
       // Calculate total points allowed for display
       const totalPointsAllowed = (stats.qtr1 || 0) + (stats.qtr2 || 0) + (stats.qtr3 || 0) + (stats.qtr4 || 0) + (stats.overtime || 0);
       
+      const comments = await getScoringComments(player.player_name);
+
       return NextResponse.json({
         success: true,
         data: {
@@ -252,7 +279,8 @@ export async function GET(request: NextRequest) {
           qtr3_points: stats.qtr3 || 0,
           qtr4_points: stats.qtr4 || 0,
           overtime_points: stats.overtime || 0,
-          position: 'D/ST'
+          position: 'D/ST',
+          comments
         }
       });
     } else {
@@ -298,9 +326,14 @@ export async function GET(request: NextRequest) {
         }, { status: 404 });
       }
 
+      const comments = await getScoringComments(player.player_name);
+
       return NextResponse.json({
         success: true,
-        data: playerStats[0]
+        data: {
+          ...playerStats[0],
+          comments
+        }
       });
     }
 
