@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
 
       if (
         !authUser.is_admin &&
-        trade.proposer_team_id !== authUser.team &&
-        trade.recipient_team_id !== authUser.team
+        trade.proposerTeamId !== authUser.team &&
+        trade.recipientTeamId !== authUser.team
       ) {
         return NextResponse.json({ success: false, error: 'Not authorized to view this trade' }, { status: 403 });
       }

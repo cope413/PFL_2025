@@ -1487,7 +1487,7 @@ export async function acceptTrade(
     throw new Error('Only pending trades can be accepted');
   }
 
-  if (trade.recipient_user_id !== recipientUserId) {
+  if (trade.recipientUserId !== recipientUserId) {
     throw new Error('Only the recipient team can accept this trade');
   }
 
@@ -1512,7 +1512,7 @@ export async function declineTrade(
     throw new Error('Only pending trades can be declined');
   }
 
-  if (trade.recipient_user_id !== recipientUserId) {
+  if (trade.recipientUserId !== recipientUserId) {
     throw new Error('Only the recipient team can decline this trade');
   }
 
@@ -1536,7 +1536,7 @@ export async function cancelTrade(
     throw new Error('Only pending trades can be cancelled');
   }
 
-  if (trade.proposer_user_id !== userId) {
+  if (trade.proposerUserId !== userId) {
     throw new Error('Only the proposing team can cancel this trade');
   }
 

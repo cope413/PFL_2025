@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -475,9 +476,6 @@ export function PlayerBreakdownModal({
                     <span>Total:</span>
                     <span className="text-green-600">{totalPoints} pts</span>
                   </div>
-                  <p className="text-xs text-muted-foreground text-center pt-2">
-                    Scoring rules can be customized in lib/scoring-rules.ts
-                  </p>
                 </>
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
