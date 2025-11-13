@@ -97,3 +97,35 @@ export function useTrade(tradeId: string | null) {
     return apiService.getTrade(tradeId);
   }, [tradeId]);
 }
+
+export function usePendingTradeNotifications(enabled: boolean = true) {
+  const [count, setCount] = useState<number>(0);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const fetchCount = useCallback(async () => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await apiService.getPendingTradeCount();
+      setCount(data.count || 0);
+      setLoading(false);
+    } catch (error) {
+      console.error('Failed to fetch pending trade count:', error);
+      setLoading(false);
+    }
+  }, [enabled]);
+
+  useEffect(() => {
+    fetchCount();
+    
+    // Poll every 30 seconds for new trade notifications
+    const interval = setInterval(fetchCount, 30000);
+    
+    return () => clearInterval(interval);
+  }, [fetchCount]);
+
+  return { count, loading, refetch: fetchCount };
+}

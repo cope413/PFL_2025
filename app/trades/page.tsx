@@ -7,6 +7,7 @@ import { Loader2, ArrowLeftRight, UserPlus, Menu, X, Settings, LogOut } from "lu
 
 import { useAuth } from "@/hooks/useAuth";
 import { useTeams, useTrades } from "@/hooks/useApi";
+import { TradeNotificationBadge } from "@/components/TradeNotificationBadge";
 import { apiService } from "@/lib/api";
 import type { Trade, TradePlayerItem } from "@/lib/db-types";
 import { useToast } from "@/hooks/use-toast";
@@ -377,9 +378,12 @@ export default function TradesPage() {
             <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Teams
             </Link>
-            <Link href="/trades" className="text-sm font-medium transition-colors hover:text-primary">
-              Trades
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/trades" className="text-sm font-medium transition-colors hover:text-primary">
+                Trades
+              </Link>
+              <TradeNotificationBadge />
+            </div>
             <Link href="/draft" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Draft
             </Link>

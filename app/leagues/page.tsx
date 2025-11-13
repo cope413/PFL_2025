@@ -31,6 +31,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
+import { TradeNotificationBadge } from "@/components/TradeNotificationBadge"
 import { useCurrentWeek } from "@/hooks/useCurrentWeek"
 import { useMatchupDetails } from "@/hooks/useMatchupDetails"
 import { MatchupDetailsModal } from "@/components/MatchupDetailsModal"
@@ -91,9 +92,12 @@ export default function LeaguesPage() {
             <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Teams
             </Link>
-            <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-              Trades
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+                Trades
+              </Link>
+              <TradeNotificationBadge />
+            </div>
             <Link
               href="/draft"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"

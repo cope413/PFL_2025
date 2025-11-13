@@ -26,6 +26,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useAuth } from "@/hooks/useAuth"
+import { TradeNotificationBadge } from "@/components/TradeNotificationBadge"
 import { useRouter } from "next/navigation"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
@@ -243,9 +244,12 @@ export default function PlayersPage() {
             <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Teams
             </Link>
-            <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-              Trades
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+                Trades
+              </Link>
+              <TradeNotificationBadge />
+            </div>
             <Link
               href="/draft"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"

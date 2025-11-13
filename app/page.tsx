@@ -33,6 +33,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/hooks/useAuth"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { TradeNotificationBadge } from "@/components/TradeNotificationBadge"
 import { useStandings } from "@/hooks/useStandings"
 import { usePlayers } from "@/hooks/usePlayers"
 
@@ -160,9 +161,12 @@ export default function Home() {
             <Link href="/teams" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
               Teams
             </Link>
-            <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
-              Trades
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link href="/trades" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+                Trades
+              </Link>
+              <TradeNotificationBadge />
+            </div>
             <Link
               href="/draft"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"

@@ -125,6 +125,10 @@ class ApiService {
     });
   }
 
+  async getPendingTradeCount() {
+    return this.fetchApi<{ count: number }>('/trades/notifications');
+  }
+
   // Players API
   async getPlayers(filters?: { position?: string; team?: string }) {
     const params = new URLSearchParams();

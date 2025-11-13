@@ -1397,6 +1397,7 @@ export async function getTradesForTeam(teamId: string): Promise<Trade[]> {
     return await mapTradesWithItems(trades as any[]);
   }
 
+  const normalizedTeamId = normalizeId(teamId);
   const trades = await getResults({
     sql: `
       SELECT 
@@ -1411,10 +1412,40 @@ export async function getTradesForTeam(teamId: string): Promise<Trade[]> {
       WHERE t.proposer_team_id = ? OR t.recipient_team_id = ?
       ORDER BY datetime(t.created_at) DESC
     `,
-    args: [teamId, teamId],
+    args: [normalizedTeamId, normalizedTeamId],
   });
 
   return await mapTradesWithItems(trades as any[]);
+}
+
+export async function getPendingTradeCount(teamId: string): Promise<number> {
+  await ensureTradeTables();
+
+  try {
+    const result = await getFirstResult({
+      sql: `
+        SELECT COUNT(*) as count
+        FROM Trades
+        WHERE recipient_team_id = ? AND status = 'pending'
+      `,
+      args: [normalizeId(teamId)],
+    });
+
+    if (!result) {
+      return 0;
+    }
+
+    const count = (result as any)?.count;
+    if (count === null || count === undefined) {
+      return 0;
+    }
+
+    // Convert to number if it's a string
+    return typeof count === 'string' ? parseInt(count, 10) : Number(count);
+  } catch (error) {
+    console.error('Error getting pending trade count:', error);
+    return 0;
+  }
 }
 
 export async function getTradeById(tradeId: string): Promise<Trade | null> {
