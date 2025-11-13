@@ -119,13 +119,14 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  let body: any = null;
   try {
     const authUser = getUserFromRequest(request);
     if (!authUser) {
       return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
     }
 
-    const body = await request.json();
+    body = await request.json();
     const { tradeId, action, message } = body;
 
     if (!tradeId || !action) {
@@ -134,36 +135,53 @@ export async function PATCH(request: NextRequest) {
 
     let updatedTrade;
 
-    switch (action) {
-      case 'accept':
-        updatedTrade = await acceptTrade(tradeId, authUser.id, message);
-        break;
-      case 'decline':
-        updatedTrade = await declineTrade(tradeId, authUser.id, message);
-        break;
-      case 'cancel':
-        updatedTrade = await cancelTrade(tradeId, authUser.id, message);
-        break;
-      case 'approve':
-        if (!authUser.is_admin) {
-          return NextResponse.json({ success: false, error: 'Only admins can approve trades' }, { status: 403 });
-        }
-        updatedTrade = await approveTrade(tradeId, authUser.id, message);
-        break;
-      case 'reject':
-        if (!authUser.is_admin) {
-          return NextResponse.json({ success: false, error: 'Only admins can reject trades' }, { status: 403 });
-        }
-        updatedTrade = await rejectTrade(tradeId, authUser.id, message);
-        break;
-      default:
-        return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
+    try {
+      switch (action) {
+        case 'accept':
+          console.log(`[Trades PATCH] Accepting trade ${tradeId} by user ${authUser.id}`);
+          updatedTrade = await acceptTrade(tradeId, authUser.id, message);
+          break;
+        case 'decline':
+          console.log(`[Trades PATCH] Declining trade ${tradeId} by user ${authUser.id}`);
+          updatedTrade = await declineTrade(tradeId, authUser.id, message);
+          break;
+        case 'cancel':
+          console.log(`[Trades PATCH] Cancelling trade ${tradeId} by user ${authUser.id}`);
+          updatedTrade = await cancelTrade(tradeId, authUser.id, message);
+          break;
+        case 'approve':
+          if (!authUser.is_admin) {
+            return NextResponse.json({ success: false, error: 'Only admins can approve trades' }, { status: 403 });
+          }
+          console.log(`[Trades PATCH] Approving trade ${tradeId} by admin ${authUser.id}`);
+          updatedTrade = await approveTrade(tradeId, authUser.id, message);
+          break;
+        case 'reject':
+          if (!authUser.is_admin) {
+            return NextResponse.json({ success: false, error: 'Only admins can reject trades' }, { status: 403 });
+          }
+          console.log(`[Trades PATCH] Rejecting trade ${tradeId} by admin ${authUser.id}`);
+          updatedTrade = await rejectTrade(tradeId, authUser.id, message);
+          break;
+        default:
+          return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
+      }
+    } catch (actionError: any) {
+      console.error(`[Trades PATCH] Error in ${action} action:`, actionError);
+      throw actionError;
     }
 
     return NextResponse.json({ success: true, data: updatedTrade });
   } catch (error: any) {
     console.error('Trades PATCH error:', error);
-    return NextResponse.json({ success: false, error: error?.message || 'Failed to update trade' }, { status: 500 });
+    console.error('Error stack:', error?.stack);
+    console.error('Error message:', error?.message);
+    console.error('Action:', body?.action, 'TradeId:', body?.tradeId);
+    return NextResponse.json({ 
+      success: false, 
+      error: error?.message || 'Failed to update trade',
+      details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+    }, { status: 500 });
   }
 }
 
