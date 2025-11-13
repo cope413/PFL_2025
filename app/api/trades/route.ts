@@ -31,8 +31,13 @@ export async function GET(request: NextRequest) {
       if (!authUser.is_admin) {
         return NextResponse.json({ success: false, error: 'Not authorized to view all trades' }, { status: 403 });
       }
-    } else if (!authUser.is_admin && teamId !== authUser.team) {
-      return NextResponse.json({ success: false, error: 'Not authorized to view trades for this team' }, { status: 403 });
+    } else if (!authUser.is_admin) {
+      // Normalize both team IDs for comparison
+      const normalizedTeamId = teamId.split('.')[0];
+      const normalizedUserTeam = (authUser.team || '').split('.')[0];
+      if (normalizedTeamId !== normalizedUserTeam) {
+        return NextResponse.json({ success: false, error: 'Not authorized to view trades for this team' }, { status: 403 });
+      }
     }
 
     if (tradeId) {
@@ -42,12 +47,15 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Trade not found' }, { status: 404 });
       }
 
-      if (
-        !authUser.is_admin &&
-        trade.proposerTeamId !== authUser.team &&
-        trade.recipientTeamId !== authUser.team
-      ) {
-        return NextResponse.json({ success: false, error: 'Not authorized to view this trade' }, { status: 403 });
+      if (!authUser.is_admin) {
+        // Normalize team IDs for comparison
+        const normalizedProposerTeamId = (trade.proposerTeamId || '').split('.')[0];
+        const normalizedRecipientTeamId = (trade.recipientTeamId || '').split('.')[0];
+        const normalizedUserTeam = (authUser.team || '').split('.')[0];
+        
+        if (normalizedProposerTeamId !== normalizedUserTeam && normalizedRecipientTeamId !== normalizedUserTeam) {
+          return NextResponse.json({ success: false, error: 'Not authorized to view this trade' }, { status: 403 });
+        }
       }
 
       return NextResponse.json({ success: true, data: trade });
@@ -55,9 +63,15 @@ export async function GET(request: NextRequest) {
 
     const trades = await getTradesForTeam(teamId);
     return NextResponse.json({ success: true, data: trades });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Trades GET error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to fetch trades' }, { status: 500 });
+    console.error('Error stack:', error?.stack);
+    console.error('Error message:', error?.message);
+    return NextResponse.json({ 
+      success: false, 
+      error: error?.message || 'Failed to fetch trades',
+      details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+    }, { status: 500 });
   }
 }
 

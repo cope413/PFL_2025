@@ -1228,47 +1228,63 @@ async function mapTradesWithItems(tradeRows: any[]): Promise<Trade[]> {
     return [];
   }
 
-  const tradeIds = tradeRows.map((trade) => trade.id);
-  const items = await getTradeItemsByTradeIds(tradeIds);
-  const itemsByTrade = new Map<string, any[]>();
+  try {
+    const tradeIds = tradeRows.map((trade) => trade.id);
+    const items = await getTradeItemsByTradeIds(tradeIds);
+    const itemsByTrade = new Map<string, any[]>();
 
-  items.forEach((item) => {
-    if (!itemsByTrade.has(item.trade_id)) {
-      itemsByTrade.set(item.trade_id, []);
-    }
-    itemsByTrade.get(item.trade_id)!.push(item);
-  });
+    items.forEach((item) => {
+      if (!itemsByTrade.has(item.trade_id)) {
+        itemsByTrade.set(item.trade_id, []);
+      }
+      itemsByTrade.get(item.trade_id)!.push(item);
+    });
 
-  return tradeRows.map((trade) => {
-    const tradeItems = itemsByTrade.get(trade.id) || [];
-    const allItems = tradeItems
-      .map(mapTradeItem)
-      .filter((item): item is TradePlayerItem => item !== null);
-    const offeredPlayers = allItems.filter((item) => item.fromTeamId === trade.proposer_team_id);
-    const requestedPlayers = allItems.filter((item) => item.fromTeamId === trade.recipient_team_id);
+    return tradeRows.map((trade) => {
+      const tradeItems = itemsByTrade.get(trade.id) || [];
+      const allItems = tradeItems
+        .map(mapTradeItem)
+        .filter((item): item is TradePlayerItem => item !== null);
+      
+      // Normalize team IDs for comparison
+      const normalizedProposerTeamId = normalizeId(trade.proposer_team_id);
+      const normalizedRecipientTeamId = normalizeId(trade.recipient_team_id);
+      
+      const offeredPlayers = allItems.filter((item) => {
+        const normalizedFromTeamId = normalizeId(item.fromTeamId);
+        return normalizedFromTeamId === normalizedProposerTeamId;
+      });
+      const requestedPlayers = allItems.filter((item) => {
+        const normalizedFromTeamId = normalizeId(item.fromTeamId);
+        return normalizedFromTeamId === normalizedRecipientTeamId;
+      });
 
-    return {
-      id: trade.id,
-      proposerUserId: normalizeId(trade.proposer_user_id),
-      proposerTeamId: trade.proposer_team_id,
-      recipientUserId: normalizeId(trade.recipient_user_id),
-      recipientTeamId: trade.recipient_team_id,
-      status: trade.status,
-      proposerMessage: trade.proposer_message,
-      responseMessage: trade.response_message,
-      createdAt: trade.created_at,
-      updatedAt: trade.updated_at,
-      resolvedAt: trade.resolved_at,
-      resolvedByUserId: normalizeId(trade.resolved_by_user_id),
-      proposerUsername: trade.proposer_username,
-      proposerTeamName: trade.proposer_team_name,
-      recipientUsername: trade.recipient_username,
-      recipientTeamName: trade.recipient_team_name,
-      items: allItems,
-      offeredPlayers,
-      requestedPlayers,
-    };
-  });
+      return {
+        id: trade.id,
+        proposerUserId: normalizeId(trade.proposer_user_id),
+        proposerTeamId: normalizeId(trade.proposer_team_id),
+        recipientUserId: normalizeId(trade.recipient_user_id),
+        recipientTeamId: normalizeId(trade.recipient_team_id),
+        status: trade.status,
+        proposerMessage: trade.proposer_message,
+        responseMessage: trade.response_message,
+        createdAt: trade.created_at,
+        updatedAt: trade.updated_at,
+        resolvedAt: trade.resolved_at,
+        resolvedByUserId: normalizeId(trade.resolved_by_user_id),
+        proposerUsername: trade.proposer_username,
+        proposerTeamName: trade.proposer_team_name,
+        recipientUsername: trade.recipient_username,
+        recipientTeamName: trade.recipient_team_name,
+        items: allItems,
+        offeredPlayers,
+        requestedPlayers,
+      };
+    });
+  } catch (error) {
+    console.error('Error mapping trades with items:', error);
+    throw error;
+  }
 }
 
 export async function createTradeProposal(
