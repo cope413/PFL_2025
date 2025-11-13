@@ -49,6 +49,15 @@ async function ensureTradeTables() {
   }
 }
 
+function normalizeId(value: any): string | null {
+  if (value === null || value === undefined) return null;
+  const num = Number(value);
+  if (!Number.isNaN(num)) {
+    return Math.trunc(num).toString();
+  }
+  return String(value);
+}
+
 function mapToUser(row: any): User {
   return {
     id: row.id,
@@ -1172,7 +1181,7 @@ export async function getLockedPlayersForWeek(week: number, season: number = 202
 }
 
 // Trade System Database Functions
-type TradeStatus = 'pending' | 'accepted' | 'approved' | 'declined' | 'cancelled';
+type TradeStatus = 'pending' | 'accepted' | 'approved' | 'declined' | 'cancelled' | 'rejected';
 
 async function getTradeItemsByTradeIds(tradeIds: string[]) {
   if (!tradeIds || tradeIds.length === 0) {
@@ -1240,9 +1249,9 @@ async function mapTradesWithItems(tradeRows: any[]): Promise<Trade[]> {
 
     return {
       id: trade.id,
-      proposerUserId: trade.proposer_user_id,
+      proposerUserId: normalizeId(trade.proposer_user_id),
       proposerTeamId: trade.proposer_team_id,
-      recipientUserId: trade.recipient_user_id,
+      recipientUserId: normalizeId(trade.recipient_user_id),
       recipientTeamId: trade.recipient_team_id,
       status: trade.status,
       proposerMessage: trade.proposer_message,
@@ -1250,7 +1259,7 @@ async function mapTradesWithItems(tradeRows: any[]): Promise<Trade[]> {
       createdAt: trade.created_at,
       updatedAt: trade.updated_at,
       resolvedAt: trade.resolved_at,
-      resolvedByUserId: trade.resolved_by_user_id,
+      resolvedByUserId: normalizeId(trade.resolved_by_user_id),
       proposerUsername: trade.proposer_username,
       proposerTeamName: trade.proposer_team_name,
       recipientUsername: trade.recipient_username,
@@ -1295,6 +1304,8 @@ export async function createTradeProposal(
   }
 
   const tradeId = generateId('TR');
+  const normalizedProposerUserId = normalizeId(proposerUserId);
+  const normalizedRecipientUserId = normalizeId(recipient.id);
 
   await db.execute({
     sql: `
@@ -1312,9 +1323,9 @@ export async function createTradeProposal(
     `,
     args: [
       tradeId,
-      proposerUserId,
+      normalizedProposerUserId,
       proposerTeamId,
-      recipient.id,
+      normalizedRecipientUserId,
       recipientTeamId,
       message || null,
     ],
@@ -1487,7 +1498,10 @@ export async function acceptTrade(
     throw new Error('Only pending trades can be accepted');
   }
 
-  if (trade.recipientUserId !== recipientUserId) {
+  const tradeRecipientId = normalizeId(trade.recipientUserId);
+  const userIdNormalized = normalizeId(recipientUserId);
+
+  if (!tradeRecipientId || !userIdNormalized || tradeRecipientId !== userIdNormalized) {
     throw new Error('Only the recipient team can accept this trade');
   }
 
@@ -1512,11 +1526,14 @@ export async function declineTrade(
     throw new Error('Only pending trades can be declined');
   }
 
-  if (trade.recipientUserId !== recipientUserId) {
+  const tradeRecipientId = normalizeId(trade.recipientUserId);
+  const userIdNormalized = normalizeId(recipientUserId);
+
+  if (!tradeRecipientId || !userIdNormalized || tradeRecipientId !== userIdNormalized) {
     throw new Error('Only the recipient team can decline this trade');
   }
 
-  await updateTradeStatus(tradeId, 'declined', responseMessage || null, recipientUserId);
+  await updateTradeStatus(tradeId, 'declined', responseMessage || null, userIdNormalized);
   return await getTradeById(tradeId);
 }
 
@@ -1536,11 +1553,14 @@ export async function cancelTrade(
     throw new Error('Only pending trades can be cancelled');
   }
 
-  if (trade.proposerUserId !== userId) {
+  const tradeProposerId = normalizeId(trade.proposerUserId);
+  const userIdNormalized = normalizeId(userId);
+
+  if (!tradeProposerId || !userIdNormalized || tradeProposerId !== userIdNormalized) {
     throw new Error('Only the proposing team can cancel this trade');
   }
 
-  await updateTradeStatus(tradeId, 'cancelled', responseMessage || null, userId);
+  await updateTradeStatus(tradeId, 'cancelled', responseMessage || null, userIdNormalized);
   return await getTradeById(tradeId);
 }
 
@@ -1575,7 +1595,7 @@ export async function approveTrade(
       });
     }
 
-    await updateTradeStatus(tradeId, 'approved', responseMessage || null, adminUserId);
+    await updateTradeStatus(tradeId, 'approved', responseMessage || null, normalizeId(adminUserId));
     await db.execute('COMMIT');
   } catch (error) {
     await db.execute('ROLLBACK');
@@ -1583,6 +1603,26 @@ export async function approveTrade(
     throw error;
   }
 
+  return await getTradeById(tradeId);
+}
+
+export async function rejectTrade(
+  tradeId: string,
+  adminUserId: string,
+  responseMessage?: string,
+): Promise<Trade | null> {
+  await ensureTradeTables();
+
+  const trade = await getTradeById(tradeId) as any;
+  if (!trade) {
+    throw new Error('Trade not found');
+  }
+
+  if (trade.status !== 'accepted') {
+    throw new Error('Only accepted trades can be rejected');
+  }
+
+  await updateTradeStatus(tradeId, 'rejected', responseMessage || null, normalizeId(adminUserId));
   return await getTradeById(tradeId);
 }
 

@@ -40,6 +40,7 @@ const statusVariant: Record<string, "default" | "secondary" | "destructive" | "o
   approved: "default",
   declined: "destructive",
   cancelled: "outline",
+  rejected: "destructive",
 };
 
 function formatPlayer(player?: TradePlayerItem | PlayerOption) {
@@ -301,7 +302,7 @@ export default function TradesPage() {
 
   const handleTradeAction = async (
     tradeId: string,
-    action: "accept" | "decline" | "cancel" | "approve",
+    action: "accept" | "decline" | "cancel" | "approve" | "reject",
     promptLabel?: string,
   ) => {
     try {
@@ -320,7 +321,9 @@ export default function TradesPage() {
           ? "Trade declined"
           : action === "cancel"
           ? "Trade cancelled"
-          : "Trade approved";
+          : action === "approve"
+          ? "Trade approved"
+          : "Trade rejected";
 
       toast({
         title: resultMessage,
@@ -936,6 +939,13 @@ function TradeCard({ trade, viewerTeamId, isOutgoing, onAction, isAdmin }: Trade
           >
             Approve Trade
           </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => onAction(trade.id, "reject", "Send a note explaining why you're rejecting this trade (optional)")}
+          >
+            Reject Trade
+          </Button>
         </div>
       )}
     </div>
@@ -945,7 +955,7 @@ function TradeCard({ trade, viewerTeamId, isOutgoing, onAction, isAdmin }: Trade
 interface CommissionerTradeListProps {
   trades: Trade[];
   loading: boolean;
-  onAction: (tradeId: string, action: "approve", promptLabel?: string) => Promise<void>;
+  onAction: (tradeId: string, action: "approve" | "reject", promptLabel?: string) => Promise<void>;
 }
 
 function CommissionerTradeList({ trades, loading, onAction }: CommissionerTradeListProps) {

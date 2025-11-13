@@ -118,7 +118,7 @@ class ApiService {
     });
   }
 
-  async updateTrade(tradeId: string, action: 'accept' | 'decline' | 'cancel' | 'approve', message?: string) {
+  async updateTrade(tradeId: string, action: 'accept' | 'decline' | 'cancel' | 'approve' | 'reject', message?: string) {
     return this.fetchApi('/trades', {
       method: 'PATCH',
       body: JSON.stringify({ tradeId, action, message })

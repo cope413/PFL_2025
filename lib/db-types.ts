@@ -167,7 +167,7 @@ export interface WaiverDraftInfo {
   isActive: boolean;
 }
 
-export type TradeStatus = 'pending' | 'accepted' | 'approved' | 'declined' | 'cancelled';
+export type TradeStatus = 'pending' | 'accepted' | 'approved' | 'declined' | 'cancelled' | 'rejected';
 
 export interface TradePlayerItem {
   id: number;

@@ -6,6 +6,7 @@ import {
   createTradeProposal,
   declineTrade,
   approveTrade,
+  rejectTrade,
   getTradeById,
   getTradesForTeam,
 } from '@/lib/database';
@@ -134,6 +135,12 @@ export async function PATCH(request: NextRequest) {
           return NextResponse.json({ success: false, error: 'Only admins can approve trades' }, { status: 403 });
         }
         updatedTrade = await approveTrade(tradeId, authUser.id, message);
+        break;
+      case 'reject':
+        if (!authUser.is_admin) {
+          return NextResponse.json({ success: false, error: 'Only admins can reject trades' }, { status: 403 });
+        }
+        updatedTrade = await rejectTrade(tradeId, authUser.id, message);
         break;
       default:
         return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
