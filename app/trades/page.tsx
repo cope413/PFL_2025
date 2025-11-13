@@ -34,10 +34,10 @@ type TeamSummary = {
   name: string;
 };
 
-const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const statusVariant: Record<string, "default" | "secondary" | "destructive" | "outline" | "success"> = {
   pending: "secondary",
-  accepted: "secondary",
-  approved: "default",
+  accepted: "success",
+  approved: "success",
   declined: "destructive",
   cancelled: "outline",
   rejected: "destructive",
