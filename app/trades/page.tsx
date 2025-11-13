@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2, ArrowLeftRight, UserPlus, Menu, X, Settings, LogOut } from "lucide-react";
+import { Loader2, ArrowLeftRight, UserPlus, Menu, X, Settings, LogOut, EyeOff } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useTeams, useTrades } from "@/hooks/useApi";
@@ -137,6 +137,15 @@ export default function TradesPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Track hidden trades (persisted in localStorage)
+  const [hiddenTradeIds, setHiddenTradeIds] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('hiddenTradeIds');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    }
+    return new Set();
+  });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -224,18 +233,28 @@ export default function TradesPage() {
 
   const commissionerTrades: Trade[] = useMemo(() => {
     if (!commissionerData || !Array.isArray(commissionerData)) return [];
-    return (commissionerData as Trade[]).filter((trade) => trade.status === 'accepted');
-  }, [commissionerData]);
+    return (commissionerData as Trade[]).filter((trade) => trade.status === 'accepted' && !hiddenTradeIds.has(trade.id));
+  }, [commissionerData, hiddenTradeIds]);
 
   const incomingTrades = useMemo(
-    () => trades.filter((trade) => trade.recipientTeamId === user?.team),
-    [trades, user?.team]
+    () => trades.filter((trade) => trade.recipientTeamId === user?.team && !hiddenTradeIds.has(trade.id)),
+    [trades, user?.team, hiddenTradeIds]
   );
 
   const outgoingTrades = useMemo(
-    () => trades.filter((trade) => trade.proposerTeamId === user?.team),
-    [trades, user?.team]
+    () => trades.filter((trade) => trade.proposerTeamId === user?.team && !hiddenTradeIds.has(trade.id)),
+    [trades, user?.team, hiddenTradeIds]
   );
+  
+  const handleHideTrade = (tradeId: string) => {
+    const newHiddenIds = new Set(hiddenTradeIds);
+    newHiddenIds.add(tradeId);
+    setHiddenTradeIds(newHiddenIds);
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hiddenTradeIds', JSON.stringify(Array.from(newHiddenIds)));
+    }
+  };
 
   const handleToggleOfferedPlayer = (playerId: string) => {
     setOfferedPlayers((prev) =>
@@ -719,6 +738,7 @@ export default function TradesPage() {
               loading={tradesLoading}
               viewerTeamId={user.team}
               onAction={handleTradeAction}
+              onHide={handleHideTrade}
               isAdmin={user?.is_admin}
             />
 
@@ -729,6 +749,7 @@ export default function TradesPage() {
               loading={tradesLoading}
               viewerTeamId={user.team}
               onAction={handleTradeAction}
+              onHide={handleHideTrade}
               isOutgoing
               isAdmin={user?.is_admin}
             />
@@ -738,6 +759,7 @@ export default function TradesPage() {
                 trades={commissionerTrades}
                 loading={commissionerLoading}
                 onAction={handleTradeAction}
+                onHide={handleHideTrade}
               />
             )}
           </div>
@@ -756,10 +778,11 @@ interface TradeListCardProps {
   viewerTeamId?: string | null;
   isOutgoing?: boolean;
   onAction: (tradeId: string, action: "accept" | "decline" | "cancel" | "approve", promptLabel?: string) => Promise<void>;
+  onHide: (tradeId: string) => void;
   isAdmin?: boolean;
 }
 
-function TradeListCard({ title, emptyMessage, trades, loading, viewerTeamId, isOutgoing, onAction, isAdmin }: TradeListCardProps) {
+function TradeListCard({ title, emptyMessage, trades, loading, viewerTeamId, isOutgoing, onAction, onHide, isAdmin }: TradeListCardProps) {
   return (
     <Card>
       <CardHeader>
@@ -789,6 +812,7 @@ function TradeListCard({ title, emptyMessage, trades, loading, viewerTeamId, isO
                 viewerTeamId={viewerTeamId}
                 isOutgoing={isOutgoing}
                 onAction={onAction}
+                onHide={onHide}
                 isAdmin={isAdmin}
               />
             ))}
@@ -804,11 +828,12 @@ interface TradeCardProps {
   viewerTeamId?: string | null;
   isOutgoing?: boolean;
   onAction: (tradeId: string, action: "accept" | "decline" | "cancel" | "approve", promptLabel?: string) => Promise<void>;
+  onHide: (tradeId: string) => void;
   isAdmin?: boolean;
   commissionerView?: boolean;
 }
 
-function TradeCard({ trade, viewerTeamId, isOutgoing, onAction, isAdmin }: TradeCardProps) {
+function TradeCard({ trade, viewerTeamId, isOutgoing, onAction, onHide, isAdmin }: TradeCardProps) {
   const perspective = getTradePerspective(trade, viewerTeamId);
   const createdDate = trade.createdAt ? new Date(trade.createdAt) : null;
   const isPending = trade.status === "pending";
@@ -841,9 +866,20 @@ function TradeCard({ trade, viewerTeamId, isOutgoing, onAction, isAdmin }: Trade
             </div>
           )}
         </div>
-        <Badge variant={statusVariant[trade.status] ?? "secondary"} className="capitalize">
-          {trade.status}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={statusVariant[trade.status] ?? "secondary"} className="capitalize">
+            {trade.status}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => onHide(trade.id)}
+            title="Hide this trade"
+          >
+            <EyeOff className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {trade.proposerMessage && (
@@ -960,9 +996,10 @@ interface CommissionerTradeListProps {
   trades: Trade[];
   loading: boolean;
   onAction: (tradeId: string, action: "approve" | "reject", promptLabel?: string) => Promise<void>;
+  onHide: (tradeId: string) => void;
 }
 
-function CommissionerTradeList({ trades, loading, onAction }: CommissionerTradeListProps) {
+function CommissionerTradeList({ trades, loading, onAction, onHide }: CommissionerTradeListProps) {
   return (
     <Card>
       <CardHeader>
@@ -987,6 +1024,7 @@ function CommissionerTradeList({ trades, loading, onAction }: CommissionerTradeL
                 trade={trade}
                 viewerTeamId={null}
                 onAction={onAction}
+                onHide={onHide}
                 isAdmin
               />
             ))}
