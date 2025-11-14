@@ -236,15 +236,43 @@ export default function TradesPage() {
     return (commissionerData as Trade[]).filter((trade) => trade.status === 'accepted' && !hiddenTradeIds.has(trade.id));
   }, [commissionerData, hiddenTradeIds]);
 
-  const incomingTrades = useMemo(
-    () => trades.filter((trade) => trade.recipientTeamId === user?.team && !hiddenTradeIds.has(trade.id)),
-    [trades, user?.team, hiddenTradeIds]
-  );
+  const incomingTrades = useMemo(() => {
+    if (!trades || !user?.team) return [];
+    const normalizedUserTeam = user.team.split('.')[0];
+    return trades.filter((trade) => {
+      const normalizedRecipientTeamId = (trade.recipientTeamId || '').split('.')[0];
+      return normalizedRecipientTeamId === normalizedUserTeam && !hiddenTradeIds.has(trade.id);
+    });
+  }, [trades, user?.team, hiddenTradeIds]);
 
-  const outgoingTrades = useMemo(
-    () => trades.filter((trade) => trade.proposerTeamId === user?.team && !hiddenTradeIds.has(trade.id)),
-    [trades, user?.team, hiddenTradeIds]
-  );
+  const outgoingTrades = useMemo(() => {
+    if (!trades || !user?.team) return [];
+    const normalizedUserTeam = user.team.split('.')[0];
+    return trades.filter((trade) => {
+      const normalizedProposerTeamId = (trade.proposerTeamId || '').split('.')[0];
+      return normalizedProposerTeamId === normalizedUserTeam && !hiddenTradeIds.has(trade.id);
+    });
+  }, [trades, user?.team, hiddenTradeIds]);
+
+  const approvedTrades = useMemo(() => {
+    if (!trades || !user?.team) return [];
+    
+    // Normalize user team ID for comparison
+    const normalizedUserTeam = user.team.split('.')[0];
+    
+    return trades.filter((trade) => {
+      // Normalize trade team IDs for comparison
+      const normalizedProposerTeamId = (trade.proposerTeamId || '').split('.')[0];
+      const normalizedRecipientTeamId = (trade.recipientTeamId || '').split('.')[0];
+      
+      const isApproved = trade.status === 'approved';
+      // Approved trades should always be visible, even if previously hidden
+      // This allows users to see completed trades for reference
+      const isParticipant = normalizedProposerTeamId === normalizedUserTeam || normalizedRecipientTeamId === normalizedUserTeam;
+      
+      return isApproved && isParticipant;
+    });
+  }, [trades, user?.team]);
   
   const handleHideTrade = (tradeId: string) => {
     const newHiddenIds = new Set(hiddenTradeIds);
@@ -762,6 +790,17 @@ export default function TradesPage() {
                 onHide={handleHideTrade}
               />
             )}
+
+            <TradeListCard
+              title="Approved Trades"
+              emptyMessage="No approved trades to display."
+              trades={approvedTrades}
+              loading={tradesLoading}
+              viewerTeamId={user.team}
+              onAction={handleTradeAction}
+              onHide={handleHideTrade}
+              isAdmin={user?.is_admin}
+            />
           </div>
         </div>
         </div>
