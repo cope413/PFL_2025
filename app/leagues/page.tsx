@@ -738,11 +738,11 @@ export default function LeaguesPage() {
 
                             {/* Offensive Points */}
                             <div>
-                              <h4 className="text-md font-semibold mb-3 text-green-700">2. Offensive Points (No Overtime Bonus unless noted)</h4>
+                              <h4 className="text-md font-semibold mb-3 text-green-700">2. Offensive Points</h4>
                               <div className="space-y-4">
                                 {/* PAT */}
                                 <div>
-                                  <h5 className="font-medium mb-2">Point(s) After Touchdown (Overtime scores count double):</h5>
+                                  <h5 className="font-medium mb-2">Point(s) After Touchdown (Overtime XP and 2pt Conversions are not doubled):</h5>
                                   <div className="overflow-x-auto">
                                     <table className="w-full border-collapse border border-gray-300">
                                       <thead>
