@@ -22,6 +22,9 @@ import {
   LogOut,
   Menu,
   X,
+  Download,
+  FileText,
+  Table as TableIcon,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -29,6 +32,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { TradeNotificationBadge } from "@/components/TradeNotificationBadge"
 import { useRouter } from "next/navigation"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { exportToCSV, exportToExcel } from "@/lib/export-utils"
 
 interface Player {
   id: string;
@@ -520,15 +524,45 @@ export default function PlayersPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>
-                  Players {filteredPlayers.length !== players.length && `(${filteredPlayers.length} of ${players.length})`}
-                </CardTitle>
-                <CardDescription>
-                  {filteredPlayers.length !== players.length 
-                    ? `Showing ${filteredPlayers.length} filtered players` 
-                    : 'Highest scoring players by total points'
-                  }
-                </CardDescription>
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <CardTitle>
+                      Players {filteredPlayers.length !== players.length && `(${filteredPlayers.length} of ${players.length})`}
+                    </CardTitle>
+                    <CardDescription>
+                      {filteredPlayers.length !== players.length 
+                        ? `Showing ${filteredPlayers.length} filtered players` 
+                        : 'Highest scoring players by total points'
+                      }
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const timestamp = new Date().toISOString().split('T')[0];
+                        exportToCSV(filteredPlayers, `player-stats-${timestamp}.csv`);
+                      }}
+                      disabled={filteredPlayers.length === 0}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      Export CSV
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const timestamp = new Date().toISOString().split('T')[0];
+                        exportToExcel(filteredPlayers, `player-stats-${timestamp}.xlsx`);
+                      }}
+                      disabled={filteredPlayers.length === 0}
+                    >
+                      <TableIcon className="mr-2 h-4 w-4" />
+                      Export Excel
+                    </Button>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
