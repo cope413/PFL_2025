@@ -66,7 +66,7 @@ export interface ScoringRules {
 export const DEFAULT_SCORING_RULES: ScoringRules = {
   QB: {
     passYardsPerPoint: 25, // 1 point per 25 passing yards
-    passTdPoints: 4, // 4 points per passing TD
+    passTdPoints: 6, // 4 points per passing TD
     rushYardsPerPoint: 10, // 1 point per 10 rushing yards
     rushTdPoints: 6, // 6 points per rushing TD
     twoPointConversion: 3, // 2 points per 2-point conversion
