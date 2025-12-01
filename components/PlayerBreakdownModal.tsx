@@ -123,6 +123,70 @@ export function PlayerBreakdownModal({
     }
   };
 
+  // Helper function to check if a scoring event occurred in overtime
+  const isOvertimeEvent = (distance: number, eventType: 'TD' | 'FG' | '2PT' | 'XP', comments?: ScoringEventComment[]): boolean => {
+    if (!comments || comments.length === 0) {
+      console.log(`isOvertimeEvent: No comments provided for distance=${distance}, eventType=${eventType}`);
+      return false;
+    }
+    
+    // Check if any comment is in overtime and mentions this distance/event
+    const result = comments.some(comment => {
+      const quarter = (comment.quarter?.toString() || '').trim();
+      const quarterUpper = quarter.toUpperCase();
+      // Check for overtime indicators: OT, OVERTIME, Overtime, or quarter 5 (case-insensitive)
+      // Match "OT", "OVERTIME", "Overtime", "QOvertime", "Q Overtime", "5", "Q5", etc.
+      const isOT = quarterUpper.includes('OT') || 
+                   /overtime/i.test(quarter) || 
+                   quarterUpper === '5' || 
+                   quarterUpper === 'Q5';
+      if (!isOT) return false;
+      
+      const commentText = comment.comment?.toLowerCase() || '';
+      
+      // For touchdowns and field goals, check for distance match
+      if (eventType === 'TD' || eventType === 'FG') {
+        // Check if comment mentions the distance (e.g., "5yd", "5 yd", "5-yard", "5 yard", "5 Yd Rush")
+        // Pattern: number, optional whitespace/dash, then "yd" or "yard", optionally followed by action word
+        const distancePattern = new RegExp(`\\b${distance}\\s*[-]?\\s*(yd|yard)(\\s+(rush|run|pass|catch|td|touchdown))?`, 'i');
+        const hasDistance = distancePattern.test(commentText);
+        
+        // Check for event type in comment - for TD, also check for "rush", "run", "pass", "catch"
+        let hasEventType = false;
+        if (eventType === 'TD') {
+          hasEventType = /touchdown|td|rushing|receiving|passing|run|catch|pass|rush/i.test(commentText);
+        } else if (eventType === 'FG') {
+          hasEventType = /field\s*goal|fg|kick/i.test(commentText);
+        }
+        
+        // Debug logging
+        if (isOT) {
+          console.log(`Checking OT event: distance=${distance}, quarter="${quarter}", comment="${comment.comment}", hasDistance=${hasDistance}, hasEventType=${hasEventType}`);
+        }
+        
+        const matches = hasDistance && hasEventType;
+        if (matches) {
+          console.log(`Matched OT event: distance=${distance}, quarter="${quarter}", comment="${comment.comment}"`);
+        }
+        return matches;
+      } else {
+        // For 2PT and XP, just check for event type (no distance needed)
+        if (eventType === '2PT') {
+          return /2[\s-]*point|two[\s-]*point|2pt/i.test(commentText);
+        } else if (eventType === 'XP') {
+          return /extra\s*point|xp|pat/i.test(commentText);
+        }
+      }
+      
+      return false;
+    });
+    
+    if (result) {
+      console.log(`isOvertimeEvent: Found OT match for distance=${distance}, eventType=${eventType}`);
+    }
+    return result;
+  };
+
   // Helper function to calculate touchdown points from distance array
   const calculateTouchdownPointsFromDistances = (distances: string | null, label: string) => {
     if (!distances || distances === '[]' || distances === 'null') return null;
@@ -130,12 +194,34 @@ export function PlayerBreakdownModal({
       const tdLengths = JSON.parse(distances);
       if (Array.isArray(tdLengths) && tdLengths.length > 0) {
         let totalPoints = 0;
+        const otTds: number[] = [];
+        const regTds: number[] = [];
+        
         tdLengths.forEach((distance: number) => {
-          totalPoints += getTouchdownPoints(distance);
+          const basePoints = getTouchdownPoints(distance);
+          const isOT = isOvertimeEvent(distance, 'TD', playerStats?.comments);
+          const finalPoints = isOT ? basePoints * 2 : basePoints;
+          totalPoints += finalPoints;
+          
+          if (isOT) {
+            otTds.push(distance);
+          } else {
+            regTds.push(distance);
+          }
         });
+        
+        // Build value string showing OT TDs separately
+        const valueParts: string[] = [];
+        if (regTds.length > 0) {
+          valueParts.push(`${regTds.length} (${regTds.join(', ')} yds)`);
+        }
+        if (otTds.length > 0) {
+          valueParts.push(`${otTds.length} OT (${otTds.join(', ')} yds)`);
+        }
+        
         return {
           label,
-          value: `${tdLengths.length} (${tdLengths.join(', ')} yds)` as any,
+          value: valueParts.join(', ') as any,
           points: totalPoints
         };
       }
@@ -152,12 +238,34 @@ export function PlayerBreakdownModal({
       const fgLengths = JSON.parse(distances);
       if (Array.isArray(fgLengths) && fgLengths.length > 0) {
         let totalPoints = 0;
+        const otFgs: number[] = [];
+        const regFgs: number[] = [];
+        
         fgLengths.forEach((distance: number) => {
-          totalPoints += getFieldGoalPoints(distance);
+          const basePoints = getFieldGoalPoints(distance);
+          const isOT = isOvertimeEvent(distance, 'FG', playerStats?.comments);
+          const finalPoints = isOT ? basePoints * 2 : basePoints;
+          totalPoints += finalPoints;
+          
+          if (isOT) {
+            otFgs.push(distance);
+          } else {
+            regFgs.push(distance);
+          }
         });
+        
+        // Build value string showing OT FGs separately
+        const valueParts: string[] = [];
+        if (regFgs.length > 0) {
+          valueParts.push(`${regFgs.length} (${regFgs.join(', ')} yds)`);
+        }
+        if (otFgs.length > 0) {
+          valueParts.push(`${otFgs.length} OT (${otFgs.join(', ')} yds)`);
+        }
+        
         return {
           label,
-          value: `${fgLengths.length} (${fgLengths.join(', ')} yds)` as any,
+          value: valueParts.join(', ') as any,
           points: totalPoints
         };
       }
@@ -177,18 +285,48 @@ export function PlayerBreakdownModal({
       case 'QB':
         const qbPassYardPoints = getPassYardPoints(stats.pass_yards);
         const qbRushYardPoints = getRushingYardPoints(stats.rush_yards);
-        const qbTwoPtPoints = (stats.pass_two_pt + stats.rush_two_pt) * rules.twoPointConversion;
+        
+        // Check for 2-point conversions in overtime
+        let qbTwoPtPoints = 0;
+        let qbTwoPtOT = 0;
+        let qbTwoPtReg = 0;
+        if ((stats.pass_two_pt + stats.rush_two_pt) > 0) {
+          // Check comments for 2-point conversions in overtime
+          const hasOT2PT = stats.comments?.some(comment => {
+            const quarter = comment.quarter?.toString().toUpperCase() || '';
+            const isOT = quarter.includes('OT') || quarter.includes('OVERTIME') || quarter === '5';
+            const commentText = comment.comment?.toLowerCase() || '';
+            return isOT && /2[\s-]*point|two[\s-]*point/i.test(commentText);
+          });
+          
+          // For simplicity, if there are any OT 2PT comments, assume all are OT
+          // In practice, you'd need to track individual 2PT conversions
+          if (hasOT2PT) {
+            qbTwoPtOT = stats.pass_two_pt + stats.rush_two_pt;
+            qbTwoPtPoints = qbTwoPtOT * rules.twoPointConversion * 2;
+          } else {
+            qbTwoPtReg = stats.pass_two_pt + stats.rush_two_pt;
+            qbTwoPtPoints = qbTwoPtReg * rules.twoPointConversion;
+          }
+        }
 
         if (stats.pass_yards > 0) breakdown.push({ label: 'Pass Yards', value: stats.pass_yards, points: qbPassYardPoints });
         if (stats.rush_yards > 0) breakdown.push({ label: 'Rush Yards', value: stats.rush_yards, points: qbRushYardPoints });
-        if ((stats.pass_two_pt + stats.rush_two_pt) > 0) breakdown.push({ label: '2-Point Conversions', value: stats.pass_two_pt + stats.rush_two_pt, points: qbTwoPtPoints });
+        if ((stats.pass_two_pt + stats.rush_two_pt) > 0) {
+          const valueStr = qbTwoPtOT > 0 
+            ? `${qbTwoPtReg > 0 ? qbTwoPtReg + ' reg, ' : ''}${qbTwoPtOT} OT`
+            : stats.pass_two_pt + stats.rush_two_pt;
+          breakdown.push({ label: '2-Point Conversions', value: valueStr, points: qbTwoPtPoints });
+        }
 
         // Handle touchdown distances
         const qbPassTdBreakdown = calculateTouchdownPointsFromDistances(stats.pass_td_distances, 'Pass TDs');
         if (qbPassTdBreakdown) {
           breakdown.push(qbPassTdBreakdown);
         } else if (stats.pass_touchdowns > 0) {
-          const fallbackPoints = stats.pass_touchdowns * rules.passTdPoints;
+          // Fallback: use minimum 6 points per TD (matches distance-based minimum for < 20 yard TDs)
+          // Touchdowns should never be worth less than 6 points
+          const fallbackPoints = stats.pass_touchdowns * 6;
           breakdown.push({ label: 'Pass TDs', value: stats.pass_touchdowns, points: fallbackPoints });
         }
 
@@ -222,7 +360,27 @@ export function PlayerBreakdownModal({
 
         const skillRecTdPoints = stats.rec_touchdowns * rules.recTdPoints;
         const skillRushTdPoints = stats.rush_touchdowns * rules.rushTdPoints;
-        const skillTwoPtPoints = (stats.rec_two_pt + stats.rush_two_pt) * rules.twoPointConversion;
+        
+        // Check for 2-point conversions in overtime
+        let skillTwoPtPoints = 0;
+        let skillTwoPtOT = 0;
+        let skillTwoPtReg = 0;
+        if ((stats.rec_two_pt + stats.rush_two_pt) > 0) {
+          const hasOT2PT = stats.comments?.some(comment => {
+            const quarter = comment.quarter?.toString().toUpperCase() || '';
+            const isOT = quarter.includes('OT') || quarter.includes('OVERTIME') || quarter === '5';
+            const commentText = comment.comment?.toLowerCase() || '';
+            return isOT && /2[\s-]*point|two[\s-]*point/i.test(commentText);
+          });
+          
+          if (hasOT2PT) {
+            skillTwoPtOT = stats.rec_two_pt + stats.rush_two_pt;
+            skillTwoPtPoints = skillTwoPtOT * rules.twoPointConversion * 2;
+          } else {
+            skillTwoPtReg = stats.rec_two_pt + stats.rush_two_pt;
+            skillTwoPtPoints = skillTwoPtReg * rules.twoPointConversion;
+          }
+        }
 
         // Show rushing breakdown - calculate which gives more points
         if (stats.rush_yards > 0 || stats.total_rushes > 0) {
@@ -250,7 +408,12 @@ export function PlayerBreakdownModal({
           }
         }
 
-        if ((stats.rec_two_pt + stats.rush_two_pt) > 0) breakdown.push({ label: '2-Point Conversions', value: stats.rec_two_pt + stats.rush_two_pt, points: skillTwoPtPoints });
+        if ((stats.rec_two_pt + stats.rush_two_pt) > 0) {
+          const valueStr = skillTwoPtOT > 0 
+            ? `${skillTwoPtReg > 0 ? skillTwoPtReg + ' reg, ' : ''}${skillTwoPtOT} OT`
+            : stats.rec_two_pt + stats.rush_two_pt;
+          breakdown.push({ label: '2-Point Conversions', value: valueStr, points: skillTwoPtPoints });
+        }
 
         // Handle touchdown distances
         const skillRecTdBreakdown = calculateTouchdownPointsFromDistances(stats.rec_td_distances, 'Rec. TDs');
@@ -275,8 +438,33 @@ export function PlayerBreakdownModal({
         break;
 
       case 'PK':
-        const extraPointPoints = stats.extra_point * rules.extraPoint;
-        if (stats.extra_point > 0) breakdown.push({ label: 'Extra Points', value: stats.extra_point, points: extraPointPoints });
+        // Check for extra points in overtime
+        let extraPointPoints = 0;
+        let extraPointOT = 0;
+        let extraPointReg = 0;
+        if (stats.extra_point > 0) {
+          const hasOTXP = stats.comments?.some(comment => {
+            const quarter = comment.quarter?.toString().toUpperCase() || '';
+            const isOT = quarter.includes('OT') || quarter.includes('OVERTIME') || quarter === '5';
+            const commentText = comment.comment?.toLowerCase() || '';
+            return isOT && /extra\s*point|xp|pat/i.test(commentText);
+          });
+          
+          if (hasOTXP) {
+            extraPointOT = stats.extra_point;
+            extraPointPoints = extraPointOT * rules.extraPoint * 2;
+          } else {
+            extraPointReg = stats.extra_point;
+            extraPointPoints = extraPointReg * rules.extraPoint;
+          }
+        }
+        
+        if (stats.extra_point > 0) {
+          const valueStr = extraPointOT > 0 
+            ? `${extraPointReg > 0 ? extraPointReg + ' reg, ' : ''}${extraPointOT} OT`
+            : stats.extra_point;
+          breakdown.push({ label: 'Extra Points', value: valueStr, points: extraPointPoints });
+        }
         
         // Handle field goal distances
         const fgBreakdown = calculateFieldGoalPointsFromDistances(stats.FG_length, 'Field Goals');
