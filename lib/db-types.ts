@@ -40,6 +40,8 @@ export interface MatchupDetails {
   team2Score: number;
   team1Players: PlayerScore[];
   team2Players: PlayerScore[];
+  team1OvertimePlayers?: PlayerScore[];
+  team2OvertimePlayers?: PlayerScore[];
   result: 'W' | 'L' | 'T';
   isComplete: boolean;
 }
@@ -100,6 +102,10 @@ export interface Lineup {
   TE: string;
   K: string;
   DEF: string;
+  OT_1?: string;
+  OT_2?: string;
+  OT_3?: string;
+  OT_4?: string;
 }
 
 export interface NotificationPreferences {

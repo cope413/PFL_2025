@@ -28,6 +28,7 @@ export interface MatchupDetails {
     totalScore: number;
     projectedScore: number;
     players: PlayerScore[];
+    overtimePlayers?: PlayerScore[];
   };
   team2: {
     teamId: string;
@@ -35,6 +36,7 @@ export interface MatchupDetails {
     totalScore: number;
     projectedScore: number;
     players: PlayerScore[];
+    overtimePlayers?: PlayerScore[];
   };
   result: 'W' | 'L' | 'T';
   date: string;

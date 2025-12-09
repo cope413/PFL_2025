@@ -106,6 +106,12 @@ export default function TeamDashboard() {
   const [fetchedRosterForWeek, setFetchedRosterForWeek] = useState<string | null>(null)
   const [loadingLineup, setLoadingLineup] = useState(false)
   const fetchingRosterRef = useRef(false)
+  const [overtimePlayers, setOvertimePlayers] = useState<{ OT_1: string; OT_2: string; OT_3: string; OT_4: string }>({
+    OT_1: '',
+    OT_2: '',
+    OT_3: '',
+    OT_4: ''
+  })
 
   useEffect(() => {
     console.log('🔍 useEffect [user, authLoading, router] #5 triggered')
@@ -142,6 +148,8 @@ export default function TeamDashboard() {
       fetchTeamRoster()
       // Reset submission state when week changes
       setHasSubmittedLineup(false)
+      // Clear overtime players when week changes
+      setOvertimePlayers({ OT_1: '', OT_2: '', OT_3: '', OT_4: '' })
     }
   }, [selectedWeek]) // Only depend on selectedWeek to prevent loops
 
@@ -317,6 +325,16 @@ export default function TeamDashboard() {
         // Update players to reflect the loaded lineup
         const lineup = result.data
         
+        // Load overtime players if they exist
+        if (lineup.OT_1 || lineup.OT_2 || lineup.OT_3 || lineup.OT_4) {
+          setOvertimePlayers({
+            OT_1: lineup.OT_1 || '',
+            OT_2: lineup.OT_2 || '',
+            OT_3: lineup.OT_3 || '',
+            OT_4: lineup.OT_4 || ''
+          })
+        }
+        
         setPlayers(prevPlayers => {
           const updatedPlayers = prevPlayers.map(player => ({
             ...player, // Preserve all existing player data including injury status
@@ -360,6 +378,8 @@ export default function TeamDashboard() {
         )
         setHasUnsavedChanges(false)
         setHasSavedLineup(false) // Mark that we don't have a saved lineup
+        // Clear overtime players when no lineup is found
+        setOvertimePlayers({ OT_1: '', OT_2: '', OT_3: '', OT_4: '' })
       }
     } catch (err) {
       console.error('Error loading lineup:', err)
@@ -647,6 +667,9 @@ export default function TeamDashboard() {
         flex2 = availableForFlex[1].id
       }
       
+      const weekNum = parseInt(selectedWeek)
+      const isPlayoffWeek = weekNum >= 15 && weekNum <= 17
+      
       const lineup = {
         QB: qbPlayers[0]?.id || '',
         RB_1: rb1,
@@ -655,7 +678,13 @@ export default function TeamDashboard() {
         FLEX_2: flex2,
         TE: tePlayers[0]?.id || '',
         K: pkPlayers[0]?.id || '', // Note: PK in frontend maps to K in database
-        DEF: defPlayers[0]?.id || ''
+        DEF: defPlayers[0]?.id || '',
+        ...(isPlayoffWeek && {
+          OT_1: overtimePlayers.OT_1 || '',
+          OT_2: overtimePlayers.OT_2 || '',
+          OT_3: overtimePlayers.OT_3 || '',
+          OT_4: overtimePlayers.OT_4 || ''
+        })
       }
 
       console.log('Saving lineup:', lineup)
@@ -739,6 +768,9 @@ export default function TeamDashboard() {
         throw new Error('No saved lineup found')
       }
 
+      const weekNum = parseInt(selectedWeek)
+      const isPlayoffWeek = weekNum >= 15 && weekNum <= 17
+      
       const lineup = {
         QB: lineupResult.data.QB || '',
         RB_1: lineupResult.data.RB_1 || '',
@@ -747,7 +779,13 @@ export default function TeamDashboard() {
         FLEX_2: lineupResult.data.FLEX_2 || '',
         TE: lineupResult.data.TE || '',
         K: lineupResult.data.K || '',
-        DEF: lineupResult.data.DEF || ''
+        DEF: lineupResult.data.DEF || '',
+        ...(isPlayoffWeek && {
+          OT_1: lineupResult.data.OT_1 || '',
+          OT_2: lineupResult.data.OT_2 || '',
+          OT_3: lineupResult.data.OT_3 || '',
+          OT_4: lineupResult.data.OT_4 || ''
+        })
       }
 
       console.log('Submitting lineup:', lineup)
@@ -1267,6 +1305,103 @@ export default function TeamDashboard() {
                           </div>
                         </CardContent>
                       </Card>
+
+                      {/* Overtime Players Section - Only for Playoff Weeks (15-17) */}
+                      {parseInt(selectedWeek) >= 15 && parseInt(selectedWeek) <= 17 && (
+                        <Card className="mt-6 border-orange-200 bg-orange-50/50">
+                          <CardHeader>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <CardTitle className="flex items-center gap-2 text-orange-900">
+                                  <Clock className="h-5 w-5" />
+                                  Overtime Players (Tie-Breakers)
+                                </CardTitle>
+                                <CardDescription className="text-orange-700">
+                                  Playoff games cannot end in a tie. Select 4 players in order of preference for tie-breaking.
+                                </CardDescription>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              {[1, 2, 3, 4].map((otNum) => {
+                                const otKey = `OT_${otNum}` as keyof typeof overtimePlayers
+                                const selectedPlayerId = overtimePlayers[otKey]
+                                const selectedPlayer = players.find(p => p.id === selectedPlayerId)
+                                
+                                return (
+                                  <div key={otNum} className="space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <label className="text-sm font-medium text-orange-900">
+                                        Overtime Player {otNum} {otNum === 1 && '(First Tie-Breaker)'}
+                                      </label>
+                                      {selectedPlayerId && (
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 text-xs text-orange-700 hover:text-orange-900"
+                                          onClick={() => {
+                                            setOvertimePlayers(prev => ({
+                                              ...prev,
+                                              [otKey]: ''
+                                            }))
+                                            setHasUnsavedChanges(true)
+                                          }}
+                                        >
+                                          Clear
+                                        </Button>
+                                      )}
+                                    </div>
+                                    <Select
+                                      value={selectedPlayerId || undefined}
+                                      onValueChange={(value) => {
+                                        setOvertimePlayers(prev => ({
+                                          ...prev,
+                                          [otKey]: value
+                                        }))
+                                        setHasUnsavedChanges(true)
+                                      }}
+                                    >
+                                      <SelectTrigger className="bg-white">
+                                        <SelectValue placeholder={`Select Overtime Player ${otNum}...`} />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {players
+                                          .filter(p => {
+                                            // Don't show players who are in the main lineup
+                                            const isInMainLineup = p.isStarter
+                                            
+                                            // Don't show players already selected in other OT slots
+                                            const otherOtSlots = Object.entries(overtimePlayers)
+                                              .filter(([key, val]) => key !== otKey && val)
+                                              .map(([, val]) => val)
+                                            const isInOtherOtSlot = otherOtSlots.includes(p.id)
+                                            
+                                            return !isInMainLineup && !isInOtherOtSlot
+                                          })
+                                          .map((player) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name} ({player.position} - {player.nflTeam})
+                                            </SelectItem>
+                                          ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                )
+                              })}
+                              {Object.values(overtimePlayers).filter(Boolean).length < 4 && parseInt(selectedWeek) >= 15 && parseInt(selectedWeek) <= 17 && (
+                                <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
+                                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                                  <AlertDescription>
+                                    You should select 4 overtime players for playoff weeks. These will be used as tie-breakers if the game ends in a tie.
+                                  </AlertDescription>
+                                </Alert>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      )}
                     </div>
 
                     <div className="lg:col-span-4">

@@ -253,6 +253,102 @@ export function MatchupDetailsModal({
           </CardContent>
         </Card>
 
+        {/* Overtime Players Section - Only for Playoff Weeks (15-17) */}
+        {matchupDetails.week >= 15 && matchupDetails.week <= 17 && (
+          <Card className="border-orange-200 bg-orange-50/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-orange-900">
+                <Clock className="h-5 w-5" />
+                Overtime Players (Tie-Breakers)
+              </CardTitle>
+              <CardDescription className="text-orange-700">
+                Playoff games cannot end in a tie. These players are used as tie-breakers in order if the game ends in a tie.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Team 1 Overtime Players */}
+                <div>
+                  <h4 className="text-sm font-semibold text-orange-900 mb-2">{team1.teamName}</h4>
+                  <div className="space-y-2">
+                    {team1.overtimePlayers && team1.overtimePlayers.length > 0 ? (
+                      team1.overtimePlayers.map((player, index) => (
+                        <div 
+                          key={player.playerId} 
+                          className="flex items-center justify-between p-2 rounded-lg border border-orange-200 bg-white"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300 text-xs min-w-[3rem]">
+                              OT {index + 1}
+                            </Badge>
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="text-xs">
+                                {player.playerName.split(" ").map((n) => n[0]).join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium text-sm">{player.playerName}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {player.position} - {player.nflTeam}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium text-sm">{player.points} pts</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground italic p-2">
+                        No overtime players selected
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Team 2 Overtime Players */}
+                <div>
+                  <h4 className="text-sm font-semibold text-orange-900 mb-2">{team2.teamName}</h4>
+                  <div className="space-y-2">
+                    {team2.overtimePlayers && team2.overtimePlayers.length > 0 ? (
+                      team2.overtimePlayers.map((player, index) => (
+                        <div 
+                          key={player.playerId} 
+                          className="flex items-center justify-between p-2 rounded-lg border border-orange-200 bg-white"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-orange-100 text-orange-800 border-orange-300 text-xs min-w-[3rem]">
+                              OT {index + 1}
+                            </Badge>
+                            <Avatar className="h-6 w-6">
+                              <AvatarFallback className="text-xs">
+                                {player.playerName.split(" ").map((n) => n[0]).join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium text-sm">{player.playerName}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {player.position} - {player.nflTeam}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-medium text-sm">{player.points} pts</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground italic p-2">
+                        No overtime players selected
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Performance Summary */}
         <Card>
           <CardHeader>
@@ -272,8 +368,8 @@ export function MatchupDetailsModal({
               <div className="text-center">
                 <div className="text-2xl font-bold">
                   {selectedTeam === 'team1' 
-                    ? Math.floor(team1.totalScore / team1.players.length)
-                    : Math.floor(team2.totalScore / team2.players.length)
+                    ? (team1.players.length > 0 ? Math.floor(team1.totalScore / team1.players.length) : 0)
+                    : (team2.players.length > 0 ? Math.floor(team2.totalScore / team2.players.length) : 0)
                   }
                 </div>
                 <div className="text-sm text-muted-foreground">Avg per Player</div>

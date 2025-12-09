@@ -43,7 +43,16 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    console.log('Saving lineup for user:', userData.team, 'week:', week);
+    // Ensure week is an integer string (not "15.0")
+    const weekNum = parseInt(week.toString(), 10);
+    if (isNaN(weekNum)) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid week value'
+      }, { status: 400 });
+    }
+
+    console.log('Saving lineup for user:', userData.team, 'week:', weekNum);
     console.log('Lineup data:', lineup);
 
     // Check if any players in the lineup have games that have started
@@ -72,7 +81,7 @@ export async function POST(request: NextRequest) {
     // Prepare the lineup data for the database
     const lineupData = {
       owner_ID: userData.team,
-      week: week.toString(),
+      week: weekNum.toString(), // Use the parsed integer, converted to string
       QB: lineup.QB || '',
       RB_1: lineup.RB_1 || '',
       WR_1: lineup.WR_1 || '',
@@ -80,14 +89,18 @@ export async function POST(request: NextRequest) {
       FLEX_2: lineup.FLEX_2 || '',
       TE: lineup.TE || '',
       K: lineup.K || '',
-      DEF: lineup.DEF || ''
+      DEF: lineup.DEF || '',
+      OT_1: lineup.OT_1 || '',
+      OT_2: lineup.OT_2 || '',
+      OT_3: lineup.OT_3 || '',
+      OT_4: lineup.OT_4 || ''
     };
 
     // Insert or update the lineup in the database
     try {
       await saveLineup(
         lineupData.owner_ID,
-        lineupData.week,
+        weekNum, // Use the parsed integer directly
         lineupData.QB,
         lineupData.RB_1,
         lineupData.WR_1,
@@ -95,7 +108,11 @@ export async function POST(request: NextRequest) {
         lineupData.FLEX_2,
         lineupData.TE,
         lineupData.K,
-        lineupData.DEF
+        lineupData.DEF,
+        lineupData.OT_1,
+        lineupData.OT_2,
+        lineupData.OT_3,
+        lineupData.OT_4
       );
 
       console.log('Lineup saved successfully');

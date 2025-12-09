@@ -485,12 +485,16 @@ export async function saveLineup(
   te: string,
   k: string,
   def: string,
+  ot1?: string,
+  ot2?: string,
+  ot3?: string,
+  ot4?: string,
 ) {
   return await db.execute({
     sql:
-      `INSERT OR REPLACE INTO Lineups (owner_ID, week, QB, RB_1, WR_1, FLEX_1, FLEX_2, TE, K, DEF)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    args: [ownerId, week, qb, rb1, wr1, flex1, flex2, te, k, def],
+      `INSERT OR REPLACE INTO Lineups (owner_ID, week, QB, RB_1, WR_1, FLEX_1, FLEX_2, TE, K, DEF, OT_1, OT_2, OT_3, OT_4)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    args: [ownerId, week.toString(), qb, rb1, wr1, flex1, flex2, te, k, def, ot1 || '', ot2 || '', ot3 || '', ot4 || ''],
   });
 }
 

@@ -1,7 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { getLineup, getTeamNameMap, getUserById, getTeamRoster, getResults, getCurrentWeek, getNFLTeamOpponentInfo } from '@/lib/database';
-import { PlayerScore, MatchupDetails } from '@/lib/db-types';
+import { PlayerScore } from '@/lib/db-types';
+
+// MatchupDetails type matching the frontend interface
+interface MatchupDetails {
+  week: number;
+  team1: {
+    teamId: string;
+    teamName: string;
+    totalScore: number;
+    projectedScore: number;
+    players: PlayerScore[];
+    overtimePlayers?: PlayerScore[];
+  };
+  team2: {
+    teamId: string;
+    teamName: string;
+    totalScore: number;
+    projectedScore: number;
+    players: PlayerScore[];
+    overtimePlayers?: PlayerScore[];
+  };
+  result: 'W' | 'L' | 'T';
+  isComplete: boolean;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -252,6 +275,65 @@ export async function GET(request: NextRequest) {
     const team1Players = await generatePlayerScores(team1, team1Lineup || {});
     const team2Players = await generatePlayerScores(team2, team2Lineup || {});
 
+    // Generate overtime players for playoff weeks (15-17)
+    const generateOvertimePlayers = async (teamId: string, lineup: any): Promise<PlayerScore[]> => {
+      const overtimePlayers: PlayerScore[] = [];
+      const isPlayoffWeek = week >= 15 && week <= 17;
+      
+      if (!isPlayoffWeek || !lineup) {
+        return overtimePlayers;
+      }
+
+      const otSlots = ['OT_1', 'OT_2', 'OT_3', 'OT_4'];
+      
+      for (const otSlot of otSlots) {
+        const playerId = lineup[otSlot];
+        if (playerId) {
+          try {
+            const playerData = await getResults({
+              sql: `
+                SELECT 
+                  p.player_ID as id,
+                  p.player_name as name,
+                  p.position,
+                  p.team_name as nflTeam,
+                  COALESCE(pts.week_${week.toString()}, 0) as points,
+                  COALESCE(pts.week_${week.toString()}, 0) as projectedPoints
+                FROM Players p
+                LEFT JOIN Points pts ON p.player_ID = pts.player_ID
+                WHERE p.player_ID = ?
+              `,
+              args: [playerId]
+            });
+
+            if (playerData && playerData.length > 0) {
+              const player = playerData[0];
+              const actualPoints = Math.floor(player.points || 0);
+              
+              overtimePlayers.push({
+                playerId: player.id,
+                playerName: player.name,
+                position: player.position,
+                nflTeam: player.nflTeam || 'NFL',
+                points: actualPoints,
+                projectedPoints: player.projectedPoints || 0,
+                isStarter: false,
+                positionSlot: `Overtime ${otSlot.replace('OT_', '')}`,
+                opponentInfo: null
+              });
+            }
+          } catch (error) {
+            console.error('Error fetching overtime player data for', playerId, error);
+          }
+        }
+      }
+
+      return overtimePlayers;
+    };
+
+    const team1OvertimePlayers = await generateOvertimePlayers(team1, team1Lineup || {});
+    const team2OvertimePlayers = await generateOvertimePlayers(team2, team2Lineup || {});
+
     const team1TotalScore = Math.floor(team1Players.reduce((sum, p) => sum + (p.points || 0), 0));
     const team2TotalScore = Math.floor(team2Players.reduce((sum, p) => sum + (p.points || 0), 0));
 
@@ -267,14 +349,16 @@ export async function GET(request: NextRequest) {
         teamName: team1Name,
         totalScore: team1TotalScore,
         projectedScore: Math.floor(team1Players.reduce((sum, p) => sum + p.projectedPoints, 0)),
-        players: team1Players
+        players: team1Players,
+        overtimePlayers: team1OvertimePlayers
       },
       team2: {
         teamId: team2,
         teamName: team2Name,
         totalScore: team2TotalScore,
         projectedScore: Math.floor(team2Players.reduce((sum, p) => sum + p.projectedPoints, 0)),
-        players: team2Players
+        players: team2Players,
+        overtimePlayers: team2OvertimePlayers
       },
       result,
       isComplete: week < currentWeek
