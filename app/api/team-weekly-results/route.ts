@@ -35,6 +35,11 @@ async function getWeekDate(weekNumber: number): Promise<string> {
 
 // Optimized function to calculate all team scores for a week in bulk
 async function calculateAllTeamScoresForWeek(weekNumber: number): Promise<Map<string, number>> {
+  // Validate weekNumber to prevent SQL injection (whitelist approach)
+  if (weekNumber < 1 || weekNumber > 18 || !Number.isInteger(weekNumber)) {
+    throw new Error(`Invalid week number: ${weekNumber}`);
+  }
+
   try {
     // Get all lineups for this week in one query
     const lineups = await getResults({
@@ -47,6 +52,7 @@ async function calculateAllTeamScoresForWeek(weekNumber: number): Promise<Map<st
     }
 
     // Get all player points for this week in one query
+    // Note: Column names cannot be parameterized, so we validate weekNumber above
     const playerPoints = await getResults({
       sql: `SELECT player_ID, COALESCE(week_${weekNumber}, 0) as points FROM Points`,
       args: []
@@ -85,6 +91,18 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     let teamId = searchParams.get('teamId');
     const week = searchParams.get('week');
+
+    // Validate week parameter if provided to prevent SQL injection
+    let weekNum: number | undefined;
+    if (week) {
+      weekNum = parseInt(week);
+      if (isNaN(weekNum) || weekNum < 1 || weekNum > 18) {
+        return NextResponse.json({
+          success: false,
+          error: 'Invalid week parameter. Must be a number between 1 and 18.'
+        }, { status: 400 });
+      }
+    }
 
     // Check cache first
     const cacheKey = `weekly-results-${teamId || 'user'}-${week || 'all'}`;
@@ -150,12 +168,12 @@ export async function GET(request: NextRequest) {
       const teamNameMap = await getTeamNameMap();
 
       // Get matchup data from WeeklyMatchups table
-      const matchupsQuery = week ? 
+      const matchupsQuery = weekNum ? 
         'SELECT * FROM WeeklyMatchups WHERE Week = ?' :
         'SELECT * FROM WeeklyMatchups ORDER BY Week';
       
-      const matchupsData = await getResults(week ? 
-        { sql: matchupsQuery, args: [parseInt(week)] } :
+      const matchupsData = await getResults(weekNum ? 
+        { sql: matchupsQuery, args: [weekNum] } :
         { sql: matchupsQuery }
       );
 
@@ -237,8 +255,8 @@ export async function GET(request: NextRequest) {
     }
 
     // If specific week requested, return only that week
-    if (week) {
-      const weekResult = weeklyResults.find(r => r.week === parseInt(week));
+    if (weekNum) {
+      const weekResult = weeklyResults.find(r => r.week === weekNum);
       if (!weekResult) {
         return NextResponse.json({
           success: false,

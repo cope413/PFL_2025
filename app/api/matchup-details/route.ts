@@ -47,6 +47,13 @@ export async function GET(request: NextRequest) {
     }
 
     const week = parseInt(weekStr);
+    // Validate week parameter to prevent SQL injection
+    if (isNaN(week) || week < 1 || week > 18) {
+      return NextResponse.json({
+        success: false,
+        error: 'Invalid week parameter. Must be a number between 1 and 18.'
+      }, { status: 400 });
+    }
     const teamNameMap = await getTeamNameMap();
     const currentWeek = await getCurrentWeek();
 
@@ -110,6 +117,11 @@ export async function GET(request: NextRequest) {
 
     // Generate real player scores from database
     const generatePlayerScores = async (teamId: string, lineup: any): Promise<PlayerScore[]> => {
+      // Validate week to prevent SQL injection (already validated above, but double-check)
+      if (week < 1 || week > 18 || !Number.isInteger(week)) {
+        throw new Error(`Invalid week number: ${week}`);
+      }
+
       const players: PlayerScore[] = [];
       
       if (!lineup) {
@@ -132,6 +144,7 @@ export async function GET(request: NextRequest) {
         if (playerId) {
           try {
             // Get real player data from database
+            // Note: Column names cannot be parameterized, so we validate week above
             const playerData = await getResults({
               sql: `
                 SELECT 

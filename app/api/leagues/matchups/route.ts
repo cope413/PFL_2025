@@ -18,6 +18,15 @@ export async function GET(request: NextRequest) {
       week = currentWeek.toString();
     }
 
+    // Validate week parameter to prevent SQL injection
+    const weekNum = parseInt(week);
+    if (isNaN(weekNum) || weekNum < 1 || weekNum > 18) {
+      return NextResponse.json<ApiResponse<null>>({
+        success: false,
+        error: 'Invalid week parameter. Must be a number between 1 and 18.'
+      }, { status: 400 });
+    }
+
     // Cache disabled to ensure real-time score updates
     // const cacheKey = `${leagueId}_${week}`;
     // const cached = matchupsCache.get(cacheKey);
@@ -50,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     if (week) {
       query += ' WHERE Week = ?';
-      params.push(parseInt(week));
+      params.push(weekNum);
     }
 
     query += ' ORDER BY Week DESC';
@@ -68,6 +77,11 @@ export async function GET(request: NextRequest) {
 
     // Optimized function to calculate all team scores in one query
     const calculateAllTeamScores = async (weekNumber: number): Promise<Map<string, number>> => {
+      // Validate weekNumber to prevent SQL injection (whitelist approach)
+      if (weekNumber < 1 || weekNumber > 18 || !Number.isInteger(weekNumber)) {
+        throw new Error(`Invalid week number: ${weekNumber}`);
+      }
+
       try {
         // Get all lineups for this week in one query
         const lineups = await getResults({
@@ -80,6 +94,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Get all player points for this week in one query
+        // Note: Column names cannot be parameterized, so we validate weekNumber above
         const playerPoints = await getResults({
           sql: `SELECT player_ID, COALESCE(week_${weekNumber}, 0) as points FROM Points`,
           args: []
@@ -114,7 +129,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Calculate all team scores once for the requested week
-    const teamScores = await calculateAllTeamScores(parseInt(week));
+    const teamScores = await calculateAllTeamScores(weekNum);
     const currentWeek = await getCurrentWeek();
 
     for (const weekRow of weeklyData) {

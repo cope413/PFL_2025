@@ -83,6 +83,11 @@ async function getAllTeamsWeeklyResults(): Promise<TeamWeeklyResult[]> {
 
     // Optimized function to calculate all team scores for a week in bulk
     const calculateAllTeamScoresForWeek = async (weekNumber: number): Promise<Map<string, number>> => {
+      // Validate weekNumber to prevent SQL injection (whitelist approach)
+      if (weekNumber < 1 || weekNumber > 18 || !Number.isInteger(weekNumber)) {
+        throw new Error(`Invalid week number: ${weekNumber}`);
+      }
+
       try {
         // Get all lineups for this week in one query
         const lineups = await getResults({
@@ -95,6 +100,7 @@ async function getAllTeamsWeeklyResults(): Promise<TeamWeeklyResult[]> {
         }
 
         // Get all player points for this week in one query
+        // Note: Column names cannot be parameterized, so we validate weekNumber above
         const playerPoints = await getResults({
           sql: `SELECT player_ID, COALESCE(week_${weekNumber}, 0) as points FROM Points`,
           args: []

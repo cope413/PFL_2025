@@ -53,6 +53,11 @@ export async function GET(
 
     // Helper function to calculate team score for a given week
     const calculateTeamScore = async (teamId: string, week: number): Promise<{ actual: number, projected: number }> => {
+      // Validate week to prevent SQL injection (whitelist approach)
+      if (week < 1 || week > 18 || !Number.isInteger(week)) {
+        throw new Error(`Invalid week number: ${week}`);
+      }
+
       try {
         // Get the team's lineup for this week
         const lineup = await getResults({
@@ -74,6 +79,7 @@ export async function GET(
           const playerId = teamLineup[pos];
           if (playerId) {
             // Get player's points for this week
+            // Note: Column names cannot be parameterized, so we validate week above
             const playerPoints = await getResults({
               sql: `SELECT week_${week} as points FROM Points WHERE player_ID = ?`,
               args: [playerId]
