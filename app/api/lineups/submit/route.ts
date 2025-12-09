@@ -85,7 +85,10 @@ export async function POST(request: NextRequest) {
       const submissionTime = new Date().toISOString();
 
       // Get player names for the email
-      const lineupWithNames = {
+      const weekNum = parseInt(week);
+      const isPlayoffWeek = weekNum >= 15 && weekNum <= 17;
+      
+      const lineupWithNames: any = {
         QB: '',
         RB_1: '',
         WR_1: '',
@@ -96,17 +99,25 @@ export async function POST(request: NextRequest) {
         DEF: ''
       };
 
-      // Fetch player names for each position
+      // Add overtime players for playoff weeks
+      if (isPlayoffWeek) {
+        lineupWithNames.OT_1 = '';
+        lineupWithNames.OT_2 = '';
+        lineupWithNames.OT_3 = '';
+        lineupWithNames.OT_4 = '';
+      }
+
+      // Fetch player names for each position (including overtime players)
       for (const [position, playerId] of Object.entries(lineup)) {
-        if (playerId) {
+        if (playerId && lineupWithNames.hasOwnProperty(position)) {
           try {
             const player = await getPlayerById(playerId);
             if (player) {
-              lineupWithNames[position as keyof typeof lineupWithNames] = player.player_name || 'Unknown Player';
+              lineupWithNames[position] = player.player_name || 'Unknown Player';
             }
           } catch (error) {
             console.warn(`Failed to get player name for ID ${playerId}:`, error);
-            lineupWithNames[position as keyof typeof lineupWithNames] = 'Unknown Player';
+            lineupWithNames[position] = 'Unknown Player';
           }
         }
       }

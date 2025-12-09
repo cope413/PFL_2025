@@ -160,73 +160,107 @@ export const emailTemplates = {
     `
   }),
 
-  lineupSubmission: (username: string, teamName: string, week: number, lineup: any, submissionTime: string) => ({
-    subject: `PFL Week ${week} Lineup Submitted - ${teamName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #059669; text-align: center;">✅ Lineup Successfully Submitted!</h1>
-        <p>Hello ${username},</p>
-        <p>Your lineup for Week ${week} has been successfully submitted!</p>
-        
-        <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #059669;">
-          <h3 style="margin-top: 0; color: #059669;">Submission Details</h3>
-          <p><strong>Team:</strong> ${teamName}</p>
-          <p><strong>Week:</strong> ${week}</p>
-          <p><strong>Submitted:</strong> ${new Date(submissionTime).toLocaleString()}</p>
-        </div>
+  lineupSubmission: (username: string, teamName: string, week: number, lineup: any, submissionTime: string) => {
+    const isPlayoffWeek = week >= 15 && week <= 17;
+    const hasOvertimePlayers = isPlayoffWeek && (lineup.OT_1 || lineup.OT_2 || lineup.OT_3 || lineup.OT_4);
+    
+    return {
+      subject: `PFL Week ${week} Lineup Submitted - ${teamName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #059669; text-align: center;">✅ Lineup Successfully Submitted!</h1>
+          <p>Hello ${username},</p>
+          <p>Your lineup for Week ${week} has been successfully submitted!</p>
+          
+          <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #059669;">
+            <h3 style="margin-top: 0; color: #059669;">Submission Details</h3>
+            <p><strong>Team:</strong> ${teamName}</p>
+            <p><strong>Week:</strong> ${week}</p>
+            <p><strong>Submitted:</strong> ${new Date(submissionTime).toLocaleString()}</p>
+          </div>
 
-        <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Your Starting Lineup</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Position</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Player</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">QB</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.QB || 'Empty'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">RB</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.RB_1 || 'Empty'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">WR</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.WR_1 || 'Empty'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">TE</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.TE || 'Empty'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">FLEX</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.FLEX_1 || 'Empty'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">FLEX</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.FLEX_2 || 'Empty'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">K</td>
-              <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.K || 'Empty'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px;">D/ST</td>
-              <td style="padding: 8px;">${lineup.DEF || 'Empty'}</td>
-            </tr>
-          </table>
-        </div>
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Your Starting Lineup</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Position</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb; font-weight: bold;">Player</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">QB</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.QB || 'Empty'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">RB</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.RB_1 || 'Empty'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">WR</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.WR_1 || 'Empty'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">TE</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.TE || 'Empty'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">FLEX</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.FLEX_1 || 'Empty'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">FLEX</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.FLEX_2 || 'Empty'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">K</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e7eb;">${lineup.K || 'Empty'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px;">D/ST</td>
+                <td style="padding: 8px;">${lineup.DEF || 'Empty'}</td>
+              </tr>
+            </table>
+          </div>
+          
+          ${hasOvertimePlayers ? `
+          <div style="background: #fff7ed; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ea580c;">
+            <h3 style="margin-top: 0; color: #ea580c;">Overtime Players (Tie-Breakers)</h3>
+            <p style="color: #9a3412; font-size: 14px; margin-bottom: 15px;">Playoff games cannot end in a tie. These players are used as tie-breakers in order if the game ends in a tie.</p>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa; font-weight: bold;">Order</td>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa; font-weight: bold;">Player</td>
+              </tr>
+              ${lineup.OT_1 ? `<tr>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">OT 1 (First Tie-Breaker)</td>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">${lineup.OT_1}</td>
+              </tr>` : ''}
+              ${lineup.OT_2 ? `<tr>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">OT 2</td>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">${lineup.OT_2}</td>
+              </tr>` : ''}
+              ${lineup.OT_3 ? `<tr>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">OT 3</td>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">${lineup.OT_3}</td>
+              </tr>` : ''}
+              ${lineup.OT_4 ? `<tr>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">OT 4</td>
+                <td style="padding: 8px; border-bottom: 1px solid #fed7aa;">${lineup.OT_4}</td>
+              </tr>` : ''}
+            </table>
+          </div>
+          ` : ''}
 
-        <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
-          <p style="margin: 0; color: #dc2626; font-weight: bold;">⚠️ Important Reminder</p>
-          <p style="margin: 5px 0 0 0; color: #374151;">Make sure to check for any last-minute player updates before game time. You can still make changes to your lineup until kickoff.</p>
-        </div>
+          <div style="background: #fef2f2; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #dc2626;">
+            <p style="margin: 0; color: #dc2626; font-weight: bold;">⚠️ Important Reminder</p>
+            <p style="margin: 5px 0 0 0; color: #374151;">Make sure to check for any last-minute player updates before game time. You can still make changes to your lineup until kickoff.</p>
+          </div>
 
-        <p>Good luck with your Week ${week} matchup!</p>
-        <p style="color: #6b7280; font-size: 14px;">- The PFL Team</p>
-      </div>
-    `
-  }),
+          <p>Good luck with your Week ${week} matchup!</p>
+          <p style="color: #6b7280; font-size: 14px;">- The PFL Team</p>
+        </div>
+      `
+    };
+  },
 
   test: (username: string) => ({
     subject: 'PFL Test Email - Notification System Working',
